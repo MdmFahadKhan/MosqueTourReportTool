@@ -1,0 +1,372 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Daily Work Plan</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#EEF0EA;
+    --surface:#FFFFFF;
+    --ink:#1B1F1D;
+    --muted:#6B7269;
+    --line:#DCE1D8;
+    --accent:#2F6E52;
+    --accent-soft:#E1EDE5;
+    --accent-soft-line:#BFD9C9;
+    --tag-deep:#2F6E52;
+    --tag-deep-bg:#E1EDE5;
+    --tag-break:#8A6D1F;
+    --tag-break-bg:#F3ECD7;
+    --tag-admin:#44607A;
+    --tag-admin-bg:#E4EAF0;
+    --tag-setup:#6B5B95;
+    --tag-setup-bg:#EAE5F2;
+    --radius:10px;
+    --shadow: 0 1px 2px rgba(27,31,29,0.06), 0 1px 1px rgba(27,31,29,0.04);
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:var(--bg);
+    color:var(--ink);
+    font-family:'Inter',system-ui,sans-serif;
+    min-height:100vh;
+    padding:32px 16px 64px;
+    -webkit-font-smoothing:antialiased;
+  }
+  .mono{font-family:'JetBrains Mono',monospace;}
+  .wrap{max-width:760px;margin:0 auto;}
+
+  /* Header */
+  header{
+    display:flex;justify-content:space-between;align-items:flex-end;
+    gap:16px;flex-wrap:wrap;margin-bottom:18px;
+  }
+  .title-block .eyebrow{
+    font-family:'JetBrains Mono',monospace;
+    font-size:11px;letter-spacing:.14em;color:var(--accent);
+    text-transform:uppercase;font-weight:600;margin:0 0 4px;
+  }
+  h1{
+    font-family:'JetBrains Mono',monospace;
+    font-size:26px;font-weight:700;margin:0;letter-spacing:-0.01em;
+  }
+  .subtitle{color:var(--muted);font-size:13.5px;margin-top:4px;}
+  .date-field{
+    display:flex;flex-direction:column;align-items:flex-end;gap:4px;
+  }
+  .date-field label{font-size:10px;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);font-family:'JetBrains Mono',monospace;}
+  .date-field input{
+    font-family:'JetBrains Mono',monospace;font-size:13px;color:var(--ink);
+    border:1px solid var(--line);border-radius:7px;background:var(--surface);
+    padding:6px 10px;outline:none;
+  }
+  .date-field input:focus{border-color:var(--accent);}
+
+  /* Progress strip — signature element */
+  .progress-card{
+    background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);
+    padding:14px 16px;margin-bottom:22px;box-shadow:var(--shadow);
+  }
+  .progress-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;}
+  .progress-label{font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:.08em;color:var(--muted);text-transform:uppercase;}
+  .progress-count{font-family:'JetBrains Mono',monospace;font-size:13px;font-weight:600;color:var(--accent);}
+  .segments{display:flex;gap:4px;}
+  .segment{
+    flex:1;height:8px;border-radius:3px;background:var(--line);
+    transition:background .25s ease;
+  }
+  .segment.done{background:var(--accent);}
+
+  /* Block rows */
+  .blocks{display:flex;flex-direction:column;gap:8px;margin-bottom:28px;}
+  .block{
+    background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);
+    padding:14px 14px;box-shadow:var(--shadow);
+    display:grid;grid-template-columns:auto 1fr auto;gap:14px;align-items:start;
+    transition:background .2s ease, border-color .2s ease;
+  }
+  .block.done{background:var(--accent-soft);border-color:var(--accent-soft-line);}
+
+  .block-time{
+    font-family:'JetBrains Mono',monospace;font-size:12.5px;color:var(--muted);
+    white-space:nowrap;padding-top:2px;min-width:108px;
+  }
+  .block.done .block-time{color:var(--accent);}
+
+  .block-main{min-width:0;}
+  .block-top-row{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:5px;}
+  .tag{
+    font-family:'JetBrains Mono',monospace;font-size:10px;font-weight:600;
+    text-transform:uppercase;letter-spacing:.06em;padding:2px 7px;border-radius:5px;
+  }
+  .tag.deep{color:var(--tag-deep);background:var(--tag-deep-bg);}
+  .tag.break{color:var(--tag-break);background:var(--tag-break-bg);}
+  .tag.admin{color:var(--tag-admin);background:var(--tag-admin-bg);}
+  .tag.setup{color:var(--tag-setup);background:var(--tag-setup-bg);}
+  .duration{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--muted);}
+
+  .activity{font-size:14px;line-height:1.4;color:var(--ink);}
+  .block.done .activity{color:#3B5447;}
+
+  .notes-input{
+    margin-top:8px;width:100%;border:none;border-bottom:1px dashed var(--line);
+    background:transparent;font-family:'Inter',sans-serif;font-size:12.5px;color:var(--ink);
+    padding:4px 2px;outline:none;
+  }
+  .notes-input::placeholder{color:#A7AC9F;}
+  .notes-input:focus{border-bottom:1px solid var(--accent);}
+
+  .toggle{
+    appearance:none;-webkit-appearance:none;
+    width:34px;height:30px;border-radius:7px;
+    border:1px solid var(--line);background:var(--bg);
+    font-family:'JetBrains Mono',monospace;font-size:13px;color:var(--muted);
+    cursor:pointer;display:flex;align-items:center;justify-content:center;
+    transition:all .15s ease;
+  }
+  .toggle:hover{border-color:var(--accent);}
+  .toggle.checked{
+    background:var(--accent);border-color:var(--accent);color:#fff;
+  }
+
+  /* Tips panel */
+  .tips-card{
+    background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);
+    box-shadow:var(--shadow);overflow:hidden;margin-bottom:20px;
+  }
+  .tips-titlebar{
+    display:flex;align-items:center;gap:7px;
+    background:#23271F;padding:9px 14px;
+  }
+  .dot{width:8px;height:8px;border-radius:50%;}
+  .dot.r{background:#E0645C;} .dot.y{background:#E5BB55;} .dot.g{background:#61C454;}
+  .tips-titlebar span{
+    margin-left:8px;font-family:'JetBrains Mono',monospace;font-size:11.5px;
+    color:#C9CFC2;letter-spacing:.04em;
+  }
+  .tips-body{padding:14px 18px;}
+  .tips-body ul{margin:0;padding:0;list-style:none;}
+  .tips-body li{
+    font-size:13px;color:var(--ink);line-height:1.6;
+    padding-left:18px;position:relative;
+  }
+  .tips-body li::before{
+    content:"\203A";position:absolute;left:0;color:var(--accent);font-weight:700;
+  }
+
+  .actions{display:flex;justify-content:flex-end;}
+  .reset-btn{
+    font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--muted);
+    background:transparent;border:1px solid var(--line);border-radius:7px;
+    padding:7px 12px;cursor:pointer;transition:all .15s ease;
+  }
+  .reset-btn:hover{border-color:#C25B4C;color:#C25B4C;}
+
+  .save-indicator{
+    font-family:'JetBrains Mono',monospace;font-size:10.5px;color:var(--muted);
+    text-align:right;margin-top:6px;min-height:14px;opacity:0;transition:opacity .3s ease;
+  }
+  .save-indicator.show{opacity:1;}
+
+  @media (max-width:560px){
+    .block{grid-template-columns:1fr auto;}
+    .block-time{grid-column:1/3;min-width:0;}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <div class="title-block">
+      <p class="eyebrow">focus schedule</p>
+      <h1>Daily Work Plan</h1>
+      <p class="subtitle">8-hour, distraction-resistant workday</p>
+    </div>
+    <div class="date-field">
+      <label for="dateInput">Date</label>
+      <input type="date" id="dateInput">
+    </div>
+  </header>
+
+  <div class="progress-card">
+    <div class="progress-top">
+      <span class="progress-label">Progress</span>
+      <span class="progress-count" id="progressCount">0 / 9 blocks</span>
+    </div>
+    <div class="segments" id="segments"></div>
+  </div>
+
+  <div class="blocks" id="blocks"></div>
+
+  <div class="tips-card">
+    <div class="tips-titlebar">
+      <span class="dot r"></span><span class="dot y"></span><span class="dot g"></span>
+      <span>distraction-control.md</span>
+    </div>
+    <div class="tips-body">
+      <ul>
+        <li>Phone in another room or on Do Not Disturb during deep work blocks</li>
+        <li>Use a website/app blocker during focus sessions</li>
+        <li>Keep a notepad for stray thoughts so they don't derail current work</li>
+        <li>Batch meetings into one part of the day where possible</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="actions">
+    <button class="reset-btn" id="resetBtn">Reset day</button>
+  </div>
+  <div class="save-indicator" id="saveIndicator">saved</div>
+
+</div>
+
+<script>
+const PLAN = [
+  {id:"b1", time:"08:00 – 08:15", type:"setup",  label:"Setup",     duration:"15 min", activity:"Morning Setup: review top 3 priorities, block calendar, silence notifications"},
+  {id:"b2", time:"08:15 – 09:45", type:"deep",    label:"Deep Work", duration:"90 min", activity:"Deep Work Block 1: highest-focus task (Pomodoro 25/5)"},
+  {id:"b3", time:"09:45 – 10:00", type:"break",   label:"Break",     duration:"15 min", activity:"Short Break: walk, stretch, hydrate (no screens)"},
+  {id:"b4", time:"10:00 – 11:30", type:"deep",    label:"Deep Work", duration:"90 min", activity:"Deep Work Block 2: second priority task"},
+  {id:"b5", time:"11:30 – 12:30", type:"break",   label:"Break",     duration:"60 min", activity:"Midday Break: full lunch away from desk"},
+  {id:"b6", time:"12:30 – 13:15", type:"admin",   label:"Admin",     duration:"45 min", activity:"Admin/Communication Block: batch emails & messages"},
+  {id:"b7", time:"13:15 – 14:45", type:"deep",    label:"Deep Work", duration:"90 min", activity:"Deep Work Block 3: third priority / follow-ups"},
+  {id:"b8", time:"14:45 – 14:55", type:"break",   label:"Break",     duration:"10 min", activity:"Short Break"},
+  {id:"b9", time:"14:55 – 15:15", type:"setup",   label:"Wrap-Up",   duration:"20 min", activity:"Wrap-Up: review progress, set tomorrow's priorities, close apps"},
+];
+
+const STORAGE_KEY = "daily-work-plan-state";
+let state = { date: todayISO(), items: {} };
+let saveTimer = null;
+
+function todayISO(){
+  const d = new Date();
+  return d.toISOString().slice(0,10);
+}
+
+function defaultState(){
+  const items = {};
+  PLAN.forEach(p => items[p.id] = { done:false, notes:"" });
+  return { date: todayISO(), items };
+}
+
+async function loadState(){
+  try{
+    const result = await window.storage.get(STORAGE_KEY, false);
+    if(result && result.value){
+      const parsed = JSON.parse(result.value);
+      // ensure all current plan ids exist
+      const items = {};
+      PLAN.forEach(p => items[p.id] = parsed.items?.[p.id] || { done:false, notes:"" });
+      state = { date: parsed.date || todayISO(), items };
+    } else {
+      state = defaultState();
+    }
+  } catch(e){
+    state = defaultState();
+  }
+  render();
+}
+
+async function saveState(){
+  try{
+    await window.storage.set(STORAGE_KEY, JSON.stringify(state), false);
+    flashSaved();
+  } catch(e){
+    console.error("Storage error:", e);
+  }
+}
+
+function queueSave(){
+  if(saveTimer) clearTimeout(saveTimer);
+  saveTimer = setTimeout(saveState, 350);
+}
+
+function flashSaved(){
+  const el = document.getElementById("saveIndicator");
+  el.textContent = "saved";
+  el.classList.add("show");
+  setTimeout(()=> el.classList.remove("show"), 900);
+}
+
+function render(){
+  document.getElementById("dateInput").value = state.date;
+
+  const blocksEl = document.getElementById("blocks");
+  blocksEl.innerHTML = "";
+  PLAN.forEach(p => {
+    const item = state.items[p.id] || { done:false, notes:"" };
+    const row = document.createElement("div");
+    row.className = "block" + (item.done ? " done" : "");
+    row.innerHTML = `
+      <div class="block-time mono">${p.time}</div>
+      <div class="block-main">
+        <div class="block-top-row">
+          <span class="tag ${p.type}">${p.label}</span>
+          <span class="duration">${p.duration}</span>
+        </div>
+        <div class="activity">${p.activity}</div>
+        <input class="notes-input" type="text" placeholder="add a note…" value="${escapeHtml(item.notes)}" data-id="${p.id}">
+      </div>
+      <button class="toggle ${item.done ? "checked" : ""}" data-id="${p.id}" aria-label="Mark block done">${item.done ? "✓" : ""}</button>
+    `;
+    blocksEl.appendChild(row);
+  });
+
+  // attach listeners
+  blocksEl.querySelectorAll(".toggle").forEach(btn => {
+    btn.addEventListener("click", () => {
+      const id = btn.dataset.id;
+      state.items[id].done = !state.items[id].done;
+      render();
+      queueSave();
+    });
+  });
+  blocksEl.querySelectorAll(".notes-input").forEach(inp => {
+    inp.addEventListener("input", () => {
+      const id = inp.dataset.id;
+      state.items[id].notes = inp.value;
+      queueSave();
+    });
+  });
+
+  updateProgress();
+}
+
+function updateProgress(){
+  const doneCount = PLAN.filter(p => state.items[p.id]?.done).length;
+  document.getElementById("progressCount").textContent = `${doneCount} / ${PLAN.length} blocks`;
+
+  const segWrap = document.getElementById("segments");
+  segWrap.innerHTML = "";
+  PLAN.forEach(p => {
+    const seg = document.createElement("div");
+    seg.className = "segment" + (state.items[p.id]?.done ? " done" : "");
+    segWrap.appendChild(seg);
+  });
+}
+
+function escapeHtml(str){
+  return (str || "").replace(/&/g,"&amp;").replace(/"/g,"&quot;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
+}
+
+document.getElementById("dateInput").addEventListener("change", (e) => {
+  state.date = e.target.value;
+  queueSave();
+});
+
+document.getElementById("resetBtn").addEventListener("click", () => {
+  if(confirm("Reset all checkboxes and notes for today?")){
+    state = defaultState();
+    render();
+    saveState();
+  }
+});
+
+loadState();
+</script>
+</body>
+</html>

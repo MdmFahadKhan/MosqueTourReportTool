@@ -1,0 +1,558 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Prompt Builder</title>
+<style>
+  :root{
+    --bg:#14171c;
+    --surface:#1c2028;
+    --surface-2:#242a34;
+    --line:#2e3542;
+    --text:#e7ebf1;
+    --muted:#8a93a3;
+    --accent:#5eead4;
+    --accent-dim:#2d5a52;
+    --warn:#f0b45e;
+    --danger:#e5707a;
+    --radius:8px;
+    --mono: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
+    --sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  }
+  [data-theme="light"]{
+    --bg:#f3f2ee;
+    --surface:#ffffff;
+    --surface-2:#f7f6f2;
+    --line:#e0ded6;
+    --text:#1d1f24;
+    --muted:#6b7280;
+    --accent:#0f9d8c;
+    --accent-dim:#d7f0ec;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    background:var(--bg);
+    color:var(--text);
+    font-family:var(--sans);
+    min-height:100vh;
+    padding-bottom:96px;
+    transition:background .2s ease, color .2s ease;
+  }
+  .wrap{ max-width:640px; margin:0 auto; padding:28px 18px 40px; }
+  header{ display:flex; align-items:baseline; justify-content:space-between; margin-bottom:22px; }
+  .brand{ display:flex; flex-direction:column; gap:2px; }
+  .brand .eyebrow{ font-family:var(--mono); font-size:11px; letter-spacing:.14em; text-transform:uppercase; color:var(--accent); }
+  .brand h1{ font-size:22px; margin:0; font-weight:650; letter-spacing:-.01em; }
+  .theme-toggle{
+    font-family:var(--mono); font-size:11px; color:var(--muted);
+    background:var(--surface); border:1px solid var(--line); border-radius:20px;
+    padding:6px 12px; cursor:pointer;
+  }
+  .theme-toggle:hover{ color:var(--text); border-color:var(--accent);}
+
+  .ticket{
+    display:flex; gap:14px; background:var(--surface); border:1px solid var(--line);
+    border-radius:var(--radius); padding:14px 16px; margin-bottom:16px;
+    font-family:var(--mono); align-items:center;
+  }
+  .ticket .field{ flex:1; display:flex; flex-direction:column; gap:4px; }
+  .ticket label{ font-size:10px; letter-spacing:.1em; text-transform:uppercase; color:var(--muted); }
+  .ticket input{
+    background:transparent; border:none; color:var(--text);
+    font-family:var(--mono); font-size:15px; padding:0; outline:none;
+  }
+
+  .card{
+    background:var(--surface); border:1px solid var(--line); border-radius:var(--radius);
+    padding:18px 16px; margin-bottom:14px;
+  }
+  .card-title{
+    font-family:var(--mono); font-size:11px; letter-spacing:.1em; text-transform:uppercase;
+    color:var(--muted); margin-bottom:12px; display:flex; justify-content:space-between; align-items:center;
+  }
+  .field-group{ margin-bottom:14px; }
+  .field-group:last-child{ margin-bottom:0; }
+  .field-group label{ display:block; font-size:13px; font-weight:600; margin-bottom:6px; color:var(--text); }
+  textarea, input[type="text"]{
+    width:100%; background:var(--surface-2); border:1px solid var(--line); border-radius:6px;
+    color:var(--text); font-family:var(--sans); font-size:14px; padding:10px 11px; resize:vertical; outline:none;
+  }
+  textarea{ min-height:56px; line-height:1.45; }
+  textarea:focus, input:focus{ border-color:var(--accent); }
+
+  .dyn-row{ border:1px solid var(--line); border-radius:6px; padding:10px; margin-bottom:10px; background:var(--surface-2); }
+  .dyn-row-head{ display:flex; gap:8px; align-items:center; margin-bottom:8px; }
+  .dyn-row-head input.dyn-name{ font-family:var(--mono); font-size:12px; color:var(--accent); background:var(--surface); padding:7px 8px; }
+  .dyn-remove{ background:none; border:none; color:var(--muted); font-size:18px; cursor:pointer; line-height:1; padding:2px 6px; flex-shrink:0; }
+  .dyn-remove:hover{ color:var(--danger); }
+  .dyn-row textarea.dyn-value{ background:var(--surface); min-height:44px; font-size:13.5px; }
+  .add-field{
+    margin-top:2px; font-family:var(--mono); font-size:12px; background:none;
+    border:1px dashed var(--line); color:var(--muted); border-radius:6px; padding:9px 12px; width:100%; cursor:pointer;
+  }
+  .add-field:hover{ border-color:var(--accent); color:var(--accent); }
+
+  .preview-textarea{ font-family:var(--mono); font-size:12.5px; min-height:140px; background:var(--surface-2); white-space:pre-wrap; }
+  .preview-meta{ font-family:var(--mono); font-size:10px; color:var(--muted); margin-top:6px; text-align:right; }
+  .hidden{ display:none !important; }
+
+  .hist-item{ display:flex; justify-content:space-between; align-items:center; gap:10px; padding:10px 0; border-bottom:1px solid var(--line); }
+  .hist-item:last-child{ border-bottom:none; }
+  .hist-item.active .hist-main .hist-role{ color:var(--accent); }
+  .hist-main{ min-width:0; flex:1; }
+  .hist-role{ font-size:13px; font-weight:600; }
+  .hist-sub{ font-family:var(--mono); font-size:11px; color:var(--muted); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .hist-actions{ display:flex; gap:6px; flex-shrink:0; }
+  .hist-actions button{
+    font-family:var(--mono); font-size:11px; background:var(--surface-2); border:1px solid var(--line);
+    color:var(--text); border-radius:5px; padding:6px 9px; cursor:pointer;
+  }
+  .hist-actions button:hover{ border-color:var(--accent); }
+  .hist-actions button.del:hover{ border-color:var(--danger); color:var(--danger); }
+  .empty-hint{ font-family:var(--mono); font-size:12px; color:var(--muted); }
+
+  .actionbar{
+    position:fixed; bottom:0; left:0; right:0; background:var(--surface); border-top:1px solid var(--line);
+    padding:12px 18px; display:flex; gap:8px; justify-content:center; flex-wrap:wrap;
+  }
+  .actionbar-inner{ max-width:640px; width:100%; display:flex; gap:8px; flex-wrap:wrap; }
+  button.action{
+    font-family:var(--mono); font-size:12px; letter-spacing:.03em; padding:10px 14px; border-radius:6px;
+    border:1px solid var(--line); background:var(--surface-2); color:var(--text); cursor:pointer; flex:1; min-width:90px;
+  }
+  button.action:hover{ border-color:var(--accent); }
+  button.primary{ background:var(--accent); color:#0b1210; border-color:var(--accent); font-weight:700; }
+  button.primary:hover{ opacity:.9; }
+  button.action:disabled{ opacity:.35; cursor:not-allowed; }
+  button.action:disabled:hover{ border-color:var(--line); }
+
+  .toast{
+    position:fixed; top:16px; left:50%; transform:translateX(-50%) translateY(-10px);
+    background:var(--surface-2); border:1px solid var(--accent); color:var(--text);
+    font-family:var(--mono); font-size:12px; padding:9px 16px; border-radius:6px;
+    opacity:0; pointer-events:none; transition:opacity .18s ease, transform .18s ease; z-index:50;
+  }
+  .toast.show{ opacity:1; transform:translateX(-50%) translateY(0); }
+</style>
+</head>
+<body data-theme="dark">
+<div class="wrap">
+  <header>
+    <div class="brand">
+      <span class="eyebrow">Prompt Builder</span>
+      <h1>Build &amp; save a prompt</h1>
+    </div>
+    <button class="theme-toggle" id="themeToggle">light mode</button>
+  </header>
+
+  <div class="ticket">
+    <div class="field">
+      <label for="sno">SNO</label>
+      <input type="text" id="sno" inputmode="numeric" placeholder="1">
+    </div>
+    <div class="field">
+      <label for="date">Date</label>
+      <input type="text" id="date" placeholder="dd-mmm-yyyy" readonly>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Core</div>
+    <div class="field-group">
+      <label for="role">Role</label>
+      <input type="text" id="role" list="roleSuggestions" placeholder="e.g. Senior Software Engineer" autocomplete="off">
+      <datalist id="roleSuggestions"></datalist>
+    </div>
+    <div class="field-group">
+      <label for="task">Task</label>
+      <textarea id="task" placeholder="What should be done?"></textarea>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Additional fields</div>
+    <div id="dynFields"></div>
+    <button class="add-field" id="addField">+ Add field</button>
+  </div>
+
+  <div class="card hidden" id="previewCard">
+    <div class="card-title">
+      <span>Saved output</span>
+      <button class="theme-toggle" id="copyPreviewBtn" style="padding:4px 10px;">copy</button>
+    </div>
+    <textarea class="preview-textarea" id="previewText" readonly></textarea>
+    <div class="preview-meta" id="previewMeta"></div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">
+      <span>Recent saves</span>
+      <span id="histCount" style="color:var(--muted);font-weight:400;"></span>
+    </div>
+    <div id="histList"></div>
+    <div class="empty-hint" id="histEmpty">No saves yet — your last 5 saves will show up here.</div>
+  </div>
+</div>
+
+<div class="actionbar">
+  <div class="actionbar-inner">
+    <button class="action primary" id="saveBtn">Save</button>
+    <button class="action" id="copyBtn">Copy prompt</button>
+    <button class="action" id="clearBtn">Clear</button>
+    <button class="action" id="undoBtn" disabled>Undo</button>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+(function(){
+  const CURRENT_KEY = 'promptbuilder:current';
+  const HISTORY_KEY = 'promptbuilder:history';
+  const MAX_HISTORY = 5;
+
+  const els = {
+    sno: document.getElementById('sno'),
+    date: document.getElementById('date'),
+    role: document.getElementById('role'),
+    task: document.getElementById('task'),
+    dynFields: document.getElementById('dynFields'),
+    roleSuggestions: document.getElementById('roleSuggestions'),
+    previewCard: document.getElementById('previewCard'),
+    previewText: document.getElementById('previewText'),
+    previewMeta: document.getElementById('previewMeta'),
+    histList: document.getElementById('histList'),
+    histEmpty: document.getElementById('histEmpty'),
+    histCount: document.getElementById('histCount'),
+  };
+  const toastEl = document.getElementById('toast');
+  const undoBtn = document.getElementById('undoBtn');
+  const themeToggle = document.getElementById('themeToggle');
+
+  let dynFields = []; // {id, name, value}
+  let dynCounter = 0;
+  let undoSnapshot = null;
+  let history = []; // saved entries, most recent first
+  let currentEditingId = null; // id of history entry currently loaded, or null for a fresh entry
+
+  function todayLabel(){
+    const d = new Date();
+    const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+    return String(d.getDate()).padStart(2,'0') + '-' + months[d.getMonth()] + '-' + d.getFullYear();
+  }
+
+  function showToast(msg){
+    toastEl.textContent = msg;
+    toastEl.classList.add('show');
+    clearTimeout(showToast._t);
+    showToast._t = setTimeout(()=> toastEl.classList.remove('show'), 1600);
+  }
+
+  function escapeAttr(s){ return String(s || '').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;'); }
+  function escapeHtml(s){ return String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+  // ---------- dynamic fields ----------
+  function newDynRow(name, value){
+    dynCounter++;
+    return { id: 'f' + dynCounter + '_' + Date.now(), name: name || '', value: value || '' };
+  }
+
+  function renderDynFields(){
+    els.dynFields.innerHTML = '';
+    dynFields.forEach(f => {
+      const row = document.createElement('div');
+      row.className = 'dyn-row';
+      row.innerHTML = `
+        <div class="dyn-row-head">
+          <input type="text" class="dyn-name" data-id="${f.id}" data-role="name" placeholder="Field name" value="${escapeAttr(f.name)}">
+          <button class="dyn-remove" data-id="${f.id}" title="Remove field">×</button>
+        </div>
+        <textarea class="dyn-value" data-id="${f.id}" data-role="value" placeholder="Value">${escapeHtml(f.value)}</textarea>
+      `;
+      els.dynFields.appendChild(row);
+    });
+  }
+
+  els.dynFields.addEventListener('input', (e) => {
+    const id = e.target.dataset.id, role = e.target.dataset.role;
+    if(!id) return;
+    const f = dynFields.find(x => x.id === id);
+    if(f){ f[role] = e.target.value; invalidateUndo(); }
+  });
+
+  els.dynFields.addEventListener('click', (e) => {
+    if(e.target.classList.contains('dyn-remove')){
+      const id = e.target.dataset.id;
+      dynFields = dynFields.filter(x => x.id !== id);
+      renderDynFields();
+      invalidateUndo();
+    }
+  });
+
+  document.getElementById('addField').addEventListener('click', () => {
+    dynFields.push(newDynRow('', ''));
+    renderDynFields();
+    invalidateUndo();
+  });
+
+  function invalidateUndo(){
+    if(undoSnapshot){ undoSnapshot = null; undoBtn.disabled = true; }
+  }
+  ['role','task','sno'].forEach(k => els[k].addEventListener('input', invalidateUndo));
+
+  // ---------- state <-> form ----------
+  function getFormState(){
+    return {
+      sno: els.sno.value,
+      date: els.date.value,
+      role: els.role.value,
+      task: els.task.value,
+      extraFields: dynFields.map(f => ({ name: f.name, value: f.value }))
+    };
+  }
+
+  function applyFormState(state){
+    els.sno.value = state.sno || '';
+    els.date.value = state.date || todayLabel();
+    els.role.value = state.role || '';
+    els.task.value = state.task || '';
+    dynFields = (state.extraFields || []).map(f => newDynRow(f.name, f.value));
+    renderDynFields();
+  }
+
+  function defaultState(){
+    return {
+      sno: '1',
+      date: todayLabel(),
+      role: '',
+      task: '',
+      extraFields: [
+        { name: 'Context', value: '' },
+        { name: 'Requirements', value: '' },
+        { name: 'Priority', value: '' },
+        { name: 'Module', value: '' },
+      ]
+    };
+  }
+
+  // ---------- prompt text ----------
+  function buildPromptText(fromState){
+    const s = fromState || getFormState();
+    const lines = [];
+    if((s.role || '').trim()) lines.push('Role: ' + s.role.trim());
+    if((s.task || '').trim()) lines.push('Task: ' + s.task.trim());
+    (s.extraFields || []).forEach(f => {
+      if((f.name || '').trim() && (f.value || '').trim()){
+        lines.push(f.name.trim() + ': ' + f.value.trim());
+      }
+    });
+    return lines.join('\n');
+  }
+
+  async function copyText(text){
+    try{
+      await navigator.clipboard.writeText(text);
+      return true;
+    }catch(e){
+      const ta = document.createElement('textarea');
+      ta.value = text;
+      document.body.appendChild(ta);
+      ta.select();
+      let ok = false;
+      try{ ok = document.execCommand('copy'); }catch(e2){ ok = false; }
+      document.body.removeChild(ta);
+      return ok;
+    }
+  }
+
+  document.getElementById('copyBtn').addEventListener('click', async () => {
+    const ok = await copyText(buildPromptText());
+    showToast(ok ? 'Copied to clipboard' : 'Copy failed');
+  });
+  document.getElementById('copyPreviewBtn').addEventListener('click', async () => {
+    const ok = await copyText(els.previewText.value);
+    showToast(ok ? 'Copied to clipboard' : 'Copy failed');
+  });
+
+  // ---------- storage ----------
+  async function loadCurrentDraft(){
+    try{
+      const res = await window.storage.get(CURRENT_KEY);
+      if(res && res.value) return JSON.parse(res.value);
+    }catch(e){ /* nothing saved yet */ }
+    return null;
+  }
+  async function saveCurrentDraft(){
+    try{ await window.storage.set(CURRENT_KEY, JSON.stringify(getFormState())); }catch(e){ /* non-fatal */ }
+  }
+  async function loadHistory(){
+    try{
+      const res = await window.storage.get(HISTORY_KEY);
+      if(res && res.value) return JSON.parse(res.value);
+    }catch(e){ /* none yet */ }
+    return [];
+  }
+  async function persistHistory(){
+    try{ await window.storage.set(HISTORY_KEY, JSON.stringify(history)); }catch(e){ showToast('Could not save history'); }
+  }
+
+  // ---------- role suggestions ----------
+  function refreshRoleSuggestions(){
+    const seen = new Set();
+    els.roleSuggestions.innerHTML = '';
+    history.forEach(item => {
+      const r = (item.role || '').trim();
+      if(r && !seen.has(r)){
+        seen.add(r);
+        const opt = document.createElement('option');
+        opt.value = r;
+        els.roleSuggestions.appendChild(opt);
+      }
+    });
+  }
+
+  // ---------- history list UI ----------
+  function renderHistoryList(){
+    els.histList.innerHTML = '';
+    els.histCount.textContent = history.length ? `${history.length}/${MAX_HISTORY}` : '';
+    els.histEmpty.classList.toggle('hidden', history.length > 0);
+    history.forEach(item => {
+      const row = document.createElement('div');
+      row.className = 'hist-item' + (item.id === currentEditingId ? ' active' : '');
+      const roleLabel = item.role && item.role.trim() ? item.role.trim() : '(no role)';
+      const taskSnippet = (item.task || '').trim().replace(/\s+/g,' ').slice(0, 48);
+      row.innerHTML = `
+        <div class="hist-main">
+          <div class="hist-role">${escapeHtml(roleLabel)}</div>
+          <div class="hist-sub">SNO ${escapeHtml(item.sno || '—')} · ${escapeHtml(item.date || '')}${taskSnippet ? ' · ' + escapeHtml(taskSnippet) : ''}</div>
+        </div>
+        <div class="hist-actions">
+          <button class="load" data-id="${item.id}">Load</button>
+          <button class="del" data-id="${item.id}">Delete</button>
+        </div>
+      `;
+      els.histList.appendChild(row);
+    });
+  }
+
+  els.histList.addEventListener('click', async (e) => {
+    const id = e.target.dataset.id;
+    if(!id) return;
+    if(e.target.classList.contains('load')){
+      const item = history.find(h => h.id === id);
+      if(item){
+        applyFormState(item);
+        currentEditingId = id;
+        showPreview(buildPromptText(item), item.savedAt);
+        renderHistoryList();
+        showToast('Loaded');
+      }
+    } else if(e.target.classList.contains('del')){
+      history = history.filter(h => h.id !== id);
+      if(currentEditingId === id) currentEditingId = null;
+      await persistHistory();
+      refreshRoleSuggestions();
+      renderHistoryList();
+      showToast('Deleted');
+    }
+  });
+
+  // ---------- preview ----------
+  function showPreview(text, savedAt){
+    els.previewText.value = text;
+    els.previewMeta.textContent = savedAt ? ('saved ' + new Date(savedAt).toLocaleString()) : '';
+    els.previewCard.classList.remove('hidden');
+  }
+
+  // ---------- save (create/update) ----------
+  async function saveState(){
+    const formState = getFormState();
+    const promptText = buildPromptText(formState);
+
+    await saveCurrentDraft();
+
+    const existingIdx = currentEditingId ? history.findIndex(h => h.id === currentEditingId) : -1;
+    const now = Date.now();
+
+    if(existingIdx !== -1){
+      const updated = { id: currentEditingId, ...formState, savedAt: now };
+      history.splice(existingIdx, 1);
+      history.unshift(updated);
+    } else {
+      const id = 'p' + now;
+      currentEditingId = id;
+      history.unshift({ id, ...formState, savedAt: now });
+    }
+    if(history.length > MAX_HISTORY) history = history.slice(0, MAX_HISTORY);
+
+    // Only stay "linked" to an entry if the user explicitly loaded it via
+    // the Load button. A plain Save always creates a fresh entry next time,
+    // so repeated saves don't keep overwriting the same slot.
+    currentEditingId = null;
+
+    await persistHistory();
+    refreshRoleSuggestions();
+    renderHistoryList();
+    showPreview(promptText, now);
+
+    undoSnapshot = null;
+    undoBtn.disabled = true;
+    showToast('Saved');
+  }
+
+  // ---------- clear / undo ----------
+  function clearFields(){
+    undoSnapshot = getFormState();
+    els.sno.value = '';
+    els.role.value = '';
+    els.task.value = '';
+    dynFields.forEach(f => f.value = '');
+    renderDynFields();
+    undoBtn.disabled = false;
+    showToast('Cleared');
+  }
+  function undoClear(){
+    if(!undoSnapshot) return;
+    applyFormState(undoSnapshot);
+    undoSnapshot = null;
+    undoBtn.disabled = true;
+    showToast('Restored');
+  }
+
+  document.getElementById('saveBtn').addEventListener('click', saveState);
+  document.getElementById('clearBtn').addEventListener('click', clearFields);
+  undoBtn.addEventListener('click', undoClear);
+
+  // ---------- keyboard shortcuts ----------
+  document.addEventListener('keydown', (e) => {
+    const mod = e.ctrlKey || e.metaKey;
+    if(mod && e.key.toLowerCase() === 's'){ e.preventDefault(); saveState(); }
+    else if(mod && e.shiftKey && e.key.toLowerCase() === 'c'){ e.preventDefault(); document.getElementById('copyBtn').click(); }
+    else if(mod && e.key.toLowerCase() === 'l'){ e.preventDefault(); clearFields(); }
+    else if(mod && e.key.toLowerCase() === 'z'){ if(!undoBtn.disabled){ e.preventDefault(); undoClear(); } }
+  });
+
+  // ---------- theme ----------
+  themeToggle.addEventListener('click', () => {
+    const body = document.body;
+    const isLight = body.getAttribute('data-theme') === 'light';
+    body.setAttribute('data-theme', isLight ? 'dark' : 'light');
+    themeToggle.textContent = isLight ? 'light mode' : 'dark mode';
+  });
+
+  // ---------- init ----------
+  async function init(){
+    history = await loadHistory();
+    const draft = await loadCurrentDraft();
+    applyFormState(draft || defaultState());
+    refreshRoleSuggestions();
+    renderHistoryList();
+  }
+
+  init();
+})();
+</script>
+</body>
+</html>
