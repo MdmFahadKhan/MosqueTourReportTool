@@ -1,1371 +1,1951 @@
 <!DOCTYPE html>
-<html lang="en" dir="ltr">
+<html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
-  <meta name="theme-color" content="#1565C0" />
-  <meta name="apple-mobile-web-app-capable" content="yes" />
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-  <meta name="apple-mobile-web-app-title" content="Tour Report" />
-  <title>Mosque Tour Activity Report</title>
-  <link rel="manifest" href="data:application/json;charset=utf-8,%7B%22name%22%3A%22Mosque%20Tour%20Activity%20Report%22%2C%22short_name%22%3A%22Tour%20Report%22%2C%22start_url%22%3A%22.%22%2C%22display%22%3A%22standalone%22%2C%22background_color%22%3A%22%23EEF2FF%22%2C%22theme_color%22%3A%22%231565C0%22%7D" />
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>Marker — Bookmark Dashboard</title>
+<meta name="description" content="A fast bookmark dashboard for your most-used links. All data stays on your device." />
+<meta name="theme-color" content="#10151F" />
 
-  <style>
-    /* ═══ DESIGN TOKENS — Blue & White theme ═══ */
-    :root {
-      --blue-dark:      #1565C0;   /* primary action */
-      --blue-mid:       #1976D2;   /* gradient end   */
-      --blue-light:     #E3F0FF;   /* tinted bg      */
-      --blue-lighter:   #EEF4FF;   /* card accent    */
-      --accent:         #F59E0B;   /* gold accent (kept for card bar) */
-      --accent-light:   #FFFBEB;   /* report bg      */
-      --text-primary:   #0D1B2A;
-      --text-secondary: #3D5A80;
-      --border:         #BFD4F2;
-      --bg:             #F0F5FF;
-      --white:          #FFFFFF;
-      --danger:         #D32F2F;
-      --radius:         12px;
-      --shadow:         0 2px 14px rgba(21,101,192,0.10);
-      --font-en:        'Segoe UI', system-ui, -apple-system, sans-serif;
-      --font-ar:        'Segoe UI', 'Amiri', 'Noto Naskh Arabic', sans-serif;
-    }
+<style>
+/* ==========================================================================
+   styles.css
+   Design language: "control tower for your links."
+   A calm instrument panel, not a toy. Cards are literal ribbon bookmarks
+   (notched bottom edge) — the one signature motif the whole UI is built
+   around. Everything else stays quiet so that motif reads clearly.
+   ========================================================================== */
 
-    * { box-sizing: border-box; margin: 0; padding: 0; }
+/* ---------------------------------------------------------------------- */
+/* Design tokens                                                          */
+/* ---------------------------------------------------------------------- */
 
-    body {
-      font-family: var(--font-en);
-      background: var(--bg);
-      color: var(--text-primary);
-      min-height: 100dvh;
-    }
-    body.rtl { font-family: var(--font-ar); direction: rtl; }
+:root {
+  /* Surfaces (light) */
+  --bg: #F6F5F1;
+  --bg-raised: #FFFFFF;
+  --bg-sunken: #ECEAE4;
+  --border: rgba(15, 23, 42, 0.10);
+  --border-strong: rgba(15, 23, 42, 0.18);
 
-    /* ── Header ── */
-    .app-header {
-      background: linear-gradient(135deg, var(--blue-dark) 0%, var(--blue-mid) 100%);
-      color: #fff;
-      padding: 18px 20px 14px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 12px;
-      position: sticky;
-      top: 0;
-      z-index: 100;
-      box-shadow: 0 3px 10px rgba(21,101,192,0.25);
-    }
-    .header-title { font-size: 16px; font-weight: 800; line-height: 1.3; flex: 1; letter-spacing: -.2px; }
-    .header-sub   { font-size: 12px; opacity: .75; margin-top: 3px; }
-    .lang-btn {
-      background: rgba(255,255,255,0.18);
-      border: 1.5px solid rgba(255,255,255,0.40);
-      color: #fff;
-      border-radius: 20px;
-      padding: 7px 15px;
-      font-size: 13px;
-      font-weight: 600;
-      cursor: pointer;
-      white-space: nowrap;
-      font-family: inherit;
-    }
-    .lang-btn:active { opacity: .75; }
+  /* Text (light) */
+  --text: #1B1F2A;
+  --text-muted: #5B6272;
+  --text-faint: #8B90A0;
 
-    /* ── Layout ── */
-    .main { padding: 16px; max-width: 520px; margin: 0 auto; padding-bottom: 130px; }
+  /* Brand */
+  --accent: #3457D5;
+  --accent-strong: #2A46B4;
+  --accent-soft: rgba(52, 87, 213, 0.12);
+  --amber: #F2A93B;
+  --amber-soft: rgba(242, 169, 59, 0.16);
+  --danger: #D5433F;
+  --danger-soft: rgba(213, 67, 63, 0.12);
 
-    /* ── Card ── */
-    .card {
-      background: var(--white);
-      border-radius: var(--radius);
-      box-shadow: var(--shadow);
-      padding: 20px 18px;
-      margin-bottom: 14px;
-      border: 1px solid rgba(191,212,242,0.5);
-    }
-    .card-title {
-      font-size: 12px;
-      font-weight: 800;
-      color: var(--blue-dark);
-      text-transform: uppercase;
-      letter-spacing: .8px;
-      margin-bottom: 18px;
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
-    .card-title::before {
-      content: '';
-      width: 4px; height: 18px;
-      background: var(--accent);
-      border-radius: 2px;
-      flex-shrink: 0;
-    }
+  /* Category hues */
+  --cat-general: #64748B;
+  --cat-spiritual: #2F9E7A;
+  --cat-health: #E0556F;
+  --cat-study: #7C5CFC;
+  --cat-work: #DE9420;
+  --cat-other: #8A8F98;
 
-    /* ── Form fields ── */
-    .field { margin-bottom: 18px; }
-    .field:last-child { margin-bottom: 0; }
+  /* Type */
+  --font-display: -apple-system, "Segoe UI Semibold", "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-body: -apple-system, "Segoe UI", "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: ui-monospace, "SF Mono", "Cascadia Code", Consolas, "Roboto Mono", monospace;
 
-    label {
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      font-size: 15px;
-      font-weight: 700;
-      color: var(--text-secondary);
-      margin-bottom: 8px;
-    }
-    .lbl-icon { font-size: 26px; line-height: 1; }
-    label .req { color: var(--danger); margin-inline-start: 2px; font-size: 16px; }
+  /* Scale */
+  --radius-sm: 8px;
+  --radius-md: 14px;
+  --radius-lg: 20px;
+  --shadow-sm: 0 1px 2px rgba(15, 23, 42, 0.06);
+  --shadow-md: 0 8px 24px rgba(15, 23, 42, 0.10);
+  --shadow-lg: 0 20px 48px rgba(15, 23, 42, 0.18);
 
-    /* date input */
-    input[type="date"] {
-      width: 100%;
-      border: 2px solid var(--border);
-      border-radius: 10px;
-      padding: 13px 15px;
-      font-size: 16px;
-      font-family: inherit;
-      color: var(--text-primary);
-      background: var(--white);
-      outline: none;
-      transition: border-color .2s, box-shadow .2s;
-      -webkit-appearance: none;
-    }
-    input[type="date"]:focus {
-      border-color: var(--blue-mid);
-      box-shadow: 0 0 0 3px rgba(25,118,210,0.14);
-    }
-    input[type="date"].invalid { border-color: var(--danger) !important; }
+  --header-h: 68px;
+  --transition-fast: 140ms cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-med: 240ms cubic-bezier(0.4, 0, 0.2, 1);
 
-    /* ── Stepper ── */
-    .stepper {
-      display: flex;
-      align-items: stretch;
-      border: 2px solid var(--border);
-      border-radius: 10px;
-      overflow: hidden;
-      background: var(--white);
-      transition: border-color .2s, box-shadow .2s;
-    }
-    .stepper.focused {
-      border-color: var(--blue-mid);
-      box-shadow: 0 0 0 3px rgba(25,118,210,0.14);
-    }
-    .stepper.invalid { border-color: var(--danger); }
+  color-scheme: light;
+}
 
-    .stepper-btn {
-      background: var(--blue-light);
-      border: none;
-      color: var(--blue-dark);
-      font-size: 28px;
-      font-weight: 700;
-      width: 60px;
-      min-height: 58px;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      flex-shrink: 0;
-      -webkit-tap-highlight-color: transparent;
-      transition: background .15s;
-      user-select: none;
-      line-height: 1;
-    }
-    .stepper-btn:active { background: #BFDBFE; }
+[data-theme='dark'] {
+  --bg: #0E1320;
+  --bg-raised: #171E2B;
+  --bg-sunken: #0A0E17;
+  --border: rgba(255, 255, 255, 0.08);
+  --border-strong: rgba(255, 255, 255, 0.16);
 
-    /* hide native browser spinner arrows */
-    .stepper-input::-webkit-outer-spin-button,
-    .stepper-input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
-    .stepper-input[type=number] { -moz-appearance: textfield; }
+  --text: #E8EAF0;
+  --text-muted: #9AA2B4;
+  --text-faint: #6B7284;
 
-    .stepper-input {
-      flex: 1;
-      border: none !important;
-      box-shadow: none !important;
-      text-align: center;
-      font-size: 24px;
-      font-weight: 800;
-      color: var(--text-primary);
-      padding: 10px 4px;
-      background: transparent;
-      outline: none;
-      min-width: 0;
-      -webkit-appearance: none;
-    }
+  --accent: #6C8CFF;
+  --accent-strong: #8AA2FF;
+  --accent-soft: rgba(108, 140, 255, 0.16);
+  --amber: #F5B95B;
+  --amber-soft: rgba(245, 185, 91, 0.14);
+  --danger: #EF6E6A;
+  --danger-soft: rgba(239, 110, 106, 0.14);
 
-    /* ── Time field: inline input + picker button ── */
-    .time-row { display: flex; flex-direction: column; gap: 0; }
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.3);
+  --shadow-md: 0 8px 24px rgba(0, 0, 0, 0.4);
+  --shadow-lg: 0 24px 56px rgba(0, 0, 0, 0.55);
 
-    .time-input-group {
-      display: flex;
-      align-items: stretch;
-      border: 2px solid var(--border);
-      border-radius: 10px;
-      overflow: hidden;
-      background: var(--white);
-      transition: border-color .2s, box-shadow .2s;
-    }
-    .time-input-group:focus-within {
-      border-color: var(--blue-mid);
-      box-shadow: 0 0 0 3px rgba(25,118,210,0.14);
-    }
-    .time-input-group.invalid { border-color: var(--danger); }
+  color-scheme: dark;
+}
 
-    /* The text input part */
-    .time-text-input {
-      flex: 1;
-      border: none !important;
-      outline: none;
-      padding: 13px 10px 13px 13px;
-      font-size: 18px;
-      font-weight: 700;
-      font-family: 'Courier New', monospace;
-      color: var(--text-primary);
-      background: transparent;
-      min-width: 0;
-      letter-spacing: 1px;
-      -webkit-appearance: none;
-    }
-    .time-text-input::placeholder { color: #A0AEC0; font-size: 14px; font-weight: 400; letter-spacing: 0; font-family: var(--font-en); }
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+}
 
-    /* Clock icon button to open wheel picker */
-    .time-picker-btn {
-      background: var(--blue-light);
-      border: none;
-      border-inline-start: 2px solid var(--border);
-      color: var(--blue-dark);
-      font-size: 22px;
-      width: 50px;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      flex-shrink: 0;
-      -webkit-tap-highlight-color: transparent;
-      transition: background .15s;
-    }
-    .time-picker-btn:active { background: #BFDBFE; }
+/* ---------------------------------------------------------------------- */
+/* Reset + base                                                           */
+/* ---------------------------------------------------------------------- */
 
-    /* ── Time picker modal (wheel) ── */
-    .time-modal-overlay {
-      display: none;
-      position: fixed; inset: 0;
-      background: rgba(13,27,42,0.5);
-      z-index: 500;
-      align-items: flex-end;
-      justify-content: center;
-    }
-    .time-modal-overlay.open { display: flex; }
+*, *::before, *::after { box-sizing: border-box; }
 
-    .time-modal {
-      background: var(--white);
-      border-radius: 22px 22px 0 0;
-      padding: 22px 22px 40px;
-      width: 100%;
-      max-width: 440px;
-      animation: slideUp .25s ease;
-    }
-    @keyframes slideUp {
-      from { transform: translateY(100%); }
-      to   { transform: translateY(0); }
-    }
-    .time-modal-header {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      margin-bottom: 22px;
-    }
-    .time-modal-title { font-size: 16px; font-weight: 800; color: var(--blue-dark); }
-    .time-modal-close {
-      background: var(--blue-light); border: none; border-radius: 50%;
-      width: 34px; height: 34px; font-size: 18px; cursor: pointer;
-      display: flex; align-items: center; justify-content: center;
-      color: var(--text-secondary);
-    }
+/* Guarantees the native `hidden` attribute always wins, even against
+   components (like .confirm-dialog, .editor-panel) that set their own
+   `display` value. Without this, a same-specificity clash meant elements
+   could render even while `hidden` was correctly set by JS. */
+[hidden] { display: none !important; }
 
-    .time-wheels {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 6px;
-      margin-bottom: 22px;
-    }
-    .time-colon { font-size: 36px; font-weight: 900; color: var(--text-primary); padding: 0 4px; }
+html, body {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+}
 
-    .wheel-col { display: flex; flex-direction: column; align-items: center; gap: 6px; }
-    .wheel-label { font-size: 11px; font-weight: 700; color: var(--text-secondary); text-transform: uppercase; letter-spacing: .6px; }
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-body);
+  font-size: 15px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  transition: background var(--transition-med), color var(--transition-med);
+}
 
-    .wheel-up, .wheel-down {
-      background: var(--blue-light);
-      border: none;
-      border-radius: 10px;
-      width: 68px; height: 46px;
-      font-size: 24px;
-      color: var(--blue-dark);
-      cursor: pointer;
-      display: flex; align-items: center; justify-content: center;
-      -webkit-tap-highlight-color: transparent;
-      font-weight: 700;
-    }
-    .wheel-up:active, .wheel-down:active { background: #BFDBFE; }
+body.no-scroll { overflow: hidden; }
 
-    .wheel-val {
-      font-size: 36px;
-      font-weight: 900;
-      color: var(--text-primary);
-      width: 68px;
-      text-align: center;
-      line-height: 1;
-      padding: 6px 0;
-    }
+h1, h2, h3 { font-family: var(--font-display); margin: 0; }
 
-    .ampm-col { display: flex; flex-direction: column; gap: 8px; margin-inline-start: 10px; padding-top: 30px; }
-    .ampm-btn {
-      border: 2px solid var(--border);
-      background: var(--white);
-      border-radius: 10px;
-      padding: 10px 18px;
-      font-size: 15px;
-      font-weight: 700;
-      cursor: pointer;
-      color: var(--text-secondary);
-      -webkit-tap-highlight-color: transparent;
-    }
-    .ampm-btn.active { background: var(--blue-dark); border-color: var(--blue-dark); color: #fff; }
+button, input, select {
+  font-family: inherit;
+  font-size: inherit;
+  color: inherit;
+}
 
-    .time-modal-confirm {
-      width: 100%;
-      padding: 16px;
-      background: var(--blue-dark);
-      color: #fff;
-      border: none;
-      border-radius: 12px;
-      font-size: 16px;
-      font-weight: 800;
-      cursor: pointer;
-      font-family: inherit;
-    }
-    .time-modal-confirm:active { opacity: .85; }
+button { cursor: pointer; }
 
-    /* ── Error messages ── */
-    .error-msg {
-      font-size: 12px;
-      color: var(--danger);
-      margin-top: 5px;
-      display: none;
-    }
-    .error-msg.visible { display: block; }
+a { color: var(--accent); }
 
-    /* ── Action buttons ── */
-    .btn-group {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 10px;
-    }
-    .btn {
-      border: none;
-      border-radius: 12px;
-      padding: 16px 10px;
-      font-size: 14px;
-      font-weight: 700;
-      cursor: pointer;
-      font-family: inherit;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 7px;
-      transition: opacity .15s, transform .1s;
-      -webkit-tap-highlight-color: transparent;
-      line-height: 1.2;
-    }
-    .btn .btn-icon { font-size: 22px; }
-    .btn:active { opacity: .8; transform: scale(.97); }
+.visually-hidden {
+  position: absolute;
+  width: 1px; height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
 
-    .btn-primary { background: var(--blue-dark); color: #fff; }
-    .btn-amber   { background: #F59E0B; color: #fff; }
-    .btn-outline { background: var(--white); color: var(--blue-dark); border: 2px solid var(--blue-dark); }
-    .btn-muted   { background: var(--blue-lighter); color: var(--text-secondary); border: 2px solid var(--border); }
-    .btn-full    { grid-column: 1 / -1; }
+.skip-link {
+  position: absolute;
+  left: 12px;
+  top: -48px;
+  background: var(--accent);
+  color: #fff;
+  padding: 10px 16px;
+  border-radius: var(--radius-sm);
+  z-index: 200;
+  transition: top var(--transition-fast);
+}
+.skip-link:focus { top: 12px; }
 
-    /* ── Report preview ── */
-    .report-preview {
-      background: var(--accent-light);
-      border: 1.5px solid #FDE68A;
-      border-radius: 10px;
-      padding: 16px;
-      font-size: 14px;
-      line-height: 2;
-      white-space: pre-wrap;
-      font-family: 'Courier New', monospace;
-      color: var(--text-primary);
-      word-break: break-word;
-      user-select: all;
-      -webkit-user-select: all;
-    }
-    .report-preview.flash { background: #DBEAFE; transition: background .4s; }
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
 
-    /* ── Report modal ── */
-    .modal-overlay {
-      display: none;
-      position: fixed; inset: 0;
-      background: rgba(13,27,42,0.55);
-      z-index: 400;
-      align-items: center;
-      justify-content: center;
-      padding: 16px;
-    }
-    .modal-overlay.open { display: flex; }
+/* ---------------------------------------------------------------------- */
+/* Header                                                                 */
+/* ---------------------------------------------------------------------- */
 
-    .modal-box {
-      background: var(--white);
-      border-radius: 18px;
-      padding: 22px;
-      width: 100%;
-      max-width: 480px;
-      max-height: 88dvh;
-      overflow-y: auto;
-      animation: fadeScale .2s ease;
-    }
-    @keyframes fadeScale {
-      from { opacity: 0; transform: scale(.93); }
-      to   { opacity: 1; transform: scale(1); }
-    }
-    .modal-header {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      margin-bottom: 14px;
-    }
-    .modal-title { font-size: 16px; font-weight: 800; color: var(--blue-dark); }
-    .modal-close {
-      background: var(--blue-light); border: none; border-radius: 50%;
-      width: 36px; height: 36px; font-size: 19px; cursor: pointer;
-      display: flex; align-items: center; justify-content: center;
-      color: var(--text-secondary);
-    }
-    .saved-badge {
-      display: inline-flex;
-      align-items: center;
-      gap: 5px;
-      background: var(--blue-light);
-      color: var(--blue-dark);
-      font-size: 12px;
-      font-weight: 700;
-      padding: 4px 12px;
-      border-radius: 20px;
-      margin-bottom: 12px;
-    }
-    .modal-actions {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 10px;
-      margin-top: 16px;
-    }
+.app-header {
+  position: sticky;
+  top: 0;
+  z-index: 40;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  height: var(--header-h);
+  padding: 0 20px;
+  background: var(--bg-raised);
+  border-bottom: 1px solid var(--border);
+  backdrop-filter: saturate(1.4) blur(8px);
+}
 
+.app-header__brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-shrink: 0;
+}
 
-    /* ── Scroll hint ── */
-    .scroll-hint {
-      position: fixed;
-      bottom: 88px;           /* sits just above the action bar */
-      left: 0; right: 0;
-      height: 64px;
-      background: linear-gradient(to bottom, transparent 0%, rgba(240,245,255,0.96) 100%);
-      pointer-events: none;
-      z-index: 190;
-      display: flex;
-      align-items: flex-end;
-      justify-content: center;
-      padding-bottom: 6px;
-      transition: opacity .35s ease;
-    }
-    .scroll-hint.hidden { opacity: 0; }
-    .scroll-hint-arrow {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 2px;
-      animation: bounceDown 1.4s ease-in-out infinite;
-    }
-    .scroll-hint-arrow svg { opacity: .7; }
-    .scroll-hint-label {
-      font-size: 10px;
-      font-weight: 700;
-      color: var(--blue-dark);
-      opacity: .65;
-      letter-spacing: .4px;
-      text-transform: uppercase;
-    }
-    @keyframes bounceDown {
-      0%, 100% { transform: translateY(0);   }
-      50%       { transform: translateY(5px); }
-    }
+.app-header__mark {
+  width: 26px;
+  height: 26px;
+  border-radius: 7px;
+  background: linear-gradient(160deg, var(--accent), var(--accent-strong));
+  position: relative;
+  flex-shrink: 0;
+}
+.app-header__mark::after {
+  content: '';
+  position: absolute;
+  left: 50%;
+  top: 22%;
+  width: 8px;
+  height: 13px;
+  transform: translateX(-50%);
+  background: var(--bg-raised);
+  clip-path: polygon(0 0, 100% 0, 100% 100%, 50% 78%, 0 100%);
+}
 
-    /* ── Sticky Action Bar ── */
-    .action-bar {
-      position: fixed;
-      bottom: 0;
-      left: 0; right: 0;
-      background: var(--white);
-      border-top: 2px solid var(--border);
-      box-shadow: 0 -4px 16px rgba(21,101,192,0.12);
-      padding: 12px 16px calc(16px + env(safe-area-inset-bottom, 0px));
-      z-index: 200;
-    }
-    .action-bar .btn-group {
-      max-width: 520px;
-      margin: 0 auto;
-    }
+.app-header__title {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 1.05rem;
+  letter-spacing: -0.01em;
+}
 
-    /* ── Toast ── */
-    .toast {
-      position: fixed;
-      bottom: 96px;
-      left: 50%;
-      transform: translateX(-50%) translateY(80px);
-      background: #0D1B2A;
-      color: #fff;
-      padding: 12px 24px;
-      border-radius: 24px;
-      font-size: 14px;
-      font-weight: 600;
-      z-index: 9999;
-      opacity: 0;
-      transition: all .3s cubic-bezier(.34,1.56,.64,1);
-      pointer-events: none;
-      white-space: nowrap;
-    }
-    .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+.app-header__search {
+  flex: 1;
+  max-width: 460px;
+  position: relative;
+  display: flex;
+  align-items: center;
+}
 
-    /* ── RTL ── */
-    body.rtl .stepper-input { direction: ltr; }
-    body.rtl .time-text-input { direction: ltr; text-align: right; }
-  </style>
+.app-header__search-icon {
+  position: absolute;
+  left: 14px;
+  color: var(--text-faint);
+  pointer-events: none;
+  font-size: 1rem;
+}
+
+.app-header__search input {
+  width: 100%;
+  height: 42px;
+  padding: 0 14px 0 38px;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border);
+  background: var(--bg-sunken);
+  color: var(--text);
+  transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+}
+.app-header__search input:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-soft);
+}
+.app-header__search input::placeholder { color: var(--text-faint); }
+
+.app-header__actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-shrink: 0;
+}
+
+/* ---------------------------------------------------------------------- */
+/* Buttons                                                                 */
+/* ---------------------------------------------------------------------- */
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 42px;
+  padding: 0 16px;
+  border-radius: var(--radius-md);
+  border: 1px solid transparent;
+  font-weight: 600;
+  font-size: 0.9rem;
+  transition: transform var(--transition-fast), background var(--transition-fast), border-color var(--transition-fast);
+  min-height: 44px;
+}
+.btn:active { transform: scale(0.97); }
+
+.btn--primary {
+  background: var(--accent);
+  color: #fff;
+}
+.btn--primary:hover { background: var(--accent-strong); }
+
+.btn--ghost {
+  background: transparent;
+  border-color: var(--border-strong);
+  color: var(--text);
+}
+.btn--ghost:hover { background: var(--bg-sunken); }
+
+.btn--danger {
+  background: var(--danger);
+  color: #fff;
+}
+.btn--danger:hover { filter: brightness(1.08); }
+
+.btn--small { height: 36px; padding: 0 12px; font-size: 0.82rem; min-height: 36px; }
+
+.icon-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  min-width: 44px;
+  min-height: 44px;
+  border-radius: var(--radius-sm);
+  border: 1px solid transparent;
+  background: transparent;
+  color: var(--text-muted);
+  transition: background var(--transition-fast), color var(--transition-fast);
+}
+.icon-btn:hover { background: var(--bg-sunken); color: var(--text); }
+.icon-btn--lg { font-size: 1.1rem; }
+.icon-btn--active { color: var(--amber); }
+.icon-btn--danger:hover { color: var(--danger); background: var(--danger-soft); }
+
+/* ---------------------------------------------------------------------- */
+/* Main layout                                                            */
+/* ---------------------------------------------------------------------- */
+
+.app-main {
+  max-width: 1180px;
+  margin: 0 auto;
+  padding: 24px 20px 64px;
+}
+
+/* ---------------------------------------------------------------------- */
+/* Stats bar                                                              */
+/* ---------------------------------------------------------------------- */
+
+.stats-bar {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(110px, 1fr));
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+.stat-card {
+  background: var(--bg-raised);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: 14px 14px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  box-shadow: var(--shadow-sm);
+}
+
+.stat-card__icon { font-size: 1rem; margin-bottom: 2px; }
+.stat-card__value { font-family: var(--font-display); font-weight: 700; font-size: 1.5rem; letter-spacing: -0.02em; }
+.stat-card__label { font-size: 0.76rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.04em; }
+
+.stat-card--primary .stat-card__value { color: var(--accent); }
+.stat-card--pinned .stat-card__value { color: var(--amber); }
+
+/* ---------------------------------------------------------------------- */
+/* Chip row (category filters)                                            */
+/* ---------------------------------------------------------------------- */
+
+.chip-row {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  padding-bottom: 6px;
+  margin-bottom: 14px;
+  scrollbar-width: thin;
+}
+.chip-row::-webkit-scrollbar { height: 6px; }
+.chip-row::-webkit-scrollbar-thumb { background: var(--border-strong); border-radius: 3px; }
+
+.chip {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 38px;
+  padding: 0 14px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: var(--bg-raised);
+  color: var(--text-muted);
+  font-weight: 600;
+  font-size: 0.86rem;
+  transition: all var(--transition-fast);
+  min-height: 44px;
+}
+.chip:hover { border-color: var(--border-strong); color: var(--text); }
+.chip--active {
+  background: var(--accent-soft);
+  border-color: var(--accent);
+  color: var(--accent);
+}
+[data-theme='dark'] .chip--active { color: var(--accent-strong); }
+.chip__icon { font-size: 0.95rem; }
+
+/* ---------------------------------------------------------------------- */
+/* Toolbar                                                                 */
+/* ---------------------------------------------------------------------- */
+
+.toolbar {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 18px;
+}
+
+.toolbar__sort {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.85rem;
+  color: var(--text-muted);
+}
+
+.toolbar__sort select {
+  height: 36px;
+  padding: 0 10px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
+  background: var(--bg-raised);
+  color: var(--text);
+}
+
+/* ---------------------------------------------------------------------- */
+/* Category sections                                                      */
+/* ---------------------------------------------------------------------- */
+
+.sections { display: flex; flex-direction: column; gap: 10px; }
+
+.category-section {
+  background: var(--bg-raised);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+}
+
+.category-section__header {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 14px 18px;
+  background: transparent;
+  border: none;
+  text-align: left;
+  font-weight: 700;
+  font-family: var(--font-display);
+}
+
+.category-section__caret {
+  font-size: 0.7rem;
+  color: var(--text-faint);
+  transition: transform var(--transition-fast);
+  width: 12px;
+}
+
+.category-section__icon { font-size: 1.05rem; }
+.category-section__title { flex: 1; letter-spacing: -0.01em; }
+
+.category-section__count {
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  background: var(--bg-sunken);
+  border-radius: 999px;
+  padding: 2px 9px;
+}
+
+.category-section__body {
+  padding: 4px 18px 18px;
+  animation: reveal var(--transition-med) ease;
+}
+
+@keyframes reveal {
+  from { opacity: 0; transform: translateY(-4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.card-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 12px;
+}
+
+/* ---------------------------------------------------------------------- */
+/* Bookmark card — the signature "ribbon" motif                           */
+/* ---------------------------------------------------------------------- */
+
+.card {
+  position: relative;
+  display: flex;
+  gap: 12px;
+  padding: 14px 14px 14px 10px;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  transition: transform var(--transition-fast), box-shadow var(--transition-fast), border-color var(--transition-fast);
+}
+
+.card:hover, .card:focus-within {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+  border-color: var(--border-strong);
+}
+
+.card__ribbon {
+  flex-shrink: 0;
+  width: 6px;
+  border-radius: 3px;
+  background: var(--card-accent, var(--accent));
+  position: relative;
+}
+.card__ribbon::after {
+  content: '';
+  position: absolute;
+  left: 0; right: 0; bottom: -1px;
+  height: 7px;
+  background: var(--bg);
+  clip-path: polygon(0 0, 100% 0, 100% 100%, 50% 40%, 0 100%);
+}
+
+.card__pin-badge {
+  position: absolute;
+  top: -6px;
+  right: 10px;
+  font-size: 0.85rem;
+  filter: drop-shadow(0 2px 2px rgba(0,0,0,0.25));
+}
+
+.card__main { flex: 1; min-width: 0; }
+
+.card__head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 3px;
+}
+
+.card__favicon {
+  width: 18px;
+  height: 18px;
+  border-radius: 4px;
+  flex-shrink: 0;
+  object-fit: cover;
+}
+.card__favicon--fallback {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.9rem;
+  background: none;
+}
+
+.card__name {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 0.94rem;
+  letter-spacing: -0.01em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.card__url {
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  color: var(--text-muted);
+  margin: 0 0 6px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.card__meta {
+  font-size: 0.7rem;
+  color: var(--text-faint);
+  margin: 0;
+}
+
+.card__actions {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  opacity: 0;
+  transform: translateX(4px);
+  transition: opacity var(--transition-fast), transform var(--transition-fast);
+}
+.card:hover .card__actions,
+.card:focus-within .card__actions {
+  opacity: 1;
+  transform: translateX(0);
+}
+.card__actions .icon-btn { width: 30px; height: 30px; min-width: 30px; min-height: 30px; font-size: 0.85rem; }
+
+@media (hover: none) {
+  .card__actions { opacity: 1; transform: none; }
+}
+
+/* ---------------------------------------------------------------------- */
+/* Empty state                                                            */
+/* ---------------------------------------------------------------------- */
+
+.empty-state {
+  text-align: center;
+  padding: 64px 20px;
+  color: var(--text-muted);
+}
+.empty-state__icon { font-size: 2.4rem; margin: 0 0 8px; }
+.empty-state h2 { font-family: var(--font-display); margin-bottom: 6px; color: var(--text); }
+
+/* ---------------------------------------------------------------------- */
+/* Footer                                                                 */
+/* ---------------------------------------------------------------------- */
+
+.app-footer {
+  text-align: center;
+  padding: 20px;
+  color: var(--text-faint);
+  font-size: 0.78rem;
+}
+
+/* ---------------------------------------------------------------------- */
+/* Slide-over editor panel                                                */
+/* ---------------------------------------------------------------------- */
+
+.editor-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(10, 14, 23, 0.45);
+  z-index: 60;
+  opacity: 0;
+  transition: opacity var(--transition-med);
+}
+.editor-overlay--visible { opacity: 1; }
+
+.editor-panel {
+  position: fixed;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: min(420px, 100vw);
+  background: var(--bg-raised);
+  border-left: 1px solid var(--border);
+  z-index: 70;
+  display: flex;
+  flex-direction: column;
+  transform: translateX(100%);
+  transition: transform var(--transition-med);
+  box-shadow: var(--shadow-lg);
+}
+.editor-panel--open { transform: translateX(0); }
+
+.editor-panel__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 20px 22px;
+  border-bottom: 1px solid var(--border);
+}
+.editor-panel__header h2 { font-size: 1.1rem; letter-spacing: -0.01em; }
+
+.editor-form {
+  padding: 22px;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  overflow-y: auto;
+}
+
+.form-field { display: flex; flex-direction: column; gap: 6px; }
+.form-field label { font-size: 0.82rem; font-weight: 600; color: var(--text-muted); }
+
+.form-field input[type='text'],
+.form-field select {
+  height: 44px;
+  padding: 0 12px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
+  background: var(--bg-sunken);
+  color: var(--text);
+}
+.form-field input:focus, .form-field select:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-soft);
+}
+.form-field input[aria-invalid='true'] { border-color: var(--danger); }
+
+.form-error {
+  min-height: 16px;
+  font-size: 0.76rem;
+  color: var(--danger);
+  margin: 0;
+}
+
+.form-field--row { flex-direction: row; align-items: center; }
+
+.switch {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: var(--text);
+}
+.switch input { position: absolute; opacity: 0; width: 1px; height: 1px; }
+.switch__track {
+  width: 40px;
+  height: 24px;
+  border-radius: 999px;
+  background: var(--bg-sunken);
+  border: 1px solid var(--border-strong);
+  position: relative;
+  transition: background var(--transition-fast);
+}
+.switch__thumb {
+  position: absolute;
+  top: 2px; left: 2px;
+  width: 18px; height: 18px;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: var(--shadow-sm);
+  transition: transform var(--transition-fast);
+}
+.switch input:checked + .switch__track { background: var(--accent); }
+.switch input:checked + .switch__track .switch__thumb { transform: translateX(16px); }
+.switch input:focus-visible + .switch__track { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+.editor-form__actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 4px;
+}
+
+/* ---------------------------------------------------------------------- */
+/* Confirm dialog                                                         */
+/* ---------------------------------------------------------------------- */
+
+.confirm-dialog {
+  position: fixed;
+  inset: 0;
+  z-index: 80;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(10, 14, 23, 0.5);
+  padding: 20px;
+  animation: fadeIn var(--transition-fast);
+}
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+.confirm-dialog__box {
+  background: var(--bg-raised);
+  border-radius: var(--radius-lg);
+  padding: 24px;
+  max-width: 380px;
+  width: 100%;
+  box-shadow: var(--shadow-lg);
+}
+.confirm-dialog__box p { margin: 0 0 18px; }
+.confirm-dialog__actions { display: flex; justify-content: flex-end; gap: 10px; }
+
+/* ---------------------------------------------------------------------- */
+/* Toasts                                                                 */
+/* ---------------------------------------------------------------------- */
+
+.toast-region {
+  position: fixed;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 90;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  align-items: center;
+  pointer-events: none;
+}
+
+.toast {
+  background: var(--text);
+  color: var(--bg);
+  padding: 10px 18px;
+  border-radius: 999px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  box-shadow: var(--shadow-md);
+  opacity: 0;
+  transform: translateY(8px);
+  transition: opacity var(--transition-fast), transform var(--transition-fast);
+}
+.toast--visible { opacity: 1; transform: translateY(0); }
+
+/* ---------------------------------------------------------------------- */
+/* Responsive breakpoints                                                 */
+/* ---------------------------------------------------------------------- */
+
+@media (max-width: 720px) {
+  .app-header { gap: 10px; padding: 0 12px; }
+  .app-header__title { display: none; }
+  .app-header__actions .btn span:last-child { display: none; }
+  .app-main { padding: 18px 12px 48px; }
+  .card-grid { grid-template-columns: 1fr; }
+  .editor-panel { width: 100vw; }
+  .stats-bar { grid-template-columns: repeat(3, 1fr); }
+}
+
+@media (max-width: 420px) {
+  .app-header__search-icon { left: 12px; }
+  .app-header__search input { padding-left: 34px; }
+  .stats-bar { grid-template-columns: repeat(2, 1fr); }
+}
+
+/* Landscape phones: keep header compact */
+@media (max-height: 420px) and (orientation: landscape) {
+  .app-header { height: 56px; }
+  :root { --header-h: 56px; }
+}
+
+</style>
 </head>
 <body>
+  <a class="skip-link" href="#main-content">Skip to content</a>
 
-<!-- ═══ HEADER ═══ -->
-<header class="app-header">
-  <div>
-    <div class="header-title" id="hdr-title">Daily Tour Activity Report</div>
-    <div class="header-sub"  id="hdr-sub">Mosque Volunteer System</div>
-  </div>
-  <button class="lang-btn" id="langBtn" onclick="toggleLang()">العربية</button>
-</header>
-
-<!-- ═══ MAIN ═══ -->
-<main class="main">
-
-  <!-- Date & Time -->
-  <div class="card">
-    <div class="card-title" id="sect-datetime">Date &amp; Time</div>
-
-    <div class="field">
-      <label for="f-date">
-        <span class="lbl-icon"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" width="26" height="26" fill="none" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="26" height="24" rx="3" fill="#E3F0FF" stroke="#1565C0" stroke-width="2"/><line x1="3" y1="12" x2="29" y2="12" stroke="#1565C0" stroke-width="2"/><line x1="10" y1="2" x2="10" y2="8" stroke="#1565C0" stroke-width="2.5"/><line x1="22" y1="2" x2="22" y2="8" stroke="#1565C0" stroke-width="2.5"/><rect x="7"  y="16" width="4" height="4" rx="1" fill="#1565C0"/><rect x="14" y="16" width="4" height="4" rx="1" fill="#1565C0"/><rect x="21" y="16" width="4" height="4" rx="1" fill="#1565C0"/><rect x="7"  y="22" width="4" height="3" rx="1" fill="#1565C0"/><rect x="14" y="22" width="4" height="3" rx="1" fill="#1565C0"/></svg></span>
-        <span id="lbl-date">Date</span><span class="req">*</span>
-      </label>
-      <input type="date" id="f-date" />
-      <div class="error-msg" id="err-date" data-en="Date is required" data-ar="التاريخ مطلوب">Date is required</div>
+  <!-- ==================== HEADER ==================== -->
+  <header class="app-header">
+    <div class="app-header__brand">
+      <span class="app-header__mark" aria-hidden="true"></span>
+      <span class="app-header__title">Marker</span>
     </div>
 
-    <div class="time-row">
-      <!-- Shift Start -->
-      <div class="field">
-        <label>
-          <span class="lbl-icon"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" width="26" height="26" fill="none" stroke-linecap="round" stroke-linejoin="round"><circle cx="16" cy="16" r="12" fill="#E3F0FF" stroke="#1565C0" stroke-width="2"/><circle cx="16" cy="16" r="1.5" fill="#1565C0"/><line x1="16" y1="16" x2="16" y2="8"  stroke="#1565C0" stroke-width="2"/><line x1="16" y1="16" x2="10" y2="16" stroke="#1565C0" stroke-width="2"/><circle cx="16" cy="6"  r="1" fill="#1565C0"/><circle cx="16" cy="26" r="1" fill="#1565C0"/><circle cx="6"  cy="16" r="1" fill="#1565C0"/><circle cx="26" cy="16" r="1" fill="#1565C0"/></svg></span>
-          <span id="lbl-start">Shift Start</span><span class="req">*</span>
+    <div class="app-header__search">
+      <label for="search-input" class="visually-hidden">Search bookmarks by name</label>
+      <span class="app-header__search-icon" aria-hidden="true">⌕</span>
+      <input
+        id="search-input"
+        type="search"
+        placeholder="Search your links…"
+        autocomplete="off"
+        spellcheck="false"
+      />
+    </div>
+
+    <div class="app-header__actions">
+      <button id="theme-toggle" class="icon-btn icon-btn--lg" type="button" aria-label="Switch theme">🌙</button>
+      <button id="add-bookmark-btn" class="btn btn--primary" type="button">
+        <span aria-hidden="true">+</span> Add bookmark
+      </button>
+    </div>
+  </header>
+
+  <main id="main-content" class="app-main">
+    <!-- ==================== STATS ==================== -->
+    <section aria-label="Bookmark statistics" id="stats-bar" class="stats-bar"></section>
+
+    <!-- ==================== CATEGORY FILTERS ==================== -->
+    <nav aria-label="Filter by category" id="category-filters" class="chip-row"></nav>
+
+    <!-- ==================== TOOLBAR: sort ==================== -->
+    <div class="toolbar">
+      <div class="toolbar__sort">
+        <label for="sort-field">Sort by</label>
+        <select id="sort-field">
+          <option value="name">Name</option>
+          <option value="category">Category</option>
+          <option value="createdDate">Created date</option>
+          <option value="lastModified">Last modified</option>
+        </select>
+        <button id="sort-direction-btn" type="button" class="btn btn--ghost btn--small" aria-label="Sort direction: ascending">↑ Asc</button>
+      </div>
+    </div>
+
+    <!-- ==================== CATEGORY SECTIONS ==================== -->
+    <div id="category-sections" class="sections"></div>
+
+    <!-- ==================== EMPTY STATE ==================== -->
+    <div id="empty-state" class="empty-state" hidden>
+      <p class="empty-state__icon" aria-hidden="true">🔖</p>
+      <h2>No bookmarks yet</h2>
+      <p>Add your first link, or clear your search and filters to see what you've saved.</p>
+    </div>
+  </main>
+
+  <footer class="app-footer">
+    <p>Stored only in this browser. Nothing leaves your device.</p>
+  </footer>
+
+  <!-- ==================== SLIDE-OVER EDITOR PANEL ==================== -->
+  <div id="editor-overlay" class="editor-overlay" hidden></div>
+  <aside id="editor-panel" class="editor-panel" hidden aria-labelledby="editor-title" role="dialog" aria-modal="true">
+    <div class="editor-panel__header">
+      <h2 id="editor-title">Add bookmark</h2>
+      <button id="editor-close" type="button" class="icon-btn" aria-label="Close panel">✕</button>
+    </div>
+
+    <form id="editor-form" class="editor-form" novalidate>
+      <div class="form-field">
+        <label for="field-name">Name</label>
+        <input id="field-name" name="name" type="text" maxlength="80" required autocomplete="off" />
+        <p class="form-error" id="error-name" role="alert"></p>
+      </div>
+
+      <div class="form-field">
+        <label for="field-url">URL</label>
+        <input id="field-url" name="url" type="text" placeholder="https://example.com" maxlength="2048" required autocomplete="off" inputmode="url" />
+        <p class="form-error" id="error-url" role="alert"></p>
+      </div>
+
+      <div class="form-field">
+        <label for="field-category">Category</label>
+        <select id="field-category" name="category">
+          <option value="GENERAL">🌐 General</option>
+          <option value="SPIRITUAL">🕌 Spiritual</option>
+          <option value="HEALTH">❤️ Health</option>
+          <option value="STUDY">📚 Study</option>
+          <option value="WORK">💼 Work</option>
+          <option value="OTHER">📁 Other</option>
+        </select>
+      </div>
+
+      <div class="form-field form-field--row">
+        <label class="switch" for="field-pinned">
+          <input id="field-pinned" name="pinned" type="checkbox" />
+          <span class="switch__track" aria-hidden="true"><span class="switch__thumb"></span></span>
+          <span>Pin to top</span>
         </label>
-        <div class="time-input-group" id="tig-start">
-          <input class="time-text-input" id="f-start-text" type="text"
-                 inputmode="numeric" maxlength="8" placeholder="09:00 AM"
-                 oninput="onTimeTextInput(this,'start')"
-                 onblur="onTimeTextBlur(this,'start')" />
-          <button class="time-picker-btn" onclick="openTimePicker('start')" title="Open picker"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="#1565C0" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="1.2" fill="#1565C0"/><line x1="12" y1="12" x2="12" y2="7"  stroke="#1565C0" stroke-width="2"/><line x1="12" y1="12" x2="16" y2="12" stroke="#1565C0" stroke-width="2"/></svg></button>
-        </div>
-        <div class="error-msg" id="err-start" data-en="Enter valid time (e.g. 09:00 AM)" data-ar="أدخل وقتاً صحيحاً (مثال: 09:00 AM)">Enter valid time</div>
       </div>
-      <!-- Shift End -->
-      <div class="field">
-        <label>
-          <span class="lbl-icon"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" width="26" height="26" fill="none" stroke-linecap="round" stroke-linejoin="round"><circle cx="16" cy="16" r="12" fill="#E3F0FF" stroke="#1565C0" stroke-width="2"/><circle cx="16" cy="16" r="1.5" fill="#1565C0"/><line x1="16" y1="16" x2="16" y2="8"  stroke="#1565C0" stroke-width="2"/><line x1="16" y1="16" x2="22" y2="21" stroke="#1565C0" stroke-width="2"/><circle cx="16" cy="6"  r="1" fill="#1565C0"/><circle cx="16" cy="26" r="1" fill="#1565C0"/><circle cx="6"  cy="16" r="1" fill="#1565C0"/><circle cx="26" cy="16" r="1" fill="#1565C0"/></svg></span>
-          <span id="lbl-end">Shift End</span><span class="req">*</span>
-        </label>
-        <div class="time-input-group" id="tig-end">
-          <input class="time-text-input" id="f-end-text" type="text"
-                 inputmode="numeric" maxlength="8" placeholder="12:00 PM"
-                 oninput="onTimeTextInput(this,'end')"
-                 onblur="onTimeTextBlur(this,'end')" />
-          <button class="time-picker-btn" onclick="openTimePicker('end')" title="Open picker"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="#1565C0" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="1.2" fill="#1565C0"/><line x1="12" y1="12" x2="12" y2="7"  stroke="#1565C0" stroke-width="2"/><line x1="12" y1="12" x2="16" y2="12" stroke="#1565C0" stroke-width="2"/></svg></button>
-        </div>
-        <div class="error-msg" id="err-end" data-en="Must be after Shift Start" data-ar="يجب أن يكون بعد وقت البدء">Must be after Shift Start</div>
+
+      <div class="editor-form__actions">
+        <button type="button" id="editor-cancel" class="btn btn--ghost">Cancel</button>
+        <button type="submit" class="btn btn--primary">Save</button>
+      </div>
+    </form>
+  </aside>
+
+  <!-- ==================== CONFIRM DIALOG ==================== -->
+  <div id="confirm-dialog" class="confirm-dialog" hidden role="alertdialog" aria-modal="true" aria-labelledby="confirm-message">
+    <div class="confirm-dialog__box">
+      <p id="confirm-message"></p>
+      <div class="confirm-dialog__actions">
+        <button id="confirm-cancel" type="button" class="btn btn--ghost">Cancel</button>
+        <button id="confirm-ok" type="button" class="btn btn--danger">Delete</button>
       </div>
     </div>
   </div>
 
-  <!-- Statistics -->
-  <div class="card">
-    <div class="card-title" id="sect-stats">Statistics</div>
+  <!-- ==================== TOASTS ==================== -->
+  <div id="toast-region" class="toast-region" aria-live="polite"></div>
 
-    <div class="field">
-      <label>
-        <span class="lbl-icon"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" width="26" height="26" fill="none" stroke-linecap="round" stroke-linejoin="round"><circle cx="21" cy="10" r="5" fill="#BFD4F2" stroke="#1565C0" stroke-width="1.5"/><path d="M13 29 Q13 21 21 21 Q29 21 29 29" fill="#BFD4F2" stroke="#1565C0" stroke-width="1.5"/><circle cx="12" cy="12" r="6" fill="#E3F0FF" stroke="#1565C0" stroke-width="2"/><path d="M2 30 Q2 22 12 22 Q22 22 22 30" fill="#E3F0FF" stroke="#1565C0" stroke-width="2"/></svg></span>
-        <span id="lbl-vol">Number of Volunteers</span><span class="req">*</span>
-      </label>
-      <div class="stepper" id="step-volunteers">
-        <button class="stepper-btn" onclick="stepChange('f-volunteers',-1,'step-volunteers')">−</button>
-        <input class="stepper-input" type="number" id="f-volunteers" min="0" value="0"
-               oninput="onStepInput(this,'step-volunteers')"
-               onfocus="stepFocus('step-volunteers')" onblur="stepBlur('step-volunteers')" />
-        <button class="stepper-btn" onclick="stepChange('f-volunteers',1,'step-volunteers')">+</button>
-      </div>
-      <div class="error-msg" id="err-vol" data-en="Cannot be negative" data-ar="لا يمكن أن يكون سالباً">Cannot be negative</div>
-    </div>
-
-    <div class="field">
-      <label>
-        <span class="lbl-icon"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" width="26" height="26" fill="none" stroke-linecap="round" stroke-linejoin="round"><circle cx="16" cy="6" r="5" fill="#E3F0FF" stroke="#1565C0" stroke-width="2"/><circle cx="14.5" cy="5" r="1" fill="#1565C0"/><circle cx="17.5" cy="5" r="1" fill="#1565C0"/><path d="M14 7.5 Q16 9.2 18 7.5" stroke="#1565C0" stroke-width="1.2" fill="none"/><line x1="16" y1="11" x2="16" y2="20" stroke="#1565C0" stroke-width="2.5"/><line x1="16" y1="14" x2="10" y2="17" stroke="#1565C0" stroke-width="2"/><line x1="16" y1="14" x2="22" y2="12" stroke="#1565C0" stroke-width="2"/><line x1="16" y1="20" x2="12" y2="28" stroke="#1565C0" stroke-width="2"/><line x1="16" y1="20" x2="20" y2="28" stroke="#1565C0" stroke-width="2"/></svg></span>
-        <span id="lbl-vis">Number of Visitors</span><span class="req">*</span>
-      </label>
-      <div class="stepper" id="step-visitors">
-        <button class="stepper-btn" onclick="stepChange('f-visitors',-1,'step-visitors')">−</button>
-        <input class="stepper-input" type="number" id="f-visitors" min="0" value="0"
-               oninput="onStepInput(this,'step-visitors')"
-               onfocus="stepFocus('step-visitors')" onblur="stepBlur('step-visitors')" />
-        <button class="stepper-btn" onclick="stepChange('f-visitors',1,'step-visitors')">+</button>
-      </div>
-      <div class="error-msg" id="err-vis" data-en="Cannot be negative" data-ar="لا يمكن أن يكون سالباً">Cannot be negative</div>
-    </div>
-
-    <div class="field">
-      <label>
-        <span class="lbl-icon"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" width="26" height="26" fill="none" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="22" height="18" rx="4" fill="#E3F0FF" stroke="#1565C0" stroke-width="2"/><polygon points="8,21 4,28 14,21" fill="#E3F0FF" stroke="#1565C0" stroke-width="2"/><circle cx="9" cy="11" r="1.5" fill="#1565C0"/><circle cx="15" cy="11" r="1.5" fill="#1565C0"/><path d="M7.5 15 Q12 18 16.5 15" stroke="#1565C0" stroke-width="1.5" fill="none"/><rect x="20" y="2" width="11" height="9" rx="3" fill="#BFD4F2" stroke="#1565C0" stroke-width="1.5"/><circle cx="23" cy="6.5" r="1" fill="#1565C0"/><circle cx="27" cy="6.5" r="1" fill="#1565C0"/></svg></span>
-        <span id="lbl-dia">Discussions / Dialogues</span><span class="req">*</span>
-      </label>
-      <div class="stepper" id="step-dialogues">
-        <button class="stepper-btn" onclick="stepChange('f-dialogues',-1,'step-dialogues')">−</button>
-        <input class="stepper-input" type="number" id="f-dialogues" min="0" value="0"
-               oninput="onStepInput(this,'step-dialogues')"
-               onfocus="stepFocus('step-dialogues')" onblur="stepBlur('step-dialogues')" />
-        <button class="stepper-btn" onclick="stepChange('f-dialogues',1,'step-dialogues')">+</button>
-      </div>
-      <div class="error-msg" id="err-dia" data-en="Cannot be negative" data-ar="لا يمكن أن يكون سالباً">Cannot be negative</div>
-    </div>
-
-    <div class="field">
-      <label>
-        <span class="lbl-icon"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" width="26" height="26" fill="none" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="4"  width="20" height="24" rx="3" fill="#BFD4F2" stroke="#1565C0" stroke-width="1.5"/><rect x="2" y="6"  width="20" height="24" rx="3" fill="#fff"    stroke="#1565C0" stroke-width="2"/><line x1="6" y1="13" x2="18" y2="13" stroke="#1565C0" stroke-width="1.8"/><line x1="6" y1="18" x2="18" y2="18" stroke="#1565C0" stroke-width="1.8"/><line x1="6" y1="23" x2="14" y2="23" stroke="#1565C0" stroke-width="1.8"/></svg></span>
-        <span id="lbl-bro">Brochures Distributed</span><span class="req">*</span>
-      </label>
-      <div class="stepper" id="step-brochures">
-        <button class="stepper-btn" onclick="stepChange('f-brochures',-1,'step-brochures')">−</button>
-        <input class="stepper-input" type="number" id="f-brochures" min="0" value="0"
-               oninput="onStepInput(this,'step-brochures')"
-               onfocus="stepFocus('step-brochures')" onblur="stepBlur('step-brochures')" />
-        <button class="stepper-btn" onclick="stepChange('f-brochures',1,'step-brochures')">+</button>
-      </div>
-      <div class="error-msg" id="err-bro" data-en="Cannot be negative" data-ar="لا يمكن أن يكون سالباً">Cannot be negative</div>
-    </div>
-
-    <div class="field">
-      <label>
-        <span class="lbl-icon"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" width="26" height="26" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M22 6 A10 10 0 1 0 22 26 A7 7 0 1 1 22 6Z" fill="#E3F0FF" stroke="#1565C0" stroke-width="2"/><polygon points="25,10 26.2,13.6 30,13.6 27,15.8 28.2,19.4 25,17.2 21.8,19.4 23,15.8 20,13.6 23.8,13.6" fill="#1565C0"/><circle cx="14" cy="15" r="1.1" fill="#1565C0"/><circle cx="17" cy="15" r="1.1" fill="#1565C0"/><path d="M13 18 Q15.5 20 18 18" stroke="#1565C0" stroke-width="1.2" fill="none"/></svg></span>
-        <span id="lbl-nm">New Muslims</span>
-      </label>
-      <div class="stepper" id="step-newmuslims">
-        <button class="stepper-btn" onclick="stepChange('f-newmuslims',-1,'step-newmuslims')">−</button>
-        <input class="stepper-input" type="number" id="f-newmuslims" min="0" value="0"
-               oninput="onStepInput(this,'step-newmuslims')"
-               onfocus="stepFocus('step-newmuslims')" onblur="stepBlur('step-newmuslims')" />
-        <button class="stepper-btn" onclick="stepChange('f-newmuslims',1,'step-newmuslims')">+</button>
-      </div>
-      <div class="error-msg" id="err-nm" data-en="Cannot be negative" data-ar="لا يمكن أن يكون سالباً">Cannot be negative</div>
-    </div>
-  </div>
-
-</main>
-
-<!-- ═══ STICKY ACTION BAR ═══ -->
-<footer class="action-bar">
-  <div class="btn-group">
-      <button class="btn btn-primary" onclick="saveReport()">
-        <span class="btn-icon"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7" fill="rgba(255,255,255,0.1)" stroke="currentColor" stroke-width="2"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z" fill="rgba(255,255,255,0.2)" stroke="currentColor" stroke-width="2"/></svg></span> <span id="btn-save">Save</span>
-      </button>
-      <button class="btn btn-amber" onclick="copyClipboard()">
-        <span class="btn-icon"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="4" width="14" height="18" rx="2" fill="rgba(255,255,255,0.2)" stroke="currentColor" stroke-width="2"/><rect x="9" y="2" width="8" height="4" rx="1" fill="rgba(255,255,255,0.4)" stroke="currentColor" stroke-width="1.5"/><circle cx="10.5" cy="11" r="1" fill="currentColor"/><circle cx="15.5" cy="11" r="1" fill="currentColor"/><path d="M9.5 14.5 Q13 17 16.5 14.5" stroke="currentColor" stroke-width="1.2" fill="none"/></svg></span> <span id="btn-copy">Copy to Clipboard</span>
-      </button>
-      <button class="btn btn-muted" onclick="clearForm()">
-        <span class="btn-icon"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6" stroke="currentColor" stroke-width="2"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6" stroke="currentColor" stroke-width="2" fill="rgba(255,255,255,0.1)"/><path d="M9 6V4a1 1 0 011-1h4a1 1 0 011 1v2" stroke="currentColor" stroke-width="2"/><circle cx="10" cy="12" r=".9" fill="currentColor"/><circle cx="14" cy="12" r=".9" fill="currentColor"/><path d="M10.5 16 Q12 14.5 13.5 16" stroke="currentColor" stroke-width="1.2" fill="none"/></svg></span> <span id="btn-clear">Clear Form</span>
-      </button>
-      <button class="btn btn-outline" onclick="openReportModal()">
-        <span class="btn-icon"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 01-2 2H4a2 2 0 01-2-2V7a2 2 0 012-2h5l2 3h9a2 2 0 012 2z" fill="rgba(255,255,255,0.2)" stroke="currentColor" stroke-width="2"/><circle cx="9.5" cy="14" r="1" fill="currentColor"/><circle cx="14.5" cy="14" r="1" fill="currentColor"/><path d="M8.5 17.5 Q12 20 15.5 17.5" stroke="currentColor" stroke-width="1.2" fill="none"/></svg></span> <span id="btn-view">View Report</span>
-      </button>
-  </div>
-</footer>
-
-<!-- ═══ TIME PICKER MODAL ═══ -->
-<div class="time-modal-overlay" id="timeModalOverlay" onclick="handleTimeOverlayClick(event)">
-  <div class="time-modal">
-    <div class="time-modal-header">
-      <div class="time-modal-title" id="timeModalTitle">Set Time</div>
-      <button class="time-modal-close" onclick="closeTimePicker()">✕</button>
-    </div>
-    <div class="time-wheels">
-      <div class="wheel-col">
-        <div class="wheel-label" id="wlbl-hr">Hour</div>
-        <button class="wheel-up"   onclick="wheelChange('hour', 1)">▲</button>
-        <div class="wheel-val" id="wval-hour">12</div>
-        <button class="wheel-down" onclick="wheelChange('hour',-1)">▼</button>
-      </div>
-      <div class="time-colon">:</div>
-      <div class="wheel-col">
-        <div class="wheel-label" id="wlbl-min">Min</div>
-        <button class="wheel-up"   onclick="wheelChange('min', 5)">▲</button>
-        <div class="wheel-val" id="wval-min">00</div>
-        <button class="wheel-down" onclick="wheelChange('min',-5)">▼</button>
-      </div>
-      <div class="ampm-col">
-        <button class="ampm-btn active" id="ampm-am" onclick="setAmPm('AM')">AM</button>
-        <button class="ampm-btn"        id="ampm-pm" onclick="setAmPm('PM')">PM</button>
-      </div>
-    </div>
-    <button class="time-modal-confirm" onclick="confirmTime()">
-      <span id="btn-timeset">Set Time</span>
-    </button>
-  </div>
-</div>
-
-<!-- ═══ REPORT MODAL ═══ -->
-<div class="modal-overlay" id="reportModalOverlay" onclick="handleReportOverlayClick(event)">
-  <div class="modal-box">
-    <div class="modal-header">
-      <div class="modal-title" id="modal-title">Saved Report</div>
-      <button class="modal-close" onclick="closeReportModal()">✕</button>
-    </div>
-    <div class="saved-badge">✔ <span id="saved-badge-text">Stored on device</span></div>
-    <div class="report-preview" id="savedReportText">—</div>
-    <div class="modal-actions">
-      <button class="btn btn-amber" onclick="copyFromModal()">
-        <span class="btn-icon"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="4" width="14" height="18" rx="2" fill="rgba(255,255,255,0.2)" stroke="currentColor" stroke-width="2"/><rect x="9" y="2" width="8" height="4" rx="1" fill="rgba(255,255,255,0.4)" stroke="currentColor" stroke-width="1.5"/><circle cx="10.5" cy="11" r="1" fill="currentColor"/><circle cx="15.5" cy="11" r="1" fill="currentColor"/><path d="M9.5 14.5 Q13 17 16.5 14.5" stroke="currentColor" stroke-width="1.2" fill="none"/></svg></span> <span id="mbtn-copy">Copy to Clipboard</span>
-      </button>
-      <button class="btn btn-outline" onclick="selectReportText()">
-        <span class="btn-icon"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 11 12 14 22 4" stroke="currentColor" stroke-width="2.5"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11" stroke="currentColor" stroke-width="2" fill="rgba(255,255,255,0.1)"/></svg></span> <span id="mbtn-selall">Select All</span>
-      </button>
-      <button class="btn btn-primary btn-full" onclick="loadSavedToForm()">
-        <span class="btn-icon"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7" stroke="currentColor" stroke-width="2" fill="rgba(255,255,255,0.1)"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z" stroke="currentColor" stroke-width="2" fill="rgba(255,255,255,0.2)"/><circle cx="8.5" cy="10.5" r="1" fill="currentColor"/><circle cx="5.5" cy="10.5" r="1" fill="currentColor"/><path d="M5 13 Q7 15 9 13" stroke="currentColor" stroke-width="1.1" fill="none"/></svg></span> <span id="btn-edit">Edit This Report</span>
-      </button>
-    </div>
-  </div>
-</div>
-
-<!-- Toast -->
-<div class="toast" id="toast"></div>
-
-<!-- ═══ SCRIPT ═══ -->
 <script>
-"use strict";
+/**
+ * bookmark.js
+ * ------------------------------------------------------------------
+ * Domain model + business rules for bookmarks. Nothing in this file
+ * touches the DOM or localStorage directly — it only knows how to
+ * build, validate, sort, filter, and transform bookmark records.
+ * ------------------------------------------------------------------
+ */
 
-/* ══ i18n ═══════════════════════════════════════════════════════════════ */
-const I18N = {
-  en: {
-    hdrTitle:      "Daily Tour Activity Report",
-    hdrSub:        "Mosque Volunteer System",
-    sectDatetime:  "Date & Time",
-    sectStats:     "Statistics",
-    sectActions:   "Actions",
-    modalTitle:    "Saved Report",
-    lblDate:       "Date",
-    lblStart:      "Shift Start",
-    lblEnd:        "Shift End",
-    lblVol:        "Number of Volunteers",
-    lblVis:        "Number of Visitors",
-    lblDia:        "Discussions / Dialogues",
-    lblBro:        "Brochures Distributed",
-    lblNm:         "New Muslims",
-    btnSave:       "Save",
-    btnCopy:       "Copy to Clipboard",
-    btnClear:      "Clear Form",
-    btnView:       "View Report",
-    btnEdit:       "Edit This Report",
-    mbtnCopy:      "Copy to Clipboard",
-    mbtnSelAll:    "Select All",
-    savedBadge:    "Stored on device",
-    btnTimeset:    "Set Time",
-    wlblHr:        "Hour",
-    wlblMin:       "Min",
-    timeModalStart:"Set Shift Start",
-    timeModalEnd:  "Set Shift End",
-    toastSaved:    "✅ Report saved!",
-    toastCopied:   "✅ Copied to clipboard!",
-    toastCleared:  "🗑️ Form cleared",
-    toastNoSaved:  "No saved report found",
-    toastLoaded:   "📂 Loaded — edit and save",
-    toastSelected: "✅ Text selected — long-press to copy",
-    errTimeInvalid:"Enter valid time (e.g. 09:00 AM)",
-    errEndTime:    "Shift End must be after Shift Start",
-    reportTitle:   "Daily Tour Activity Report",
-    reportDate:    "Date",
-    reportStart:   "Shift Start",
-    reportEnd:     "Shift End",
-    reportVol:     "Number of Volunteers",
-    reportVis:     "Number of Visitors",
-    reportDia:     "Discussions/Dialogues",
-    reportBro:     "Brochures Distributed",
-    reportNm:      "New Muslims",
-    langSwitch:    "العربية",
-  },
-  ar: {
-    hdrTitle:      "تقرير نشاط الجولة اليومية",
-    hdrSub:        "نظام المتطوعين في المسجد",
-    sectDatetime:  "التاريخ والوقت",
-    sectStats:     "الإحصائيات",
-    sectActions:   "الإجراءات",
-    modalTitle:    "التقرير المحفوظ",
-    lblDate:       "التاريخ",
-    lblStart:      "بداية الوردية",
-    lblEnd:        "نهاية الوردية",
-    lblVol:        "عدد المتطوعين",
-    lblVis:        "عدد الزوار",
-    lblDia:        "النقاشات / الحوارات",
-    lblBro:        "الكتيبات الموزعة",
-    lblNm:         "المسلمون الجدد",
-    btnSave:       "حفظ",
-    btnCopy:       "نسخ إلى الحافظة",
-    btnClear:      "مسح النموذج",
-    btnView:       "عرض التقرير",
-    btnEdit:       "تعديل هذا التقرير",
-    mbtnCopy:      "نسخ إلى الحافظة",
-    mbtnSelAll:    "تحديد الكل",
-    savedBadge:    "محفوظ على الجهاز",
-    btnTimeset:    "تعيين الوقت",
-    wlblHr:        "ساعة",
-    wlblMin:       "دقيقة",
-    timeModalStart:"تعيين بداية الوردية",
-    timeModalEnd:  "تعيين نهاية الوردية",
-    toastSaved:    "✅ تم حفظ التقرير!",
-    toastCopied:   "✅ تم النسخ إلى الحافظة!",
-    toastCleared:  "🗑️ تم مسح النموذج",
-    toastNoSaved:  "لا يوجد تقرير محفوظ",
-    toastLoaded:   "📂 تم التحميل — عدّل واحفظ",
-    toastSelected: "✅ تم التحديد — اضغط مطولاً للنسخ",
-    errTimeInvalid:"أدخل وقتاً صحيحاً (مثال: 09:00 AM)",
-    errEndTime:    "يجب أن تكون نهاية الوردية بعد البداية",
-    reportTitle:   "تقرير نشاط الجولة اليومية",
-    reportDate:    "التاريخ",
-    reportStart:   "بداية الوردية",
-    reportEnd:     "نهاية الوردية",
-    reportVol:     "عدد المتطوعين",
-    reportVis:     "عدد الزوار",
-    reportDia:     "النقاشات/الحوارات",
-    reportBro:     "الكتيبات الموزعة",
-    reportNm:      "المسلمون الجدد",
-    langSwitch:    "English",
+/** @typedef {'GENERAL'|'SPIRITUAL'|'HEALTH'|'STUDY'|'WORK'|'OTHER'} CategoryKey */
+
+const CATEGORIES = Object.freeze({
+  GENERAL: { key: 'GENERAL', label: 'General', icon: '🌐', color: 'var(--cat-general)' },
+  SPIRITUAL: { key: 'SPIRITUAL', label: 'Spiritual', icon: '🕌', color: 'var(--cat-spiritual)' },
+  HEALTH: { key: 'HEALTH', label: 'Health', icon: '❤️', color: 'var(--cat-health)' },
+  STUDY: { key: 'STUDY', label: 'Study', icon: '📚', color: 'var(--cat-study)' },
+  WORK: { key: 'WORK', label: 'Work', icon: '💼', color: 'var(--cat-work)' },
+  OTHER: { key: 'OTHER', label: 'Other', icon: '📁', color: 'var(--cat-other)' },
+});
+
+const CATEGORY_ORDER = ['GENERAL', 'SPIRITUAL', 'HEALTH', 'STUDY', 'WORK', 'OTHER'];
+const DEFAULT_CATEGORY = 'GENERAL';
+
+const NAME_MAX_LEN = 80;
+const URL_MAX_LEN = 2048;
+
+/** Generates a RFC4122-ish UUID with a safe fallback for older WebViews. */
+function generateId() {
+  if (typeof crypto !== 'undefined' && crypto.randomUUID) {
+    return crypto.randomUUID();
   }
-};
-
-let lang = localStorage.getItem("mtar_lang") || "en";
-
-/* ══ Language ══════════════════════════════════════════════════════════ */
-function applyLang() {
-  const t = I18N[lang];
-  const isAr = lang === "ar";
-  document.documentElement.lang = lang;
-  document.documentElement.dir  = isAr ? "rtl" : "ltr";
-  document.body.classList.toggle("rtl", isAr);
-
-  const ids = {
-    "hdr-title":        t.hdrTitle,
-    "hdr-sub":          t.hdrSub,
-    "sect-datetime":    t.sectDatetime,
-    "sect-stats":       t.sectStats,
-    "sect-actions":     t.sectActions,
-    "modal-title":      t.modalTitle,
-    "lbl-date":         t.lblDate,
-    "lbl-start":        t.lblStart,
-    "lbl-end":          t.lblEnd,
-    "lbl-vol":          t.lblVol,
-    "lbl-vis":          t.lblVis,
-    "lbl-dia":          t.lblDia,
-    "lbl-bro":          t.lblBro,
-    "lbl-nm":           t.lblNm,
-    "btn-save":         t.btnSave,
-    "btn-copy":         t.btnCopy,
-    "btn-clear":        t.btnClear,
-    "btn-view":         t.btnView,
-    "btn-edit":         t.btnEdit,
-    "mbtn-copy":        t.mbtnCopy,
-    "mbtn-selall":      t.mbtnSelAll,
-    "saved-badge-text": t.savedBadge,
-    "btn-timeset":      t.btnTimeset,
-    "wlbl-hr":          t.wlblHr,
-    "wlbl-min":         t.wlblMin,
-  };
-  Object.entries(ids).forEach(([id, txt]) => set(id, txt));
-  document.getElementById("langBtn").textContent = t.langSwitch;
-
-  document.querySelectorAll(".error-msg").forEach(el => {
-    if (el.dataset[lang]) el.textContent = el.dataset[lang];
+  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {
+    const r = (Math.random() * 16) | 0;
+    const v = c === 'x' ? r : (r & 0x3) | 0x8;
+    return v.toString(16);
   });
-
-  const saved = loadFromStorage();
-  if (saved) set("savedReportText", buildReportText(saved));
-}
-function set(id, txt) { const e = document.getElementById(id); if (e) e.textContent = txt; }
-function toggleLang() {
-  lang = lang === "en" ? "ar" : "en";
-  localStorage.setItem("mtar_lang", lang);
-  applyLang();
 }
 
-/* ══ Stepper ═══════════════════════════════════════════════════════════ */
-function stepChange(inputId, delta, wid) {
-  const inp = document.getElementById(inputId);
-  inp.value = Math.max(0, (parseInt(inp.value,10)||0) + delta);
-  document.getElementById(wid).classList.remove("invalid");
+/**
+ * Validates raw form input for a bookmark.
+ * @returns {{valid:boolean, errors:Object<string,string>}}
+ */
+function validateBookmarkInput({ name, url, category }) {
+  const errors = {};
+  const trimmedName = (name ?? '').trim();
+  const trimmedUrl = (url ?? '').trim();
+
+  if (!trimmedName) {
+    errors.name = 'Name is required.';
+  } else if (trimmedName.length > NAME_MAX_LEN) {
+    errors.name = `Name must be ${NAME_MAX_LEN} characters or fewer.`;
+  }
+
+  if (!trimmedUrl) {
+    errors.url = 'URL is required.';
+  } else if (trimmedUrl.length > URL_MAX_LEN) {
+    errors.url = `URL must be ${URL_MAX_LEN} characters or fewer.`;
+  } else if (!isValidHttpUrl(trimmedUrl)) {
+    errors.url = 'Enter a valid URL starting with http:// or https://';
+  }
+
+  if (category && !CATEGORY_ORDER.includes(category)) {
+    errors.category = 'Unknown category.';
+  }
+
+  return { valid: Object.keys(errors).length === 0, errors };
 }
-function onStepInput(inp, wid) { if (parseInt(inp.value,10) < 0) inp.value = 0; }
-function stepFocus(wid) { document.getElementById(wid).classList.add("focused"); }
-function stepBlur(wid)  { document.getElementById(wid).classList.remove("focused"); }
 
-/* ══ Time text input ═══════════════════════════════════════════════════
-   Accepts:  "9", "09", "900", "9:00", "9:00 AM", "09:00 AM" etc.
-   Auto-formats as user types digits.
-═══════════════════════════════════════════════════════════════════════ */
-const timeValues = { start: "", end: "" }; // stores "HH:MM" 24h
-
-function onTimeTextInput(inp, which) {
-  // allow only digits, colon, space, A, P, M
-  let raw = inp.value.replace(/[^0-9:APMapm ]/g, "");
-  inp.value = raw;
-}
-
-function onTimeTextBlur(inp, which) {
-  const parsed = parseTimeText(inp.value.trim());
-  if (parsed) {
-    timeValues[which] = parsed;
-    inp.value = fmtTime(parsed);          // display nicely
-    document.getElementById("tig-" + which).classList.remove("invalid");
-    document.getElementById("err-" + which).classList.remove("visible");
-
-    // Auto-populate Shift End when Shift Start typed & End still empty
-    if (which === "start" && !timeValues.end) {
-      timeValues.end = parsed;
-      const endEl = document.getElementById("f-end-text");
-      if (endEl) endEl.value = fmtTime(parsed);
-      document.getElementById("tig-end").classList.remove("invalid");
-      document.getElementById("err-end").classList.remove("visible");
-    }
-  } else if (inp.value.trim() === "") {
-    timeValues[which] = "";
-  } else {
-    // leave the typed value but mark invalid (will be caught by validate)
-    timeValues[which] = "";
+function isValidHttpUrl(value) {
+  try {
+    const u = new URL(value);
+    return u.protocol === 'http:' || u.protocol === 'https:';
+  } catch {
+    return false;
   }
 }
 
 /**
- * Parse a loosely-typed time string → "HH:MM" 24h or null.
- * Handles: "9", "09", "9:00", "09:30", "9:00 AM", "9:00 PM",
- *          "0900", "1300", "13:00", "1:30pm"
+ * Builds a new, fully-formed bookmark record from validated form input.
  */
-function parseTimeText(str) {
-  if (!str) return null;
-  str = str.toUpperCase().replace(/\./g, "").trim();
-
-  let h, m, ampm = null;
-
-  // detect AM/PM suffix
-  if (str.includes("AM")) { ampm = "AM"; str = str.replace("AM","").trim(); }
-  else if (str.includes("PM")) { ampm = "PM"; str = str.replace("PM","").trim(); }
-
-  str = str.replace(/[^0-9:]/g, "");
-
-  if (str.includes(":")) {
-    const parts = str.split(":");
-    h = parseInt(parts[0], 10);
-    m = parseInt(parts[1] || "0", 10);
-  } else if (str.length <= 2) {
-    h = parseInt(str, 10); m = 0;
-  } else if (str.length === 3) {
-    h = parseInt(str[0], 10); m = parseInt(str.slice(1), 10);
-  } else if (str.length === 4) {
-    h = parseInt(str.slice(0,2), 10); m = parseInt(str.slice(2), 10);
-  } else return null;
-
-  if (isNaN(h) || isNaN(m)) return null;
-  if (m < 0 || m > 59) return null;
-
-  // resolve AM/PM
-  if (ampm === "AM") {
-    if (h === 12) h = 0;
-    if (h < 0 || h > 12) return null;
-  } else if (ampm === "PM") {
-    if (h !== 12) h += 12;
-    if (h < 12 || h > 23) return null;
-  } else {
-    // no suffix — treat as 24h if >=13, else 12h AM
-    if (h < 0 || h > 23) return null;
-  }
-
-  return `${String(h).padStart(2,"0")}:${String(m).padStart(2,"0")}`;
-}
-
-/* ══ Wheel picker ══════════════════════════════════════════════════════ */
-let activeTimePicker = null;
-let tpHour = 12, tpMin = 0, tpAmPm = "AM";
-
-function openTimePicker(which) {
-  activeTimePicker = which;
-  const t = I18N[lang];
-  set("timeModalTitle", which === "start" ? t.timeModalStart : t.timeModalEnd);
-  set("btn-timeset", t.btnTimeset);
-
-  const existing = timeValues[which];
-  if (existing) {
-    const [h24, m] = existing.split(":").map(Number);
-    tpAmPm = h24 >= 12 ? "PM" : "AM";
-    tpHour = h24 % 12 || 12;
-    tpMin  = m;
-  } else {
-    // pre-fill from the text field if partially typed
-    const textEl = document.getElementById("f-" + which + "-text");
-    const parsed = parseTimeText(textEl ? textEl.value : "");
-    if (parsed) {
-      const [h24, m] = parsed.split(":").map(Number);
-      tpAmPm = h24 >= 12 ? "PM" : "AM";
-      tpHour = h24 % 12 || 12;
-      tpMin  = m;
-    } else {
-      tpHour = 12; tpMin = 0; tpAmPm = "AM";
-    }
-  }
-  renderWheels();
-  document.getElementById("timeModalOverlay").classList.add("open");
-}
-function closeTimePicker() {
-  document.getElementById("timeModalOverlay").classList.remove("open");
-  activeTimePicker = null;
-}
-function handleTimeOverlayClick(e) {
-  if (e.target === document.getElementById("timeModalOverlay")) closeTimePicker();
-}
-function wheelChange(part, delta) {
-  if (part === "hour") tpHour = ((tpHour - 1 + delta + 12) % 12) + 1;
-  else tpMin = ((tpMin + delta) + 60) % 60;
-  renderWheels();
-}
-function setAmPm(val) { tpAmPm = val; renderWheels(); }
-function renderWheels() {
-  set("wval-hour", String(tpHour).padStart(2,"0"));
-  set("wval-min",  String(tpMin).padStart(2,"0"));
-  document.getElementById("ampm-am").classList.toggle("active", tpAmPm === "AM");
-  document.getElementById("ampm-pm").classList.toggle("active", tpAmPm === "PM");
-}
-function confirmTime() {
-  let h24 = tpHour % 12;
-  if (tpAmPm === "PM") h24 += 12;
-  const val24 = `${String(h24).padStart(2,"0")}:${String(tpMin).padStart(2,"0")}`;
-  timeValues[activeTimePicker] = val24;
-
-  const textEl = document.getElementById("f-" + activeTimePicker + "-text");
-  if (textEl) textEl.value = fmtTime(val24);
-
-  document.getElementById("tig-" + activeTimePicker).classList.remove("invalid");
-  document.getElementById("err-" + activeTimePicker).classList.remove("visible");
-
-  // Auto-populate Shift End when Shift Start is set and End is still empty
-  if (activeTimePicker === "start" && !timeValues.end) {
-    timeValues.end = val24;
-    const endEl = document.getElementById("f-end-text");
-    if (endEl) endEl.value = fmtTime(val24);
-    document.getElementById("tig-end").classList.remove("invalid");
-    document.getElementById("err-end").classList.remove("visible");
-  }
-
-  closeTimePicker();
-}
-
-/* ══ Helpers ═══════════════════════════════════════════════════════════ */
-function today() { return new Date().toISOString().slice(0,10); }
-
-function fmtDate(val) {
-  if (!val) return "";
-  const [y,m,d] = val.split("-");
-  const months = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
-  return `${d}-${months[parseInt(m,10)-1]}-${y}`;
-}
-function fmtTime(val24) {
-  if (!val24) return "";
-  const [h,mi] = val24.split(":").map(Number);
-  const ap = h >= 12 ? "PM" : "AM";
-  const hr = h % 12 || 12;
-  return `${String(hr).padStart(2,"0")}:${String(mi).padStart(2,"0")} ${ap}`;
-}
-function v(id) { return document.getElementById(id).value; }
-
-/* ══ Report ════════════════════════════════════════════════════════════ */
-function buildReportText(data) {
-  const t = I18N[lang];
-  return [
-    t.reportTitle, "",
-    `${t.reportDate}: ${fmtDate(data.date)}`,
-    `${t.reportStart}: ${fmtTime(data.start)}`,
-    `${t.reportEnd}: ${fmtTime(data.end)}`,
-    `${t.reportVol}: ${data.volunteers}`,
-    `${t.reportVis}: ${data.visitors}`,
-    `${t.reportDia}: ${data.dialogues}`,
-    `${t.reportBro}: ${data.brochures}`,
-    `${t.reportNm}: ${parseInt(data.newmuslims,10)||0}`,
-  ].join("\n");
-}
-
-/* ══ Storage ═══════════════════════════════════════════════════════════ */
-const STORAGE_KEY = "mtar_report_v3";
-function saveToStorage(d)   { localStorage.setItem(STORAGE_KEY, JSON.stringify(d)); }
-function loadFromStorage()  { const r = localStorage.getItem(STORAGE_KEY); return r ? JSON.parse(r) : null; }
-
-/* ══ Collect ═══════════════════════════════════════════════════════════ */
-function collectData() {
+function createBookmark({ name, url, category, pinned }) {
+  const now = new Date().toISOString();
   return {
-    date:       v("f-date"),
-    start:      timeValues.start,
-    end:        timeValues.end,
-    volunteers: v("f-volunteers"),
-    visitors:   v("f-visitors"),
-    dialogues:  v("f-dialogues"),
-    brochures:  v("f-brochures"),
-    newmuslims: v("f-newmuslims"),
+    id: generateId(),
+    sno: 0, // regenerated on every render/save pass
+    name: name.trim(),
+    category: category && CATEGORY_ORDER.includes(category) ? category : DEFAULT_CATEGORY,
+    url: url.trim(),
+    createdDate: now,
+    lastModified: now,
+    favorite: false,
+    pinned: Boolean(pinned),
   };
 }
 
-/* ══ Validation ════════════════════════════════════════════════════════ */
-function clearErrors() {
-  document.querySelectorAll(".error-msg").forEach(e => e.classList.remove("visible"));
-  document.querySelectorAll(".stepper").forEach(s => s.classList.remove("invalid"));
-  document.querySelectorAll(".time-input-group").forEach(g => g.classList.remove("invalid"));
-  document.querySelectorAll("input[type=date]").forEach(i => i.classList.remove("invalid"));
+/** Returns a new bookmark object with edits applied + lastModified bumped. */
+function updateBookmark(existing, { name, url, category, pinned }) {
+  return {
+    ...existing,
+    name: name.trim(),
+    url: url.trim(),
+    category: category && CATEGORY_ORDER.includes(category) ? category : existing.category,
+    pinned: typeof pinned === 'boolean' ? pinned : existing.pinned,
+    lastModified: new Date().toISOString(),
+  };
 }
 
-function validate() {
-  clearErrors();
-  const t = I18N[lang];
-  let ok = true;
+/** Returns a duplicate of a bookmark with a fresh id/timestamps and "(Copy)" suffix. */
+function duplicateBookmark(existing) {
+  const now = new Date().toISOString();
+  return {
+    ...existing,
+    id: generateId(),
+    name: `${existing.name} (Copy)`,
+    createdDate: now,
+    lastModified: now,
+  };
+}
 
-  if (!v("f-date")) {
-    document.getElementById("err-date").classList.add("visible");
-    document.getElementById("f-date").classList.add("invalid");
-    ok = false;
+/** Toggles the pinned flag, returning a new object. */
+function togglePinned(existing) {
+  return { ...existing, pinned: !existing.pinned, lastModified: new Date().toISOString() };
+}
+
+/** Toggles the favorite flag, returning a new object. */
+function toggleFavorite(existing) {
+  return { ...existing, favorite: !existing.favorite, lastModified: new Date().toISOString() };
+}
+
+/**
+ * Regenerates sequential sno values for a full list (call after any
+ * add/edit/delete/reorder so displayed numbering stays contiguous).
+ */
+function regenerateSno(bookmarks) {
+  return bookmarks.map((b, idx) => ({ ...b, sno: idx + 1 }));
+}
+
+/** Case-insensitive substring search against the bookmark name only. */
+function searchByName(bookmarks, query) {
+  const q = query.trim().toLowerCase();
+  if (!q) return bookmarks;
+  return bookmarks.filter((b) => b.name.toLowerCase().includes(q));
+}
+
+/** Filters by a single category key, or returns all when key is 'ALL'. */
+function filterByCategory(bookmarks, categoryKey) {
+  if (!categoryKey || categoryKey === 'ALL') return bookmarks;
+  return bookmarks.filter((b) => b.category === categoryKey);
+}
+
+const SORT_COMPARATORS = {
+  name: (a, b) => a.name.localeCompare(b.name, undefined, { sensitivity: 'base' }),
+  category: (a, b) => a.category.localeCompare(b.category),
+  createdDate: (a, b) => new Date(a.createdDate) - new Date(b.createdDate),
+  lastModified: (a, b) => new Date(a.lastModified) - new Date(b.lastModified),
+};
+
+/**
+ * Sorts a list per user-chosen field/direction, but ALWAYS keeps pinned
+ * items first (pinned sort is a fixed business rule, not user-selectable).
+ */
+function sortBookmarks(bookmarks, field = 'name', direction = 'asc') {
+  const comparator = SORT_COMPARATORS[field] || SORT_COMPARATORS.name;
+  const sorted = [...bookmarks].sort((a, b) => {
+    const base = comparator(a, b);
+    return direction === 'desc' ? -base : base;
+  });
+  const pinned = sorted.filter((b) => b.pinned);
+  const rest = sorted.filter((b) => !b.pinned);
+  return [...pinned, ...rest];
+}
+
+/** Groups a list of bookmarks by category, preserving CATEGORY_ORDER. */
+function groupByCategory(bookmarks) {
+  const groups = {};
+  for (const key of CATEGORY_ORDER) groups[key] = [];
+  for (const b of bookmarks) {
+    if (!groups[b.category]) groups[b.category] = [];
+    groups[b.category].push(b);
+  }
+  return groups;
+}
+
+/** Computes dashboard statistics from the full unfiltered bookmark list. */
+function computeStats(bookmarks) {
+  const stats = {
+    total: bookmarks.length,
+    pinned: bookmarks.filter((b) => b.pinned).length,
+  };
+  for (const key of CATEGORY_ORDER) {
+    stats[key] = bookmarks.filter((b) => b.category === key).length;
+  }
+  return stats;
+}
+
+/** Best-effort favicon URL for a bookmark's URL, with graceful fallback handled by UI. */
+function faviconUrlFor(url) {
+  try {
+    const u = new URL(url);
+    return `https://www.google.com/s2/favicons?sz=64&domain=${u.hostname}`;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * storage.js
+ * ------------------------------------------------------------------
+ * Persistence layer. This is the ONLY module allowed to talk to
+ * localStorage directly. Every other module goes through
+ * StorageService so the storage format can change in one place.
+ *
+ * Schema is versioned so future releases can migrate old data
+ * instead of wiping it.
+ * ------------------------------------------------------------------
+ */
+
+const SCHEMA_VERSION = 1;
+const KEY_PREFIX = 'bookmark-dashboard';
+
+const KEYS = {
+  DATA: `${KEY_PREFIX}-v${SCHEMA_VERSION}`,
+  THEME: `${KEY_PREFIX}-theme`,
+  COLLAPSED: `${KEY_PREFIX}-collapsed-sections`,
+  SORT: `${KEY_PREFIX}-sort-prefs`,
+  LEGACY_PREFIX: KEY_PREFIX, // used to detect older un-versioned keys
+};
+
+/**
+ * Default shape of the persisted document.
+ * @returns {{version:number, bookmarks:Array, updatedAt:string}}
+ */
+function emptyDocument() {
+  return {
+    version: SCHEMA_VERSION,
+    bookmarks: [],
+    updatedAt: new Date().toISOString(),
+  };
+}
+
+class StorageService {
+  constructor(storage = window.localStorage) {
+    this.storage = storage;
   }
 
-  // Validate start time — try to parse typed text first
-  const startText = document.getElementById("f-start-text").value.trim();
-  if (startText && !timeValues.start) {
-    const p = parseTimeText(startText);
-    if (p) timeValues.start = p;
-  }
-  if (!timeValues.start) {
-    document.getElementById("err-start").textContent = t.errTimeInvalid;
-    document.getElementById("err-start").classList.add("visible");
-    document.getElementById("tig-start").classList.add("invalid");
-    ok = false;
-  }
-
-  // Validate end time
-  const endText = document.getElementById("f-end-text").value.trim();
-  if (endText && !timeValues.end) {
-    const p = parseTimeText(endText);
-    if (p) timeValues.end = p;
-  }
-  if (!timeValues.end) {
-    document.getElementById("err-end").textContent = t.errTimeInvalid;
-    document.getElementById("err-end").classList.add("visible");
-    document.getElementById("tig-end").classList.add("invalid");
-    ok = false;
-  } else if (timeValues.start && timeValues.end <= timeValues.start) {
-    document.getElementById("err-end").textContent = t.errEndTime;
-    document.getElementById("err-end").classList.add("visible");
-    document.getElementById("tig-end").classList.add("invalid");
-    ok = false;
-  }
-
-  [["f-volunteers","err-vol","step-volunteers"],
-   ["f-visitors",  "err-vis","step-visitors"],
-   ["f-dialogues", "err-dia","step-dialogues"],
-   ["f-brochures", "err-bro","step-brochures"],
-   ["f-newmuslims","err-nm", "step-newmuslims"]].forEach(([fid,eid,sid]) => {
-    if (parseInt(document.getElementById(fid).value,10) < 0) {
-      document.getElementById(eid).classList.add("visible");
-      document.getElementById(sid).classList.add("invalid");
-      ok = false;
+  /** Confirms localStorage is actually usable (private mode, quota, etc). */
+  isAvailable() {
+    try {
+      const testKey = `${KEY_PREFIX}-__probe__`;
+      this.storage.setItem(testKey, '1');
+      this.storage.removeItem(testKey);
+      return true;
+    } catch (err) {
+      return false;
     }
-  });
-  return ok;
+  }
+
+  /**
+   * Reads and migrates the bookmark document.
+   * @returns {{version:number, bookmarks:Array, updatedAt:string}}
+   */
+  loadDocument() {
+    const raw = this.storage.getItem(KEYS.DATA);
+    if (!raw) {
+      return this._migrateFromLegacyOrEmpty();
+    }
+    try {
+      const parsed = JSON.parse(raw);
+      if (!parsed || !Array.isArray(parsed.bookmarks)) {
+        throw new Error('Malformed bookmark document');
+      }
+      return this._runMigrations(parsed);
+    } catch (err) {
+      console.error('[storage] Failed to parse stored bookmarks, starting fresh.', err);
+      return emptyDocument();
+    }
+  }
+
+  /** Placeholder migration path — future schema bumps add cases here. */
+  _runMigrations(doc) {
+    if (doc.version === SCHEMA_VERSION) return doc;
+    // Example of how a future migration would look:
+    // if (doc.version === 1) { doc = migrateV1ToV2(doc); }
+    doc.version = SCHEMA_VERSION;
+    return doc;
+  }
+
+  _migrateFromLegacyOrEmpty() {
+    // No legacy version exists yet (v1 is first release), so just start empty.
+    return emptyDocument();
+  }
+
+  /**
+   * Persists the full bookmark array.
+   * @param {Array} bookmarks
+   * @returns {boolean} success
+   */
+  saveBookmarks(bookmarks) {
+    const doc = {
+      version: SCHEMA_VERSION,
+      bookmarks,
+      updatedAt: new Date().toISOString(),
+    };
+    try {
+      this.storage.setItem(KEYS.DATA, JSON.stringify(doc));
+      return true;
+    } catch (err) {
+      console.error('[storage] Failed to save bookmarks (quota exceeded?).', err);
+      return false;
+    }
+  }
+
+  getBookmarks() {
+    return this.loadDocument().bookmarks;
+  }
+
+  // ---- Theme preference -------------------------------------------------
+
+  getTheme() {
+    return this.storage.getItem(KEYS.THEME); // 'light' | 'dark' | null
+  }
+
+  setTheme(theme) {
+    this.storage.setItem(KEYS.THEME, theme);
+  }
+
+  // ---- Collapsed section state -------------------------------------------
+
+  getCollapsedSections() {
+    try {
+      const raw = this.storage.getItem(KEYS.COLLAPSED);
+      return raw ? JSON.parse(raw) : {};
+    } catch {
+      return {};
+    }
+  }
+
+  setCollapsedSections(map) {
+    this.storage.setItem(KEYS.COLLAPSED, JSON.stringify(map));
+  }
+
+  // ---- Sort preferences ---------------------------------------------------
+
+  getSortPrefs() {
+    try {
+      const raw = this.storage.getItem(KEYS.SORT);
+      return raw ? JSON.parse(raw) : { field: 'name', direction: 'asc' };
+    } catch {
+      return { field: 'name', direction: 'asc' };
+    }
+  }
+
+  setSortPrefs(prefs) {
+    this.storage.setItem(KEYS.SORT, JSON.stringify(prefs));
+  }
 }
 
-/* ══ Actions ═══════════════════════════════════════════════════════════ */
-function saveReport() {
-  if (!validate()) return;
-  saveToStorage(collectData());
-  toast(I18N[lang].toastSaved);
+/**
+ * ui.js
+ * ------------------------------------------------------------------
+ * Rendering layer. Owns every DOM read/write in the app. Consumers
+ * (app.js) pass it data and callbacks; this module never mutates
+ * bookmark data itself — it only reports user intent upward via the
+ * callbacks it was given.
+ * ------------------------------------------------------------------
+ */
+
+const $ = (sel, root = document) => root.querySelector(sel);
+const $$ = (sel, root = document) => Array.from(root.querySelectorAll(sel));
+
+/** Escapes text for safe insertion into innerHTML. */
+function escapeHtml(str) {
+  const div = document.createElement('div');
+  div.textContent = str ?? '';
+  return div.innerHTML;
 }
 
-function doCopy(text) {
-  if (navigator.clipboard && navigator.clipboard.writeText)
-    return navigator.clipboard.writeText(text).then(() => true).catch(() => legacyCopy(text));
-  return Promise.resolve(legacyCopy(text));
-}
-function legacyCopy(text) {
-  const el = document.createElement("div");
-  el.contentEditable = "true";
-  el.style.cssText = "position:fixed;top:0;left:0;opacity:0;white-space:pre-wrap;";
-  el.textContent = text;
-  document.body.appendChild(el);
-  const range = document.createRange();
-  range.selectNodeContents(el);
-  const sel = window.getSelection();
-  sel.removeAllRanges(); sel.addRange(range);
-  let ok = false;
-  try { ok = document.execCommand("copy"); } catch(e) {}
-  sel.removeAllRanges();
-  document.body.removeChild(el);
-  return ok;
+function formatDate(iso) {
+  try {
+    return new Date(iso).toLocaleDateString(undefined, {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+    });
+  } catch {
+    return '—';
+  }
 }
 
-function copyClipboard() {
-  const saved = loadFromStorage();
-  doCopy(saved ? buildReportText(saved) : buildReportText(collectData()))
-    .then(() => toast(I18N[lang].toastCopied));
-}
-function copyFromModal() {
-  doCopy(document.getElementById("savedReportText").textContent)
-    .then(() => toast(I18N[lang].toastCopied));
-}
-function selectReportText() {
-  const el = document.getElementById("savedReportText");
-  el.classList.add("flash");
-  setTimeout(() => el.classList.remove("flash"), 500);
-  const range = document.createRange();
-  range.selectNodeContents(el);
-  const sel = window.getSelection();
-  sel.removeAllRanges(); sel.addRange(range);
-  toast(I18N[lang].toastSelected);
-}
+class UIRenderer {
+  /**
+   * @param {Object} callbacks - handlers the UI reports user intent to.
+   */
+  constructor(callbacks) {
+    this.callbacks = callbacks;
+    this.els = {
+      statsBar: $('#stats-bar'),
+      categoryButtons: $('#category-filters'),
+      sectionsContainer: $('#category-sections'),
+      searchInput: $('#search-input'),
+      sortField: $('#sort-field'),
+      sortDirection: $('#sort-direction-btn'),
+      themeToggle: $('#theme-toggle'),
+      addBtn: $('#add-bookmark-btn'),
+      panel: $('#editor-panel'),
+      panelOverlay: $('#editor-overlay'),
+      panelForm: $('#editor-form'),
+      panelTitle: $('#editor-title'),
+      panelClose: $('#editor-close'),
+      panelCancel: $('#editor-cancel'),
+      fieldName: $('#field-name'),
+      fieldUrl: $('#field-url'),
+      fieldCategory: $('#field-category'),
+      fieldPinned: $('#field-pinned'),
+      errorName: $('#error-name'),
+      errorUrl: $('#error-url'),
+      toastRegion: $('#toast-region'),
+      emptyState: $('#empty-state'),
+      confirmDialog: $('#confirm-dialog'),
+      confirmMessage: $('#confirm-message'),
+      confirmOk: $('#confirm-ok'),
+      confirmCancel: $('#confirm-cancel'),
+    };
+    this._bindStaticEvents();
+    this._activeCategory = 'ALL';
+  }
 
-function clearForm() {
-  document.getElementById("f-date").value       = today();
-  document.getElementById("f-volunteers").value = 0;
-  document.getElementById("f-visitors").value   = 0;
-  document.getElementById("f-dialogues").value  = 0;
-  document.getElementById("f-brochures").value  = 0;
-  document.getElementById("f-newmuslims").value = 0;
-  timeValues.start = ""; timeValues.end = "";
-  document.getElementById("f-start-text").value = "";
-  document.getElementById("f-end-text").value   = "";
-  document.getElementById("tig-start").classList.remove("invalid");
-  document.getElementById("tig-end").classList.remove("invalid");
-  clearErrors();
-  toast(I18N[lang].toastCleared);
-}
+  // ------------------------------------------------------------------
+  // Static event wiring (things that never need re-binding on re-render)
+  // ------------------------------------------------------------------
 
-function openReportModal() {
-  const saved = loadFromStorage();
-  if (!saved) { toast(I18N[lang].toastNoSaved); return; }
-  set("savedReportText", buildReportText(saved));
-  document.getElementById("reportModalOverlay").classList.add("open");
-}
-function closeReportModal() { document.getElementById("reportModalOverlay").classList.remove("open"); }
-function handleReportOverlayClick(e) {
-  if (e.target === document.getElementById("reportModalOverlay")) closeReportModal();
-}
+  _bindStaticEvents() {
+    const { els, callbacks } = this;
 
-function loadSavedToForm() {
-  const saved = loadFromStorage();
-  if (!saved) { toast(I18N[lang].toastNoSaved); return; }
-  document.getElementById("f-date").value       = saved.date       || today();
-  document.getElementById("f-volunteers").value = saved.volunteers ?? 0;
-  document.getElementById("f-visitors").value   = saved.visitors   ?? 0;
-  document.getElementById("f-dialogues").value  = saved.dialogues  ?? 0;
-  document.getElementById("f-brochures").value  = saved.brochures  ?? 0;
-  document.getElementById("f-newmuslims").value = saved.newmuslims ?? 0;
-  ["start","end"].forEach(k => {
-    timeValues[k] = saved[k] || "";
-    const textEl = document.getElementById("f-"+k+"-text");
-    if (textEl) textEl.value = saved[k] ? fmtTime(saved[k]) : "";
-    document.getElementById("tig-"+k).classList.remove("invalid");
-  });
-  closeReportModal();
-  window.scrollTo({ top: 0, behavior: "smooth" });
-  toast(I18N[lang].toastLoaded);
-}
+    els.searchInput.addEventListener('input', (e) => callbacks.onSearch(e.target.value));
 
-/* ══ Toast ═════════════════════════════════════════════════════════════ */
-let toastTimer = null;
-function toast(msg) {
-  const el = document.getElementById("toast");
-  el.textContent = msg;
-  el.classList.add("show");
-  if (toastTimer) clearTimeout(toastTimer);
-  toastTimer = setTimeout(() => el.classList.remove("show"), 2800);
-}
+    els.sortField.addEventListener('change', (e) =>
+      callbacks.onSortChange({ field: e.target.value })
+    );
+    els.sortDirection.addEventListener('click', () => callbacks.onToggleSortDirection());
 
-/* ══ Init ══════════════════════════════════════════════════════════════ */
-(function init() {
-  document.getElementById("f-date").value = today();
-  const saved = loadFromStorage();
-  if (saved) {
-    document.getElementById("f-date").value       = saved.date       || today();
-    document.getElementById("f-volunteers").value = saved.volunteers ?? 0;
-    document.getElementById("f-visitors").value   = saved.visitors   ?? 0;
-    document.getElementById("f-dialogues").value  = saved.dialogues  ?? 0;
-    document.getElementById("f-brochures").value  = saved.brochures  ?? 0;
-    document.getElementById("f-newmuslims").value = saved.newmuslims ?? 0;
-    ["start","end"].forEach(k => {
-      if (saved[k]) {
-        timeValues[k] = saved[k];
-        const textEl = document.getElementById("f-"+k+"-text");
-        if (textEl) textEl.value = fmtTime(saved[k]);
+    els.themeToggle.addEventListener('click', () => callbacks.onToggleTheme());
+
+    els.addBtn.addEventListener('click', () => callbacks.onRequestAdd());
+
+    els.panelClose.addEventListener('click', () => this.closePanel());
+    els.panelCancel.addEventListener('click', () => this.closePanel());
+    els.panelOverlay.addEventListener('click', () => this.closePanel());
+
+    els.panelForm.addEventListener('submit', (e) => {
+      e.preventDefault();
+      callbacks.onSubmitForm(this.getFormValues());
+    });
+
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') {
+        if (!els.panel.hasAttribute('hidden')) this.closePanel();
+        if (!els.confirmDialog.hasAttribute('hidden')) this._resolveConfirm(false);
       }
     });
   }
-  applyLang();
-})();
 
-/* ══ Scroll hint ═══════════════════════════════════════════════════════ */
-(function setupScrollHint() {
-  const hint = document.getElementById("scrollHint");
-  if (!hint) return;
+  // ------------------------------------------------------------------
+  // Category filter bar
+  // ------------------------------------------------------------------
 
-  function checkScroll() {
-    // Hide hint when within 40px of the bottom of scrollable content
-    const distFromBottom = document.documentElement.scrollHeight
-                         - window.scrollY
-                         - window.innerHeight;
-    if (distFromBottom < 40) {
-      hint.classList.add("hidden");
-    } else {
-      hint.classList.remove("hidden");
+  renderCategoryFilters(activeCategory) {
+    this._activeCategory = activeCategory;
+    const all = { key: 'ALL', label: 'All', icon: '✦' };
+    const items = [all, ...CATEGORY_ORDER.map((k) => CATEGORIES[k])];
+
+    this.els.categoryButtons.innerHTML = items
+      .map((cat) => {
+        const isActive = cat.key === activeCategory;
+        return `
+        <button
+          type="button"
+          class="chip ${isActive ? 'chip--active' : ''}"
+          data-category="${cat.key}"
+          aria-pressed="${isActive}"
+        >
+          <span class="chip__icon" aria-hidden="true">${cat.icon}</span>
+          <span>${cat.label}</span>
+        </button>`;
+      })
+      .join('');
+
+    $$('.chip', this.els.categoryButtons).forEach((btn) => {
+      btn.addEventListener('click', () => this.callbacks.onCategoryFilter(btn.dataset.category));
+    });
+  }
+
+  // ------------------------------------------------------------------
+  // Stats bar
+  // ------------------------------------------------------------------
+
+  renderStats(stats) {
+    const cards = [
+      { label: 'Total Links', value: stats.total, tone: 'primary' },
+      { label: 'Pinned', value: stats.pinned, tone: 'pinned' },
+      ...CATEGORY_ORDER.map((key) => ({
+        label: CATEGORIES[key].label,
+        value: stats[key],
+        icon: CATEGORIES[key].icon,
+        tone: key.toLowerCase(),
+      })),
+    ];
+
+    this.els.statsBar.innerHTML = cards
+      .map(
+        (c) => `
+        <div class="stat-card stat-card--${c.tone}">
+          ${c.icon ? `<span class="stat-card__icon" aria-hidden="true">${c.icon}</span>` : ''}
+          <span class="stat-card__value">${c.value}</span>
+          <span class="stat-card__label">${c.label}</span>
+        </div>`
+      )
+      .join('');
+  }
+
+  // ------------------------------------------------------------------
+  // Category sections + bookmark cards
+  // ------------------------------------------------------------------
+
+  /**
+   * @param {Object<string,Array>} groups - category key -> bookmark[]
+   * @param {Object<string,boolean>} collapsedMap - category key -> collapsed?
+   * @param {string} activeCategory - 'ALL' or a category key (controls which sections show)
+   */
+  renderSections(groups, collapsedMap, activeCategory) {
+    const keysToRender =
+      activeCategory === 'ALL' ? CATEGORY_ORDER : [activeCategory];
+
+    const totalVisible = keysToRender.reduce((sum, k) => sum + (groups[k]?.length || 0), 0);
+
+    if (totalVisible === 0) {
+      this.els.sectionsContainer.innerHTML = '';
+      this.els.emptyState.removeAttribute('hidden');
+      return;
+    }
+    this.els.emptyState.setAttribute('hidden', '');
+
+    this.els.sectionsContainer.innerHTML = keysToRender
+      .filter((key) => (groups[key] || []).length > 0)
+      .map((key) => this._renderSection(key, groups[key], Boolean(collapsedMap[key])))
+      .join('');
+
+    this._bindSectionEvents();
+  }
+
+  _renderSection(categoryKey, bookmarks, collapsed) {
+    const cat = CATEGORIES[categoryKey];
+    return `
+      <section class="category-section" data-category="${categoryKey}">
+        <button
+          type="button"
+          class="category-section__header"
+          aria-expanded="${!collapsed}"
+          data-toggle-category="${categoryKey}"
+        >
+          <span class="category-section__caret" aria-hidden="true">${collapsed ? '▶' : '▼'}</span>
+          <span class="category-section__icon" aria-hidden="true">${cat.icon}</span>
+          <span class="category-section__title">${cat.label}</span>
+          <span class="category-section__count">${bookmarks.length}</span>
+        </button>
+        <div class="category-section__body" ${collapsed ? 'hidden' : ''}>
+          <div class="card-grid">
+            ${bookmarks.map((b) => this._renderCard(b)).join('')}
+          </div>
+        </div>
+      </section>`;
+  }
+
+  _renderCard(bookmark) {
+    const cat = CATEGORIES[bookmark.category] || CATEGORIES.GENERAL;
+    const favicon = faviconUrlFor(bookmark.url);
+    const iconMarkup = favicon
+      ? `<img src="${favicon}" alt="" class="card__favicon" loading="lazy"
+           onerror="this.replaceWith(Object.assign(document.createElement('span'),{className:'card__favicon card__favicon--fallback',textContent:'${cat.icon}'}))" />`
+      : `<span class="card__favicon card__favicon--fallback">${cat.icon}</span>`;
+
+    return `
+      <article class="card" data-id="${bookmark.id}" style="--card-accent:${cat.color}" tabindex="0">
+        ${bookmark.pinned ? '<span class="card__pin-badge" title="Pinned" aria-label="Pinned">📌</span>' : ''}
+        <div class="card__ribbon" aria-hidden="true"></div>
+        <div class="card__main">
+          <div class="card__head">
+            ${iconMarkup}
+            <h3 class="card__name" title="${escapeHtml(bookmark.name)}">${escapeHtml(bookmark.name)}</h3>
+          </div>
+          <p class="card__url" title="${escapeHtml(bookmark.url)}">${escapeHtml(bookmark.url)}</p>
+          <p class="card__meta">Added ${formatDate(bookmark.createdDate)}</p>
+        </div>
+        <div class="card__actions">
+          <button type="button" class="icon-btn" data-action="open" title="Open" aria-label="Open ${escapeHtml(bookmark.name)}">↗</button>
+          <button type="button" class="icon-btn" data-action="edit" title="Edit" aria-label="Edit ${escapeHtml(bookmark.name)}">✎</button>
+          <button type="button" class="icon-btn" data-action="duplicate" title="Duplicate" aria-label="Duplicate ${escapeHtml(bookmark.name)}">⧉</button>
+          <button type="button" class="icon-btn ${bookmark.pinned ? 'icon-btn--active' : ''}" data-action="pin" title="${bookmark.pinned ? 'Unpin' : 'Pin'}" aria-label="${bookmark.pinned ? 'Unpin' : 'Pin'} ${escapeHtml(bookmark.name)}">📌</button>
+          <button type="button" class="icon-btn icon-btn--danger" data-action="delete" title="Delete" aria-label="Delete ${escapeHtml(bookmark.name)}">🗑</button>
+        </div>
+      </article>`;
+  }
+
+  _bindSectionEvents() {
+    $$('[data-toggle-category]', this.els.sectionsContainer).forEach((header) => {
+      header.addEventListener('click', () =>
+        this.callbacks.onToggleSection(header.dataset.toggleCategory)
+      );
+    });
+
+    $$('.card', this.els.sectionsContainer).forEach((card) => {
+      const id = card.dataset.id;
+
+      card.addEventListener('click', (e) => {
+        const actionEl = e.target.closest('[data-action]');
+        if (!actionEl) return;
+        e.stopPropagation();
+        this.callbacks.onCardAction(actionEl.dataset.action, id);
+      });
+
+      // Enter/Space opens the link when the card itself (not a button) is focused
+      card.addEventListener('keydown', (e) => {
+        if ((e.key === 'Enter' || e.key === ' ') && e.target === card) {
+          e.preventDefault();
+          this.callbacks.onCardAction('open', id);
+        }
+      });
+    });
+  }
+
+  // ------------------------------------------------------------------
+  // Slide-over editor panel
+  // ------------------------------------------------------------------
+
+  openPanel({ mode, bookmark }) {
+    const { els } = this;
+    els.panelTitle.textContent = mode === 'edit' ? 'Edit bookmark' : 'Add bookmark';
+    els.panelForm.dataset.mode = mode;
+    els.panelForm.dataset.editingId = bookmark?.id || '';
+
+    els.fieldName.value = bookmark?.name || '';
+    els.fieldUrl.value = bookmark?.url || '';
+    els.fieldCategory.value = bookmark?.category || 'GENERAL';
+    els.fieldPinned.checked = Boolean(bookmark?.pinned);
+
+    this.clearFormErrors();
+
+    els.panel.removeAttribute('hidden');
+    els.panelOverlay.removeAttribute('hidden');
+    requestAnimationFrame(() => {
+      els.panel.classList.add('editor-panel--open');
+      els.panelOverlay.classList.add('editor-overlay--visible');
+    });
+    els.fieldName.focus();
+
+    document.body.classList.add('no-scroll');
+  }
+
+  closePanel() {
+    const { els } = this;
+    els.panel.classList.remove('editor-panel--open');
+    els.panelOverlay.classList.remove('editor-overlay--visible');
+    document.body.classList.remove('no-scroll');
+    setTimeout(() => {
+      els.panel.setAttribute('hidden', '');
+      els.panelOverlay.setAttribute('hidden', '');
+    }, 220);
+  }
+
+  getFormValues() {
+    return {
+      name: this.els.fieldName.value,
+      url: this.els.fieldUrl.value,
+      category: this.els.fieldCategory.value,
+      pinned: this.els.fieldPinned.checked,
+    };
+  }
+
+  showFormErrors(errors) {
+    this.clearFormErrors();
+    if (errors.name) {
+      this.els.errorName.textContent = errors.name;
+      this.els.fieldName.setAttribute('aria-invalid', 'true');
+    }
+    if (errors.url) {
+      this.els.errorUrl.textContent = errors.url;
+      this.els.fieldUrl.setAttribute('aria-invalid', 'true');
     }
   }
 
-  window.addEventListener("scroll", checkScroll, { passive: true });
-  // Also check on resize (e.g. keyboard opens/closes)
-  window.addEventListener("resize", checkScroll, { passive: true });
-  // Initial check after paint
-  requestAnimationFrame(checkScroll);
-})();
+  clearFormErrors() {
+    this.els.errorName.textContent = '';
+    this.els.errorUrl.textContent = '';
+    this.els.fieldName.removeAttribute('aria-invalid');
+    this.els.fieldUrl.removeAttribute('aria-invalid');
+  }
+
+  // ------------------------------------------------------------------
+  // Confirm dialog (used for delete confirmation)
+  // ------------------------------------------------------------------
+
+  confirm(message) {
+    const { els } = this;
+    els.confirmMessage.textContent = message;
+    els.confirmDialog.removeAttribute('hidden');
+    els.confirmOk.focus();
+
+    return new Promise((resolve) => {
+      this._resolveConfirm = (result) => {
+        els.confirmDialog.setAttribute('hidden', '');
+        okHandler.remove?.();
+        resolve(result);
+      };
+      const okHandler = () => this._resolveConfirm(true);
+      const cancelHandler = () => this._resolveConfirm(false);
+      els.confirmOk.addEventListener('click', okHandler, { once: true });
+      els.confirmCancel.addEventListener('click', cancelHandler, { once: true });
+    });
+  }
+
+  // ------------------------------------------------------------------
+  // Toasts
+  // ------------------------------------------------------------------
+
+  toast(message, tone = 'default') {
+    const el = document.createElement('div');
+    el.className = `toast toast--${tone}`;
+    el.setAttribute('role', 'status');
+    el.textContent = message;
+    this.els.toastRegion.appendChild(el);
+    requestAnimationFrame(() => el.classList.add('toast--visible'));
+    setTimeout(() => {
+      el.classList.remove('toast--visible');
+      setTimeout(() => el.remove(), 200);
+    }, 2600);
+  }
+
+  // ------------------------------------------------------------------
+  // Theme
+  // ------------------------------------------------------------------
+
+  applyTheme(theme) {
+    document.documentElement.setAttribute('data-theme', theme);
+    this.els.themeToggle.setAttribute('aria-label', `Switch to ${theme === 'dark' ? 'light' : 'dark'} theme`);
+    this.els.themeToggle.textContent = theme === 'dark' ? '☀️' : '🌙';
+  }
+
+  // ------------------------------------------------------------------
+  // Sort controls
+  // ------------------------------------------------------------------
+
+  applySortPrefs({ field, direction }) {
+    this.els.sortField.value = field;
+    this.els.sortDirection.textContent = direction === 'asc' ? '↑ Asc' : '↓ Desc';
+    this.els.sortDirection.setAttribute('aria-label', `Sort direction: ${direction === 'asc' ? 'ascending' : 'descending'}`);
+  }
+}
+
+/**
+ * app.js
+ * ------------------------------------------------------------------
+ * Application entry point and controller. Owns the current in-memory
+ * state (bookmarks + view settings), coordinates StorageService,
+ * the pure functions in bookmark.js, and UIRenderer. No direct DOM
+ * access happens here — that's UIRenderer's job.
+ * ------------------------------------------------------------------
+ */
+
+class App {
+  constructor() {
+    this.storage = new StorageService();
+    this.ui = new UIRenderer({
+      onSearch: (q) => this.setSearch(q),
+      onCategoryFilter: (key) => this.setCategoryFilter(key),
+      onToggleSection: (key) => this.toggleSection(key),
+      onSortChange: ({ field }) => this.setSort({ field }),
+      onToggleSortDirection: () => this.toggleSortDirection(),
+      onToggleTheme: () => this.toggleTheme(),
+      onRequestAdd: () => this.openAddPanel(),
+      onSubmitForm: (values) => this.handleFormSubmit(values),
+      onCardAction: (action, id) => this.handleCardAction(action, id),
+    });
+
+    this.state = {
+      bookmarks: [],
+      searchQuery: '',
+      activeCategory: 'ALL',
+      sort: this.storage.getSortPrefs(),
+      collapsed: this.storage.getCollapsedSections(),
+    };
+
+    this._init();
+  }
+
+  _init() {
+    if (!this.storage.isAvailable()) {
+      // Local Storage is unavailable (private browsing lockdown, etc). The
+      // app still functions for the session; it just can't persist.
+      console.warn('[app] localStorage unavailable — data will not persist.');
+    }
+
+    this.state.bookmarks = this.storage.getBookmarks();
+
+    const savedTheme = this.storage.getTheme();
+    const systemPrefersDark = window.matchMedia?.('(prefers-color-scheme: dark)').matches;
+    this.currentTheme = savedTheme || (systemPrefersDark ? 'dark' : 'light');
+    this.ui.applyTheme(this.currentTheme);
+
+    // Keep in sync with OS theme changes only if user hasn't picked manually.
+    window.matchMedia?.('(prefers-color-scheme: dark)').addEventListener('change', (e) => {
+      if (!this.storage.getTheme()) {
+        this.currentTheme = e.matches ? 'dark' : 'light';
+        this.ui.applyTheme(this.currentTheme);
+      }
+    });
+
+    this.ui.applySortPrefs(this.state.sort);
+    this.ui.renderCategoryFilters(this.state.activeCategory);
+    this._persistAndRender({ persist: false });
+  }
+
+  // ------------------------------------------------------------------
+  // Derived view + rendering
+  // ------------------------------------------------------------------
+
+  _getVisibleBookmarks() {
+    let list = this.state.bookmarks;
+    list = searchByName(list, this.state.searchQuery);
+    list = filterByCategory(list, this.state.activeCategory);
+    list = sortBookmarks(list, this.state.sort.field, this.state.sort.direction);
+    return list;
+  }
+
+  _render() {
+    const stats = computeStats(this.state.bookmarks);
+    this.ui.renderStats(stats);
+
+    const visible = this._getVisibleBookmarks();
+    const groups = groupByCategory(visible);
+    this.ui.renderSections(groups, this.state.collapsed, this.state.activeCategory);
+  }
+
+  /** Regenerates sno, persists to storage, and re-renders the view. */
+  _persistAndRender({ persist = true } = {}) {
+    this.state.bookmarks = regenerateSno(
+      sortBookmarks(this.state.bookmarks, 'name', 'asc')
+    );
+    if (persist) this.storage.saveBookmarks(this.state.bookmarks);
+    this._render();
+  }
+
+  // ------------------------------------------------------------------
+  // Search / filter / sort / collapse / theme handlers
+  // ------------------------------------------------------------------
+
+  setSearch(query) {
+    this.state.searchQuery = query;
+    this._render();
+  }
+
+  setCategoryFilter(key) {
+    this.state.activeCategory = key;
+    this.ui.renderCategoryFilters(key);
+    this._render();
+  }
+
+  toggleSection(categoryKey) {
+    this.state.collapsed[categoryKey] = !this.state.collapsed[categoryKey];
+    this.storage.setCollapsedSections(this.state.collapsed);
+    this._render();
+  }
+
+  setSort({ field }) {
+    this.state.sort.field = field;
+    this.storage.setSortPrefs(this.state.sort);
+    this.ui.applySortPrefs(this.state.sort);
+    this._render();
+  }
+
+  toggleSortDirection() {
+    this.state.sort.direction = this.state.sort.direction === 'asc' ? 'desc' : 'asc';
+    this.storage.setSortPrefs(this.state.sort);
+    this.ui.applySortPrefs(this.state.sort);
+    this._render();
+  }
+
+  toggleTheme() {
+    this.currentTheme = this.currentTheme === 'dark' ? 'light' : 'dark';
+    this.storage.setTheme(this.currentTheme);
+    this.ui.applyTheme(this.currentTheme);
+  }
+
+  // ------------------------------------------------------------------
+  // CRUD flows
+  // ------------------------------------------------------------------
+
+  openAddPanel() {
+    this.ui.openPanel({ mode: 'add', bookmark: { category: DEFAULT_CATEGORY } });
+  }
+
+  openEditPanel(id) {
+    const bookmark = this.state.bookmarks.find((b) => b.id === id);
+    if (!bookmark) return;
+    this.ui.openPanel({ mode: 'edit', bookmark });
+  }
+
+  handleFormSubmit(values) {
+    const { valid, errors } = validateBookmarkInput(values);
+    if (!valid) {
+      this.ui.showFormErrors(errors);
+      return;
+    }
+
+    const mode = this.ui.els.panelForm.dataset.mode;
+    const editingId = this.ui.els.panelForm.dataset.editingId;
+
+    if (mode === 'edit' && editingId) {
+      const existing = this.state.bookmarks.find((b) => b.id === editingId);
+      if (existing) {
+        const updated = updateBookmark(existing, values);
+        this.state.bookmarks = this.state.bookmarks.map((b) =>
+          b.id === editingId ? updated : b
+        );
+        this.ui.toast('Bookmark updated.');
+      }
+    } else {
+      const created = createBookmark(values);
+      this.state.bookmarks = [...this.state.bookmarks, created];
+      this.ui.toast('Bookmark added.');
+    }
+
+    this.ui.closePanel();
+    this._persistAndRender();
+  }
+
+  async handleCardAction(action, id) {
+    const bookmark = this.state.bookmarks.find((b) => b.id === id);
+    if (!bookmark) return;
+
+    switch (action) {
+      case 'open':
+        window.open(bookmark.url, '_blank', 'noopener,noreferrer');
+        break;
+
+      case 'edit':
+        this.openEditPanel(id);
+        break;
+
+      case 'duplicate': {
+        const copy = duplicateBookmark(bookmark);
+        this.state.bookmarks = [...this.state.bookmarks, copy];
+        this.ui.toast('Bookmark duplicated.');
+        this._persistAndRender();
+        break;
+      }
+
+      case 'pin': {
+        this.state.bookmarks = this.state.bookmarks.map((b) =>
+          b.id === id ? togglePinned(b) : b
+        );
+        this.ui.toast(bookmark.pinned ? 'Unpinned.' : 'Pinned to top.');
+        this._persistAndRender();
+        break;
+      }
+
+      case 'delete': {
+        const confirmed = await this.ui.confirm(
+          `Delete "${bookmark.name}"? This cannot be undone.`
+        );
+        if (!confirmed) return;
+        this.state.bookmarks = this.state.bookmarks.filter((b) => b.id !== id);
+        this.ui.toast('Bookmark deleted.');
+        this._persistAndRender();
+        break;
+      }
+
+      default:
+        break;
+    }
+  }
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  window.__bookmarkDashboardApp = new App();
+});
 
 </script>
-
-<!-- ═══ SCROLL HINT ═══ -->
-<div class="scroll-hint" id="scrollHint">
-  <div class="scroll-hint-arrow">
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 12" width="22" height="13" fill="none">
-      <polyline points="2,2 10,10 18,2" stroke="#1565C0" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
-    </svg>
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 12" width="22" height="13" fill="none" style="opacity:.45;margin-top:-6px">
-      <polyline points="2,2 10,10 18,2" stroke="#1565C0" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
-    </svg>
-  </div>
-</div>
 </body>
 </html>
