@@ -1,0 +1,1371 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
+  <meta name="theme-color" content="#1565C0" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="Tour Report" />
+  <title>Mosque Tour Activity Report</title>
+  <link rel="manifest" href="data:application/json;charset=utf-8,%7B%22name%22%3A%22Mosque%20Tour%20Activity%20Report%22%2C%22short_name%22%3A%22Tour%20Report%22%2C%22start_url%22%3A%22.%22%2C%22display%22%3A%22standalone%22%2C%22background_color%22%3A%22%23EEF2FF%22%2C%22theme_color%22%3A%22%231565C0%22%7D" />
+
+  <style>
+    /* ═══ DESIGN TOKENS — Blue & White theme ═══ */
+    :root {
+      --blue-dark:      #1565C0;   /* primary action */
+      --blue-mid:       #1976D2;   /* gradient end   */
+      --blue-light:     #E3F0FF;   /* tinted bg      */
+      --blue-lighter:   #EEF4FF;   /* card accent    */
+      --accent:         #F59E0B;   /* gold accent (kept for card bar) */
+      --accent-light:   #FFFBEB;   /* report bg      */
+      --text-primary:   #0D1B2A;
+      --text-secondary: #3D5A80;
+      --border:         #BFD4F2;
+      --bg:             #F0F5FF;
+      --white:          #FFFFFF;
+      --danger:         #D32F2F;
+      --radius:         12px;
+      --shadow:         0 2px 14px rgba(21,101,192,0.10);
+      --font-en:        'Segoe UI', system-ui, -apple-system, sans-serif;
+      --font-ar:        'Segoe UI', 'Amiri', 'Noto Naskh Arabic', sans-serif;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: var(--font-en);
+      background: var(--bg);
+      color: var(--text-primary);
+      min-height: 100dvh;
+    }
+    body.rtl { font-family: var(--font-ar); direction: rtl; }
+
+    /* ── Header ── */
+    .app-header {
+      background: linear-gradient(135deg, var(--blue-dark) 0%, var(--blue-mid) 100%);
+      color: #fff;
+      padding: 18px 20px 14px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      box-shadow: 0 3px 10px rgba(21,101,192,0.25);
+    }
+    .header-title { font-size: 16px; font-weight: 800; line-height: 1.3; flex: 1; letter-spacing: -.2px; }
+    .header-sub   { font-size: 12px; opacity: .75; margin-top: 3px; }
+    .lang-btn {
+      background: rgba(255,255,255,0.18);
+      border: 1.5px solid rgba(255,255,255,0.40);
+      color: #fff;
+      border-radius: 20px;
+      padding: 7px 15px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      white-space: nowrap;
+      font-family: inherit;
+    }
+    .lang-btn:active { opacity: .75; }
+
+    /* ── Layout ── */
+    .main { padding: 16px; max-width: 520px; margin: 0 auto; padding-bottom: 130px; }
+
+    /* ── Card ── */
+    .card {
+      background: var(--white);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 20px 18px;
+      margin-bottom: 14px;
+      border: 1px solid rgba(191,212,242,0.5);
+    }
+    .card-title {
+      font-size: 12px;
+      font-weight: 800;
+      color: var(--blue-dark);
+      text-transform: uppercase;
+      letter-spacing: .8px;
+      margin-bottom: 18px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .card-title::before {
+      content: '';
+      width: 4px; height: 18px;
+      background: var(--accent);
+      border-radius: 2px;
+      flex-shrink: 0;
+    }
+
+    /* ── Form fields ── */
+    .field { margin-bottom: 18px; }
+    .field:last-child { margin-bottom: 0; }
+
+    label {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 15px;
+      font-weight: 700;
+      color: var(--text-secondary);
+      margin-bottom: 8px;
+    }
+    .lbl-icon { font-size: 26px; line-height: 1; }
+    label .req { color: var(--danger); margin-inline-start: 2px; font-size: 16px; }
+
+    /* date input */
+    input[type="date"] {
+      width: 100%;
+      border: 2px solid var(--border);
+      border-radius: 10px;
+      padding: 13px 15px;
+      font-size: 16px;
+      font-family: inherit;
+      color: var(--text-primary);
+      background: var(--white);
+      outline: none;
+      transition: border-color .2s, box-shadow .2s;
+      -webkit-appearance: none;
+    }
+    input[type="date"]:focus {
+      border-color: var(--blue-mid);
+      box-shadow: 0 0 0 3px rgba(25,118,210,0.14);
+    }
+    input[type="date"].invalid { border-color: var(--danger) !important; }
+
+    /* ── Stepper ── */
+    .stepper {
+      display: flex;
+      align-items: stretch;
+      border: 2px solid var(--border);
+      border-radius: 10px;
+      overflow: hidden;
+      background: var(--white);
+      transition: border-color .2s, box-shadow .2s;
+    }
+    .stepper.focused {
+      border-color: var(--blue-mid);
+      box-shadow: 0 0 0 3px rgba(25,118,210,0.14);
+    }
+    .stepper.invalid { border-color: var(--danger); }
+
+    .stepper-btn {
+      background: var(--blue-light);
+      border: none;
+      color: var(--blue-dark);
+      font-size: 28px;
+      font-weight: 700;
+      width: 60px;
+      min-height: 58px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      -webkit-tap-highlight-color: transparent;
+      transition: background .15s;
+      user-select: none;
+      line-height: 1;
+    }
+    .stepper-btn:active { background: #BFDBFE; }
+
+    /* hide native browser spinner arrows */
+    .stepper-input::-webkit-outer-spin-button,
+    .stepper-input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+    .stepper-input[type=number] { -moz-appearance: textfield; }
+
+    .stepper-input {
+      flex: 1;
+      border: none !important;
+      box-shadow: none !important;
+      text-align: center;
+      font-size: 24px;
+      font-weight: 800;
+      color: var(--text-primary);
+      padding: 10px 4px;
+      background: transparent;
+      outline: none;
+      min-width: 0;
+      -webkit-appearance: none;
+    }
+
+    /* ── Time field: inline input + picker button ── */
+    .time-row { display: flex; flex-direction: column; gap: 0; }
+
+    .time-input-group {
+      display: flex;
+      align-items: stretch;
+      border: 2px solid var(--border);
+      border-radius: 10px;
+      overflow: hidden;
+      background: var(--white);
+      transition: border-color .2s, box-shadow .2s;
+    }
+    .time-input-group:focus-within {
+      border-color: var(--blue-mid);
+      box-shadow: 0 0 0 3px rgba(25,118,210,0.14);
+    }
+    .time-input-group.invalid { border-color: var(--danger); }
+
+    /* The text input part */
+    .time-text-input {
+      flex: 1;
+      border: none !important;
+      outline: none;
+      padding: 13px 10px 13px 13px;
+      font-size: 18px;
+      font-weight: 700;
+      font-family: 'Courier New', monospace;
+      color: var(--text-primary);
+      background: transparent;
+      min-width: 0;
+      letter-spacing: 1px;
+      -webkit-appearance: none;
+    }
+    .time-text-input::placeholder { color: #A0AEC0; font-size: 14px; font-weight: 400; letter-spacing: 0; font-family: var(--font-en); }
+
+    /* Clock icon button to open wheel picker */
+    .time-picker-btn {
+      background: var(--blue-light);
+      border: none;
+      border-inline-start: 2px solid var(--border);
+      color: var(--blue-dark);
+      font-size: 22px;
+      width: 50px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      -webkit-tap-highlight-color: transparent;
+      transition: background .15s;
+    }
+    .time-picker-btn:active { background: #BFDBFE; }
+
+    /* ── Time picker modal (wheel) ── */
+    .time-modal-overlay {
+      display: none;
+      position: fixed; inset: 0;
+      background: rgba(13,27,42,0.5);
+      z-index: 500;
+      align-items: flex-end;
+      justify-content: center;
+    }
+    .time-modal-overlay.open { display: flex; }
+
+    .time-modal {
+      background: var(--white);
+      border-radius: 22px 22px 0 0;
+      padding: 22px 22px 40px;
+      width: 100%;
+      max-width: 440px;
+      animation: slideUp .25s ease;
+    }
+    @keyframes slideUp {
+      from { transform: translateY(100%); }
+      to   { transform: translateY(0); }
+    }
+    .time-modal-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 22px;
+    }
+    .time-modal-title { font-size: 16px; font-weight: 800; color: var(--blue-dark); }
+    .time-modal-close {
+      background: var(--blue-light); border: none; border-radius: 50%;
+      width: 34px; height: 34px; font-size: 18px; cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      color: var(--text-secondary);
+    }
+
+    .time-wheels {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      margin-bottom: 22px;
+    }
+    .time-colon { font-size: 36px; font-weight: 900; color: var(--text-primary); padding: 0 4px; }
+
+    .wheel-col { display: flex; flex-direction: column; align-items: center; gap: 6px; }
+    .wheel-label { font-size: 11px; font-weight: 700; color: var(--text-secondary); text-transform: uppercase; letter-spacing: .6px; }
+
+    .wheel-up, .wheel-down {
+      background: var(--blue-light);
+      border: none;
+      border-radius: 10px;
+      width: 68px; height: 46px;
+      font-size: 24px;
+      color: var(--blue-dark);
+      cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      -webkit-tap-highlight-color: transparent;
+      font-weight: 700;
+    }
+    .wheel-up:active, .wheel-down:active { background: #BFDBFE; }
+
+    .wheel-val {
+      font-size: 36px;
+      font-weight: 900;
+      color: var(--text-primary);
+      width: 68px;
+      text-align: center;
+      line-height: 1;
+      padding: 6px 0;
+    }
+
+    .ampm-col { display: flex; flex-direction: column; gap: 8px; margin-inline-start: 10px; padding-top: 30px; }
+    .ampm-btn {
+      border: 2px solid var(--border);
+      background: var(--white);
+      border-radius: 10px;
+      padding: 10px 18px;
+      font-size: 15px;
+      font-weight: 700;
+      cursor: pointer;
+      color: var(--text-secondary);
+      -webkit-tap-highlight-color: transparent;
+    }
+    .ampm-btn.active { background: var(--blue-dark); border-color: var(--blue-dark); color: #fff; }
+
+    .time-modal-confirm {
+      width: 100%;
+      padding: 16px;
+      background: var(--blue-dark);
+      color: #fff;
+      border: none;
+      border-radius: 12px;
+      font-size: 16px;
+      font-weight: 800;
+      cursor: pointer;
+      font-family: inherit;
+    }
+    .time-modal-confirm:active { opacity: .85; }
+
+    /* ── Error messages ── */
+    .error-msg {
+      font-size: 12px;
+      color: var(--danger);
+      margin-top: 5px;
+      display: none;
+    }
+    .error-msg.visible { display: block; }
+
+    /* ── Action buttons ── */
+    .btn-group {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+    .btn {
+      border: none;
+      border-radius: 12px;
+      padding: 16px 10px;
+      font-size: 14px;
+      font-weight: 700;
+      cursor: pointer;
+      font-family: inherit;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 7px;
+      transition: opacity .15s, transform .1s;
+      -webkit-tap-highlight-color: transparent;
+      line-height: 1.2;
+    }
+    .btn .btn-icon { font-size: 22px; }
+    .btn:active { opacity: .8; transform: scale(.97); }
+
+    .btn-primary { background: var(--blue-dark); color: #fff; }
+    .btn-amber   { background: #F59E0B; color: #fff; }
+    .btn-outline { background: var(--white); color: var(--blue-dark); border: 2px solid var(--blue-dark); }
+    .btn-muted   { background: var(--blue-lighter); color: var(--text-secondary); border: 2px solid var(--border); }
+    .btn-full    { grid-column: 1 / -1; }
+
+    /* ── Report preview ── */
+    .report-preview {
+      background: var(--accent-light);
+      border: 1.5px solid #FDE68A;
+      border-radius: 10px;
+      padding: 16px;
+      font-size: 14px;
+      line-height: 2;
+      white-space: pre-wrap;
+      font-family: 'Courier New', monospace;
+      color: var(--text-primary);
+      word-break: break-word;
+      user-select: all;
+      -webkit-user-select: all;
+    }
+    .report-preview.flash { background: #DBEAFE; transition: background .4s; }
+
+    /* ── Report modal ── */
+    .modal-overlay {
+      display: none;
+      position: fixed; inset: 0;
+      background: rgba(13,27,42,0.55);
+      z-index: 400;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+    }
+    .modal-overlay.open { display: flex; }
+
+    .modal-box {
+      background: var(--white);
+      border-radius: 18px;
+      padding: 22px;
+      width: 100%;
+      max-width: 480px;
+      max-height: 88dvh;
+      overflow-y: auto;
+      animation: fadeScale .2s ease;
+    }
+    @keyframes fadeScale {
+      from { opacity: 0; transform: scale(.93); }
+      to   { opacity: 1; transform: scale(1); }
+    }
+    .modal-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 14px;
+    }
+    .modal-title { font-size: 16px; font-weight: 800; color: var(--blue-dark); }
+    .modal-close {
+      background: var(--blue-light); border: none; border-radius: 50%;
+      width: 36px; height: 36px; font-size: 19px; cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      color: var(--text-secondary);
+    }
+    .saved-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      background: var(--blue-light);
+      color: var(--blue-dark);
+      font-size: 12px;
+      font-weight: 700;
+      padding: 4px 12px;
+      border-radius: 20px;
+      margin-bottom: 12px;
+    }
+    .modal-actions {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-top: 16px;
+    }
+
+
+    /* ── Scroll hint ── */
+    .scroll-hint {
+      position: fixed;
+      bottom: 88px;           /* sits just above the action bar */
+      left: 0; right: 0;
+      height: 64px;
+      background: linear-gradient(to bottom, transparent 0%, rgba(240,245,255,0.96) 100%);
+      pointer-events: none;
+      z-index: 190;
+      display: flex;
+      align-items: flex-end;
+      justify-content: center;
+      padding-bottom: 6px;
+      transition: opacity .35s ease;
+    }
+    .scroll-hint.hidden { opacity: 0; }
+    .scroll-hint-arrow {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 2px;
+      animation: bounceDown 1.4s ease-in-out infinite;
+    }
+    .scroll-hint-arrow svg { opacity: .7; }
+    .scroll-hint-label {
+      font-size: 10px;
+      font-weight: 700;
+      color: var(--blue-dark);
+      opacity: .65;
+      letter-spacing: .4px;
+      text-transform: uppercase;
+    }
+    @keyframes bounceDown {
+      0%, 100% { transform: translateY(0);   }
+      50%       { transform: translateY(5px); }
+    }
+
+    /* ── Sticky Action Bar ── */
+    .action-bar {
+      position: fixed;
+      bottom: 0;
+      left: 0; right: 0;
+      background: var(--white);
+      border-top: 2px solid var(--border);
+      box-shadow: 0 -4px 16px rgba(21,101,192,0.12);
+      padding: 12px 16px calc(16px + env(safe-area-inset-bottom, 0px));
+      z-index: 200;
+    }
+    .action-bar .btn-group {
+      max-width: 520px;
+      margin: 0 auto;
+    }
+
+    /* ── Toast ── */
+    .toast {
+      position: fixed;
+      bottom: 96px;
+      left: 50%;
+      transform: translateX(-50%) translateY(80px);
+      background: #0D1B2A;
+      color: #fff;
+      padding: 12px 24px;
+      border-radius: 24px;
+      font-size: 14px;
+      font-weight: 600;
+      z-index: 9999;
+      opacity: 0;
+      transition: all .3s cubic-bezier(.34,1.56,.64,1);
+      pointer-events: none;
+      white-space: nowrap;
+    }
+    .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+    /* ── RTL ── */
+    body.rtl .stepper-input { direction: ltr; }
+    body.rtl .time-text-input { direction: ltr; text-align: right; }
+  </style>
+</head>
+<body>
+
+<!-- ═══ HEADER ═══ -->
+<header class="app-header">
+  <div>
+    <div class="header-title" id="hdr-title">Daily Tour Activity Report</div>
+    <div class="header-sub"  id="hdr-sub">Mosque Volunteer System</div>
+  </div>
+  <button class="lang-btn" id="langBtn" onclick="toggleLang()">العربية</button>
+</header>
+
+<!-- ═══ MAIN ═══ -->
+<main class="main">
+
+  <!-- Date & Time -->
+  <div class="card">
+    <div class="card-title" id="sect-datetime">Date &amp; Time</div>
+
+    <div class="field">
+      <label for="f-date">
+        <span class="lbl-icon"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" width="26" height="26" fill="none" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="26" height="24" rx="3" fill="#E3F0FF" stroke="#1565C0" stroke-width="2"/><line x1="3" y1="12" x2="29" y2="12" stroke="#1565C0" stroke-width="2"/><line x1="10" y1="2" x2="10" y2="8" stroke="#1565C0" stroke-width="2.5"/><line x1="22" y1="2" x2="22" y2="8" stroke="#1565C0" stroke-width="2.5"/><rect x="7"  y="16" width="4" height="4" rx="1" fill="#1565C0"/><rect x="14" y="16" width="4" height="4" rx="1" fill="#1565C0"/><rect x="21" y="16" width="4" height="4" rx="1" fill="#1565C0"/><rect x="7"  y="22" width="4" height="3" rx="1" fill="#1565C0"/><rect x="14" y="22" width="4" height="3" rx="1" fill="#1565C0"/></svg></span>
+        <span id="lbl-date">Date</span><span class="req">*</span>
+      </label>
+      <input type="date" id="f-date" />
+      <div class="error-msg" id="err-date" data-en="Date is required" data-ar="التاريخ مطلوب">Date is required</div>
+    </div>
+
+    <div class="time-row">
+      <!-- Shift Start -->
+      <div class="field">
+        <label>
+          <span class="lbl-icon"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" width="26" height="26" fill="none" stroke-linecap="round" stroke-linejoin="round"><circle cx="16" cy="16" r="12" fill="#E3F0FF" stroke="#1565C0" stroke-width="2"/><circle cx="16" cy="16" r="1.5" fill="#1565C0"/><line x1="16" y1="16" x2="16" y2="8"  stroke="#1565C0" stroke-width="2"/><line x1="16" y1="16" x2="10" y2="16" stroke="#1565C0" stroke-width="2"/><circle cx="16" cy="6"  r="1" fill="#1565C0"/><circle cx="16" cy="26" r="1" fill="#1565C0"/><circle cx="6"  cy="16" r="1" fill="#1565C0"/><circle cx="26" cy="16" r="1" fill="#1565C0"/></svg></span>
+          <span id="lbl-start">Shift Start</span><span class="req">*</span>
+        </label>
+        <div class="time-input-group" id="tig-start">
+          <input class="time-text-input" id="f-start-text" type="text"
+                 inputmode="numeric" maxlength="8" placeholder="09:00 AM"
+                 oninput="onTimeTextInput(this,'start')"
+                 onblur="onTimeTextBlur(this,'start')" />
+          <button class="time-picker-btn" onclick="openTimePicker('start')" title="Open picker"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="#1565C0" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="1.2" fill="#1565C0"/><line x1="12" y1="12" x2="12" y2="7"  stroke="#1565C0" stroke-width="2"/><line x1="12" y1="12" x2="16" y2="12" stroke="#1565C0" stroke-width="2"/></svg></button>
+        </div>
+        <div class="error-msg" id="err-start" data-en="Enter valid time (e.g. 09:00 AM)" data-ar="أدخل وقتاً صحيحاً (مثال: 09:00 AM)">Enter valid time</div>
+      </div>
+      <!-- Shift End -->
+      <div class="field">
+        <label>
+          <span class="lbl-icon"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" width="26" height="26" fill="none" stroke-linecap="round" stroke-linejoin="round"><circle cx="16" cy="16" r="12" fill="#E3F0FF" stroke="#1565C0" stroke-width="2"/><circle cx="16" cy="16" r="1.5" fill="#1565C0"/><line x1="16" y1="16" x2="16" y2="8"  stroke="#1565C0" stroke-width="2"/><line x1="16" y1="16" x2="22" y2="21" stroke="#1565C0" stroke-width="2"/><circle cx="16" cy="6"  r="1" fill="#1565C0"/><circle cx="16" cy="26" r="1" fill="#1565C0"/><circle cx="6"  cy="16" r="1" fill="#1565C0"/><circle cx="26" cy="16" r="1" fill="#1565C0"/></svg></span>
+          <span id="lbl-end">Shift End</span><span class="req">*</span>
+        </label>
+        <div class="time-input-group" id="tig-end">
+          <input class="time-text-input" id="f-end-text" type="text"
+                 inputmode="numeric" maxlength="8" placeholder="12:00 PM"
+                 oninput="onTimeTextInput(this,'end')"
+                 onblur="onTimeTextBlur(this,'end')" />
+          <button class="time-picker-btn" onclick="openTimePicker('end')" title="Open picker"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="#1565C0" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="1.2" fill="#1565C0"/><line x1="12" y1="12" x2="12" y2="7"  stroke="#1565C0" stroke-width="2"/><line x1="12" y1="12" x2="16" y2="12" stroke="#1565C0" stroke-width="2"/></svg></button>
+        </div>
+        <div class="error-msg" id="err-end" data-en="Must be after Shift Start" data-ar="يجب أن يكون بعد وقت البدء">Must be after Shift Start</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Statistics -->
+  <div class="card">
+    <div class="card-title" id="sect-stats">Statistics</div>
+
+    <div class="field">
+      <label>
+        <span class="lbl-icon"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" width="26" height="26" fill="none" stroke-linecap="round" stroke-linejoin="round"><circle cx="21" cy="10" r="5" fill="#BFD4F2" stroke="#1565C0" stroke-width="1.5"/><path d="M13 29 Q13 21 21 21 Q29 21 29 29" fill="#BFD4F2" stroke="#1565C0" stroke-width="1.5"/><circle cx="12" cy="12" r="6" fill="#E3F0FF" stroke="#1565C0" stroke-width="2"/><path d="M2 30 Q2 22 12 22 Q22 22 22 30" fill="#E3F0FF" stroke="#1565C0" stroke-width="2"/></svg></span>
+        <span id="lbl-vol">Number of Volunteers</span><span class="req">*</span>
+      </label>
+      <div class="stepper" id="step-volunteers">
+        <button class="stepper-btn" onclick="stepChange('f-volunteers',-1,'step-volunteers')">−</button>
+        <input class="stepper-input" type="number" id="f-volunteers" min="0" value="0"
+               oninput="onStepInput(this,'step-volunteers')"
+               onfocus="stepFocus('step-volunteers')" onblur="stepBlur('step-volunteers')" />
+        <button class="stepper-btn" onclick="stepChange('f-volunteers',1,'step-volunteers')">+</button>
+      </div>
+      <div class="error-msg" id="err-vol" data-en="Cannot be negative" data-ar="لا يمكن أن يكون سالباً">Cannot be negative</div>
+    </div>
+
+    <div class="field">
+      <label>
+        <span class="lbl-icon"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" width="26" height="26" fill="none" stroke-linecap="round" stroke-linejoin="round"><circle cx="16" cy="6" r="5" fill="#E3F0FF" stroke="#1565C0" stroke-width="2"/><circle cx="14.5" cy="5" r="1" fill="#1565C0"/><circle cx="17.5" cy="5" r="1" fill="#1565C0"/><path d="M14 7.5 Q16 9.2 18 7.5" stroke="#1565C0" stroke-width="1.2" fill="none"/><line x1="16" y1="11" x2="16" y2="20" stroke="#1565C0" stroke-width="2.5"/><line x1="16" y1="14" x2="10" y2="17" stroke="#1565C0" stroke-width="2"/><line x1="16" y1="14" x2="22" y2="12" stroke="#1565C0" stroke-width="2"/><line x1="16" y1="20" x2="12" y2="28" stroke="#1565C0" stroke-width="2"/><line x1="16" y1="20" x2="20" y2="28" stroke="#1565C0" stroke-width="2"/></svg></span>
+        <span id="lbl-vis">Number of Visitors</span><span class="req">*</span>
+      </label>
+      <div class="stepper" id="step-visitors">
+        <button class="stepper-btn" onclick="stepChange('f-visitors',-1,'step-visitors')">−</button>
+        <input class="stepper-input" type="number" id="f-visitors" min="0" value="0"
+               oninput="onStepInput(this,'step-visitors')"
+               onfocus="stepFocus('step-visitors')" onblur="stepBlur('step-visitors')" />
+        <button class="stepper-btn" onclick="stepChange('f-visitors',1,'step-visitors')">+</button>
+      </div>
+      <div class="error-msg" id="err-vis" data-en="Cannot be negative" data-ar="لا يمكن أن يكون سالباً">Cannot be negative</div>
+    </div>
+
+    <div class="field">
+      <label>
+        <span class="lbl-icon"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" width="26" height="26" fill="none" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="22" height="18" rx="4" fill="#E3F0FF" stroke="#1565C0" stroke-width="2"/><polygon points="8,21 4,28 14,21" fill="#E3F0FF" stroke="#1565C0" stroke-width="2"/><circle cx="9" cy="11" r="1.5" fill="#1565C0"/><circle cx="15" cy="11" r="1.5" fill="#1565C0"/><path d="M7.5 15 Q12 18 16.5 15" stroke="#1565C0" stroke-width="1.5" fill="none"/><rect x="20" y="2" width="11" height="9" rx="3" fill="#BFD4F2" stroke="#1565C0" stroke-width="1.5"/><circle cx="23" cy="6.5" r="1" fill="#1565C0"/><circle cx="27" cy="6.5" r="1" fill="#1565C0"/></svg></span>
+        <span id="lbl-dia">Discussions / Dialogues</span><span class="req">*</span>
+      </label>
+      <div class="stepper" id="step-dialogues">
+        <button class="stepper-btn" onclick="stepChange('f-dialogues',-1,'step-dialogues')">−</button>
+        <input class="stepper-input" type="number" id="f-dialogues" min="0" value="0"
+               oninput="onStepInput(this,'step-dialogues')"
+               onfocus="stepFocus('step-dialogues')" onblur="stepBlur('step-dialogues')" />
+        <button class="stepper-btn" onclick="stepChange('f-dialogues',1,'step-dialogues')">+</button>
+      </div>
+      <div class="error-msg" id="err-dia" data-en="Cannot be negative" data-ar="لا يمكن أن يكون سالباً">Cannot be negative</div>
+    </div>
+
+    <div class="field">
+      <label>
+        <span class="lbl-icon"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" width="26" height="26" fill="none" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="4"  width="20" height="24" rx="3" fill="#BFD4F2" stroke="#1565C0" stroke-width="1.5"/><rect x="2" y="6"  width="20" height="24" rx="3" fill="#fff"    stroke="#1565C0" stroke-width="2"/><line x1="6" y1="13" x2="18" y2="13" stroke="#1565C0" stroke-width="1.8"/><line x1="6" y1="18" x2="18" y2="18" stroke="#1565C0" stroke-width="1.8"/><line x1="6" y1="23" x2="14" y2="23" stroke="#1565C0" stroke-width="1.8"/></svg></span>
+        <span id="lbl-bro">Brochures Distributed</span><span class="req">*</span>
+      </label>
+      <div class="stepper" id="step-brochures">
+        <button class="stepper-btn" onclick="stepChange('f-brochures',-1,'step-brochures')">−</button>
+        <input class="stepper-input" type="number" id="f-brochures" min="0" value="0"
+               oninput="onStepInput(this,'step-brochures')"
+               onfocus="stepFocus('step-brochures')" onblur="stepBlur('step-brochures')" />
+        <button class="stepper-btn" onclick="stepChange('f-brochures',1,'step-brochures')">+</button>
+      </div>
+      <div class="error-msg" id="err-bro" data-en="Cannot be negative" data-ar="لا يمكن أن يكون سالباً">Cannot be negative</div>
+    </div>
+
+    <div class="field">
+      <label>
+        <span class="lbl-icon"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" width="26" height="26" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M22 6 A10 10 0 1 0 22 26 A7 7 0 1 1 22 6Z" fill="#E3F0FF" stroke="#1565C0" stroke-width="2"/><polygon points="25,10 26.2,13.6 30,13.6 27,15.8 28.2,19.4 25,17.2 21.8,19.4 23,15.8 20,13.6 23.8,13.6" fill="#1565C0"/><circle cx="14" cy="15" r="1.1" fill="#1565C0"/><circle cx="17" cy="15" r="1.1" fill="#1565C0"/><path d="M13 18 Q15.5 20 18 18" stroke="#1565C0" stroke-width="1.2" fill="none"/></svg></span>
+        <span id="lbl-nm">New Muslims</span>
+      </label>
+      <div class="stepper" id="step-newmuslims">
+        <button class="stepper-btn" onclick="stepChange('f-newmuslims',-1,'step-newmuslims')">−</button>
+        <input class="stepper-input" type="number" id="f-newmuslims" min="0" value="0"
+               oninput="onStepInput(this,'step-newmuslims')"
+               onfocus="stepFocus('step-newmuslims')" onblur="stepBlur('step-newmuslims')" />
+        <button class="stepper-btn" onclick="stepChange('f-newmuslims',1,'step-newmuslims')">+</button>
+      </div>
+      <div class="error-msg" id="err-nm" data-en="Cannot be negative" data-ar="لا يمكن أن يكون سالباً">Cannot be negative</div>
+    </div>
+  </div>
+
+</main>
+
+<!-- ═══ STICKY ACTION BAR ═══ -->
+<footer class="action-bar">
+  <div class="btn-group">
+      <button class="btn btn-primary" onclick="saveReport()">
+        <span class="btn-icon"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7" fill="rgba(255,255,255,0.1)" stroke="currentColor" stroke-width="2"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z" fill="rgba(255,255,255,0.2)" stroke="currentColor" stroke-width="2"/></svg></span> <span id="btn-save">Save</span>
+      </button>
+      <button class="btn btn-amber" onclick="copyClipboard()">
+        <span class="btn-icon"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="4" width="14" height="18" rx="2" fill="rgba(255,255,255,0.2)" stroke="currentColor" stroke-width="2"/><rect x="9" y="2" width="8" height="4" rx="1" fill="rgba(255,255,255,0.4)" stroke="currentColor" stroke-width="1.5"/><circle cx="10.5" cy="11" r="1" fill="currentColor"/><circle cx="15.5" cy="11" r="1" fill="currentColor"/><path d="M9.5 14.5 Q13 17 16.5 14.5" stroke="currentColor" stroke-width="1.2" fill="none"/></svg></span> <span id="btn-copy">Copy to Clipboard</span>
+      </button>
+      <button class="btn btn-muted" onclick="clearForm()">
+        <span class="btn-icon"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6" stroke="currentColor" stroke-width="2"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6" stroke="currentColor" stroke-width="2" fill="rgba(255,255,255,0.1)"/><path d="M9 6V4a1 1 0 011-1h4a1 1 0 011 1v2" stroke="currentColor" stroke-width="2"/><circle cx="10" cy="12" r=".9" fill="currentColor"/><circle cx="14" cy="12" r=".9" fill="currentColor"/><path d="M10.5 16 Q12 14.5 13.5 16" stroke="currentColor" stroke-width="1.2" fill="none"/></svg></span> <span id="btn-clear">Clear Form</span>
+      </button>
+      <button class="btn btn-outline" onclick="openReportModal()">
+        <span class="btn-icon"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 01-2 2H4a2 2 0 01-2-2V7a2 2 0 012-2h5l2 3h9a2 2 0 012 2z" fill="rgba(255,255,255,0.2)" stroke="currentColor" stroke-width="2"/><circle cx="9.5" cy="14" r="1" fill="currentColor"/><circle cx="14.5" cy="14" r="1" fill="currentColor"/><path d="M8.5 17.5 Q12 20 15.5 17.5" stroke="currentColor" stroke-width="1.2" fill="none"/></svg></span> <span id="btn-view">View Report</span>
+      </button>
+  </div>
+</footer>
+
+<!-- ═══ TIME PICKER MODAL ═══ -->
+<div class="time-modal-overlay" id="timeModalOverlay" onclick="handleTimeOverlayClick(event)">
+  <div class="time-modal">
+    <div class="time-modal-header">
+      <div class="time-modal-title" id="timeModalTitle">Set Time</div>
+      <button class="time-modal-close" onclick="closeTimePicker()">✕</button>
+    </div>
+    <div class="time-wheels">
+      <div class="wheel-col">
+        <div class="wheel-label" id="wlbl-hr">Hour</div>
+        <button class="wheel-up"   onclick="wheelChange('hour', 1)">▲</button>
+        <div class="wheel-val" id="wval-hour">12</div>
+        <button class="wheel-down" onclick="wheelChange('hour',-1)">▼</button>
+      </div>
+      <div class="time-colon">:</div>
+      <div class="wheel-col">
+        <div class="wheel-label" id="wlbl-min">Min</div>
+        <button class="wheel-up"   onclick="wheelChange('min', 5)">▲</button>
+        <div class="wheel-val" id="wval-min">00</div>
+        <button class="wheel-down" onclick="wheelChange('min',-5)">▼</button>
+      </div>
+      <div class="ampm-col">
+        <button class="ampm-btn active" id="ampm-am" onclick="setAmPm('AM')">AM</button>
+        <button class="ampm-btn"        id="ampm-pm" onclick="setAmPm('PM')">PM</button>
+      </div>
+    </div>
+    <button class="time-modal-confirm" onclick="confirmTime()">
+      <span id="btn-timeset">Set Time</span>
+    </button>
+  </div>
+</div>
+
+<!-- ═══ REPORT MODAL ═══ -->
+<div class="modal-overlay" id="reportModalOverlay" onclick="handleReportOverlayClick(event)">
+  <div class="modal-box">
+    <div class="modal-header">
+      <div class="modal-title" id="modal-title">Saved Report</div>
+      <button class="modal-close" onclick="closeReportModal()">✕</button>
+    </div>
+    <div class="saved-badge">✔ <span id="saved-badge-text">Stored on device</span></div>
+    <div class="report-preview" id="savedReportText">—</div>
+    <div class="modal-actions">
+      <button class="btn btn-amber" onclick="copyFromModal()">
+        <span class="btn-icon"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="4" width="14" height="18" rx="2" fill="rgba(255,255,255,0.2)" stroke="currentColor" stroke-width="2"/><rect x="9" y="2" width="8" height="4" rx="1" fill="rgba(255,255,255,0.4)" stroke="currentColor" stroke-width="1.5"/><circle cx="10.5" cy="11" r="1" fill="currentColor"/><circle cx="15.5" cy="11" r="1" fill="currentColor"/><path d="M9.5 14.5 Q13 17 16.5 14.5" stroke="currentColor" stroke-width="1.2" fill="none"/></svg></span> <span id="mbtn-copy">Copy to Clipboard</span>
+      </button>
+      <button class="btn btn-outline" onclick="selectReportText()">
+        <span class="btn-icon"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 11 12 14 22 4" stroke="currentColor" stroke-width="2.5"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11" stroke="currentColor" stroke-width="2" fill="rgba(255,255,255,0.1)"/></svg></span> <span id="mbtn-selall">Select All</span>
+      </button>
+      <button class="btn btn-primary btn-full" onclick="loadSavedToForm()">
+        <span class="btn-icon"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7" stroke="currentColor" stroke-width="2" fill="rgba(255,255,255,0.1)"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z" stroke="currentColor" stroke-width="2" fill="rgba(255,255,255,0.2)"/><circle cx="8.5" cy="10.5" r="1" fill="currentColor"/><circle cx="5.5" cy="10.5" r="1" fill="currentColor"/><path d="M5 13 Q7 15 9 13" stroke="currentColor" stroke-width="1.1" fill="none"/></svg></span> <span id="btn-edit">Edit This Report</span>
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast"></div>
+
+<!-- ═══ SCRIPT ═══ -->
+<script>
+"use strict";
+
+/* ══ i18n ═══════════════════════════════════════════════════════════════ */
+const I18N = {
+  en: {
+    hdrTitle:      "Daily Tour Activity Report",
+    hdrSub:        "Mosque Volunteer System",
+    sectDatetime:  "Date & Time",
+    sectStats:     "Statistics",
+    sectActions:   "Actions",
+    modalTitle:    "Saved Report",
+    lblDate:       "Date",
+    lblStart:      "Shift Start",
+    lblEnd:        "Shift End",
+    lblVol:        "Number of Volunteers",
+    lblVis:        "Number of Visitors",
+    lblDia:        "Discussions / Dialogues",
+    lblBro:        "Brochures Distributed",
+    lblNm:         "New Muslims",
+    btnSave:       "Save",
+    btnCopy:       "Copy to Clipboard",
+    btnClear:      "Clear Form",
+    btnView:       "View Report",
+    btnEdit:       "Edit This Report",
+    mbtnCopy:      "Copy to Clipboard",
+    mbtnSelAll:    "Select All",
+    savedBadge:    "Stored on device",
+    btnTimeset:    "Set Time",
+    wlblHr:        "Hour",
+    wlblMin:       "Min",
+    timeModalStart:"Set Shift Start",
+    timeModalEnd:  "Set Shift End",
+    toastSaved:    "✅ Report saved!",
+    toastCopied:   "✅ Copied to clipboard!",
+    toastCleared:  "🗑️ Form cleared",
+    toastNoSaved:  "No saved report found",
+    toastLoaded:   "📂 Loaded — edit and save",
+    toastSelected: "✅ Text selected — long-press to copy",
+    errTimeInvalid:"Enter valid time (e.g. 09:00 AM)",
+    errEndTime:    "Shift End must be after Shift Start",
+    reportTitle:   "Daily Tour Activity Report",
+    reportDate:    "Date",
+    reportStart:   "Shift Start",
+    reportEnd:     "Shift End",
+    reportVol:     "Number of Volunteers",
+    reportVis:     "Number of Visitors",
+    reportDia:     "Discussions/Dialogues",
+    reportBro:     "Brochures Distributed",
+    reportNm:      "New Muslims",
+    langSwitch:    "العربية",
+  },
+  ar: {
+    hdrTitle:      "تقرير نشاط الجولة اليومية",
+    hdrSub:        "نظام المتطوعين في المسجد",
+    sectDatetime:  "التاريخ والوقت",
+    sectStats:     "الإحصائيات",
+    sectActions:   "الإجراءات",
+    modalTitle:    "التقرير المحفوظ",
+    lblDate:       "التاريخ",
+    lblStart:      "بداية الوردية",
+    lblEnd:        "نهاية الوردية",
+    lblVol:        "عدد المتطوعين",
+    lblVis:        "عدد الزوار",
+    lblDia:        "النقاشات / الحوارات",
+    lblBro:        "الكتيبات الموزعة",
+    lblNm:         "المسلمون الجدد",
+    btnSave:       "حفظ",
+    btnCopy:       "نسخ إلى الحافظة",
+    btnClear:      "مسح النموذج",
+    btnView:       "عرض التقرير",
+    btnEdit:       "تعديل هذا التقرير",
+    mbtnCopy:      "نسخ إلى الحافظة",
+    mbtnSelAll:    "تحديد الكل",
+    savedBadge:    "محفوظ على الجهاز",
+    btnTimeset:    "تعيين الوقت",
+    wlblHr:        "ساعة",
+    wlblMin:       "دقيقة",
+    timeModalStart:"تعيين بداية الوردية",
+    timeModalEnd:  "تعيين نهاية الوردية",
+    toastSaved:    "✅ تم حفظ التقرير!",
+    toastCopied:   "✅ تم النسخ إلى الحافظة!",
+    toastCleared:  "🗑️ تم مسح النموذج",
+    toastNoSaved:  "لا يوجد تقرير محفوظ",
+    toastLoaded:   "📂 تم التحميل — عدّل واحفظ",
+    toastSelected: "✅ تم التحديد — اضغط مطولاً للنسخ",
+    errTimeInvalid:"أدخل وقتاً صحيحاً (مثال: 09:00 AM)",
+    errEndTime:    "يجب أن تكون نهاية الوردية بعد البداية",
+    reportTitle:   "تقرير نشاط الجولة اليومية",
+    reportDate:    "التاريخ",
+    reportStart:   "بداية الوردية",
+    reportEnd:     "نهاية الوردية",
+    reportVol:     "عدد المتطوعين",
+    reportVis:     "عدد الزوار",
+    reportDia:     "النقاشات/الحوارات",
+    reportBro:     "الكتيبات الموزعة",
+    reportNm:      "المسلمون الجدد",
+    langSwitch:    "English",
+  }
+};
+
+let lang = localStorage.getItem("mtar_lang") || "en";
+
+/* ══ Language ══════════════════════════════════════════════════════════ */
+function applyLang() {
+  const t = I18N[lang];
+  const isAr = lang === "ar";
+  document.documentElement.lang = lang;
+  document.documentElement.dir  = isAr ? "rtl" : "ltr";
+  document.body.classList.toggle("rtl", isAr);
+
+  const ids = {
+    "hdr-title":        t.hdrTitle,
+    "hdr-sub":          t.hdrSub,
+    "sect-datetime":    t.sectDatetime,
+    "sect-stats":       t.sectStats,
+    "sect-actions":     t.sectActions,
+    "modal-title":      t.modalTitle,
+    "lbl-date":         t.lblDate,
+    "lbl-start":        t.lblStart,
+    "lbl-end":          t.lblEnd,
+    "lbl-vol":          t.lblVol,
+    "lbl-vis":          t.lblVis,
+    "lbl-dia":          t.lblDia,
+    "lbl-bro":          t.lblBro,
+    "lbl-nm":           t.lblNm,
+    "btn-save":         t.btnSave,
+    "btn-copy":         t.btnCopy,
+    "btn-clear":        t.btnClear,
+    "btn-view":         t.btnView,
+    "btn-edit":         t.btnEdit,
+    "mbtn-copy":        t.mbtnCopy,
+    "mbtn-selall":      t.mbtnSelAll,
+    "saved-badge-text": t.savedBadge,
+    "btn-timeset":      t.btnTimeset,
+    "wlbl-hr":          t.wlblHr,
+    "wlbl-min":         t.wlblMin,
+  };
+  Object.entries(ids).forEach(([id, txt]) => set(id, txt));
+  document.getElementById("langBtn").textContent = t.langSwitch;
+
+  document.querySelectorAll(".error-msg").forEach(el => {
+    if (el.dataset[lang]) el.textContent = el.dataset[lang];
+  });
+
+  const saved = loadFromStorage();
+  if (saved) set("savedReportText", buildReportText(saved));
+}
+function set(id, txt) { const e = document.getElementById(id); if (e) e.textContent = txt; }
+function toggleLang() {
+  lang = lang === "en" ? "ar" : "en";
+  localStorage.setItem("mtar_lang", lang);
+  applyLang();
+}
+
+/* ══ Stepper ═══════════════════════════════════════════════════════════ */
+function stepChange(inputId, delta, wid) {
+  const inp = document.getElementById(inputId);
+  inp.value = Math.max(0, (parseInt(inp.value,10)||0) + delta);
+  document.getElementById(wid).classList.remove("invalid");
+}
+function onStepInput(inp, wid) { if (parseInt(inp.value,10) < 0) inp.value = 0; }
+function stepFocus(wid) { document.getElementById(wid).classList.add("focused"); }
+function stepBlur(wid)  { document.getElementById(wid).classList.remove("focused"); }
+
+/* ══ Time text input ═══════════════════════════════════════════════════
+   Accepts:  "9", "09", "900", "9:00", "9:00 AM", "09:00 AM" etc.
+   Auto-formats as user types digits.
+═══════════════════════════════════════════════════════════════════════ */
+const timeValues = { start: "", end: "" }; // stores "HH:MM" 24h
+
+function onTimeTextInput(inp, which) {
+  // allow only digits, colon, space, A, P, M
+  let raw = inp.value.replace(/[^0-9:APMapm ]/g, "");
+  inp.value = raw;
+}
+
+function onTimeTextBlur(inp, which) {
+  const parsed = parseTimeText(inp.value.trim());
+  if (parsed) {
+    timeValues[which] = parsed;
+    inp.value = fmtTime(parsed);          // display nicely
+    document.getElementById("tig-" + which).classList.remove("invalid");
+    document.getElementById("err-" + which).classList.remove("visible");
+
+    // Auto-populate Shift End when Shift Start typed & End still empty
+    if (which === "start" && !timeValues.end) {
+      timeValues.end = parsed;
+      const endEl = document.getElementById("f-end-text");
+      if (endEl) endEl.value = fmtTime(parsed);
+      document.getElementById("tig-end").classList.remove("invalid");
+      document.getElementById("err-end").classList.remove("visible");
+    }
+  } else if (inp.value.trim() === "") {
+    timeValues[which] = "";
+  } else {
+    // leave the typed value but mark invalid (will be caught by validate)
+    timeValues[which] = "";
+  }
+}
+
+/**
+ * Parse a loosely-typed time string → "HH:MM" 24h or null.
+ * Handles: "9", "09", "9:00", "09:30", "9:00 AM", "9:00 PM",
+ *          "0900", "1300", "13:00", "1:30pm"
+ */
+function parseTimeText(str) {
+  if (!str) return null;
+  str = str.toUpperCase().replace(/\./g, "").trim();
+
+  let h, m, ampm = null;
+
+  // detect AM/PM suffix
+  if (str.includes("AM")) { ampm = "AM"; str = str.replace("AM","").trim(); }
+  else if (str.includes("PM")) { ampm = "PM"; str = str.replace("PM","").trim(); }
+
+  str = str.replace(/[^0-9:]/g, "");
+
+  if (str.includes(":")) {
+    const parts = str.split(":");
+    h = parseInt(parts[0], 10);
+    m = parseInt(parts[1] || "0", 10);
+  } else if (str.length <= 2) {
+    h = parseInt(str, 10); m = 0;
+  } else if (str.length === 3) {
+    h = parseInt(str[0], 10); m = parseInt(str.slice(1), 10);
+  } else if (str.length === 4) {
+    h = parseInt(str.slice(0,2), 10); m = parseInt(str.slice(2), 10);
+  } else return null;
+
+  if (isNaN(h) || isNaN(m)) return null;
+  if (m < 0 || m > 59) return null;
+
+  // resolve AM/PM
+  if (ampm === "AM") {
+    if (h === 12) h = 0;
+    if (h < 0 || h > 12) return null;
+  } else if (ampm === "PM") {
+    if (h !== 12) h += 12;
+    if (h < 12 || h > 23) return null;
+  } else {
+    // no suffix — treat as 24h if >=13, else 12h AM
+    if (h < 0 || h > 23) return null;
+  }
+
+  return `${String(h).padStart(2,"0")}:${String(m).padStart(2,"0")}`;
+}
+
+/* ══ Wheel picker ══════════════════════════════════════════════════════ */
+let activeTimePicker = null;
+let tpHour = 12, tpMin = 0, tpAmPm = "AM";
+
+function openTimePicker(which) {
+  activeTimePicker = which;
+  const t = I18N[lang];
+  set("timeModalTitle", which === "start" ? t.timeModalStart : t.timeModalEnd);
+  set("btn-timeset", t.btnTimeset);
+
+  const existing = timeValues[which];
+  if (existing) {
+    const [h24, m] = existing.split(":").map(Number);
+    tpAmPm = h24 >= 12 ? "PM" : "AM";
+    tpHour = h24 % 12 || 12;
+    tpMin  = m;
+  } else {
+    // pre-fill from the text field if partially typed
+    const textEl = document.getElementById("f-" + which + "-text");
+    const parsed = parseTimeText(textEl ? textEl.value : "");
+    if (parsed) {
+      const [h24, m] = parsed.split(":").map(Number);
+      tpAmPm = h24 >= 12 ? "PM" : "AM";
+      tpHour = h24 % 12 || 12;
+      tpMin  = m;
+    } else {
+      tpHour = 12; tpMin = 0; tpAmPm = "AM";
+    }
+  }
+  renderWheels();
+  document.getElementById("timeModalOverlay").classList.add("open");
+}
+function closeTimePicker() {
+  document.getElementById("timeModalOverlay").classList.remove("open");
+  activeTimePicker = null;
+}
+function handleTimeOverlayClick(e) {
+  if (e.target === document.getElementById("timeModalOverlay")) closeTimePicker();
+}
+function wheelChange(part, delta) {
+  if (part === "hour") tpHour = ((tpHour - 1 + delta + 12) % 12) + 1;
+  else tpMin = ((tpMin + delta) + 60) % 60;
+  renderWheels();
+}
+function setAmPm(val) { tpAmPm = val; renderWheels(); }
+function renderWheels() {
+  set("wval-hour", String(tpHour).padStart(2,"0"));
+  set("wval-min",  String(tpMin).padStart(2,"0"));
+  document.getElementById("ampm-am").classList.toggle("active", tpAmPm === "AM");
+  document.getElementById("ampm-pm").classList.toggle("active", tpAmPm === "PM");
+}
+function confirmTime() {
+  let h24 = tpHour % 12;
+  if (tpAmPm === "PM") h24 += 12;
+  const val24 = `${String(h24).padStart(2,"0")}:${String(tpMin).padStart(2,"0")}`;
+  timeValues[activeTimePicker] = val24;
+
+  const textEl = document.getElementById("f-" + activeTimePicker + "-text");
+  if (textEl) textEl.value = fmtTime(val24);
+
+  document.getElementById("tig-" + activeTimePicker).classList.remove("invalid");
+  document.getElementById("err-" + activeTimePicker).classList.remove("visible");
+
+  // Auto-populate Shift End when Shift Start is set and End is still empty
+  if (activeTimePicker === "start" && !timeValues.end) {
+    timeValues.end = val24;
+    const endEl = document.getElementById("f-end-text");
+    if (endEl) endEl.value = fmtTime(val24);
+    document.getElementById("tig-end").classList.remove("invalid");
+    document.getElementById("err-end").classList.remove("visible");
+  }
+
+  closeTimePicker();
+}
+
+/* ══ Helpers ═══════════════════════════════════════════════════════════ */
+function today() { return new Date().toISOString().slice(0,10); }
+
+function fmtDate(val) {
+  if (!val) return "";
+  const [y,m,d] = val.split("-");
+  const months = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+  return `${d}-${months[parseInt(m,10)-1]}-${y}`;
+}
+function fmtTime(val24) {
+  if (!val24) return "";
+  const [h,mi] = val24.split(":").map(Number);
+  const ap = h >= 12 ? "PM" : "AM";
+  const hr = h % 12 || 12;
+  return `${String(hr).padStart(2,"0")}:${String(mi).padStart(2,"0")} ${ap}`;
+}
+function v(id) { return document.getElementById(id).value; }
+
+/* ══ Report ════════════════════════════════════════════════════════════ */
+function buildReportText(data) {
+  const t = I18N[lang];
+  return [
+    t.reportTitle, "",
+    `${t.reportDate}: ${fmtDate(data.date)}`,
+    `${t.reportStart}: ${fmtTime(data.start)}`,
+    `${t.reportEnd}: ${fmtTime(data.end)}`,
+    `${t.reportVol}: ${data.volunteers}`,
+    `${t.reportVis}: ${data.visitors}`,
+    `${t.reportDia}: ${data.dialogues}`,
+    `${t.reportBro}: ${data.brochures}`,
+    `${t.reportNm}: ${parseInt(data.newmuslims,10)||0}`,
+  ].join("\n");
+}
+
+/* ══ Storage ═══════════════════════════════════════════════════════════ */
+const STORAGE_KEY = "mtar_report_v3";
+function saveToStorage(d)   { localStorage.setItem(STORAGE_KEY, JSON.stringify(d)); }
+function loadFromStorage()  { const r = localStorage.getItem(STORAGE_KEY); return r ? JSON.parse(r) : null; }
+
+/* ══ Collect ═══════════════════════════════════════════════════════════ */
+function collectData() {
+  return {
+    date:       v("f-date"),
+    start:      timeValues.start,
+    end:        timeValues.end,
+    volunteers: v("f-volunteers"),
+    visitors:   v("f-visitors"),
+    dialogues:  v("f-dialogues"),
+    brochures:  v("f-brochures"),
+    newmuslims: v("f-newmuslims"),
+  };
+}
+
+/* ══ Validation ════════════════════════════════════════════════════════ */
+function clearErrors() {
+  document.querySelectorAll(".error-msg").forEach(e => e.classList.remove("visible"));
+  document.querySelectorAll(".stepper").forEach(s => s.classList.remove("invalid"));
+  document.querySelectorAll(".time-input-group").forEach(g => g.classList.remove("invalid"));
+  document.querySelectorAll("input[type=date]").forEach(i => i.classList.remove("invalid"));
+}
+
+function validate() {
+  clearErrors();
+  const t = I18N[lang];
+  let ok = true;
+
+  if (!v("f-date")) {
+    document.getElementById("err-date").classList.add("visible");
+    document.getElementById("f-date").classList.add("invalid");
+    ok = false;
+  }
+
+  // Validate start time — try to parse typed text first
+  const startText = document.getElementById("f-start-text").value.trim();
+  if (startText && !timeValues.start) {
+    const p = parseTimeText(startText);
+    if (p) timeValues.start = p;
+  }
+  if (!timeValues.start) {
+    document.getElementById("err-start").textContent = t.errTimeInvalid;
+    document.getElementById("err-start").classList.add("visible");
+    document.getElementById("tig-start").classList.add("invalid");
+    ok = false;
+  }
+
+  // Validate end time
+  const endText = document.getElementById("f-end-text").value.trim();
+  if (endText && !timeValues.end) {
+    const p = parseTimeText(endText);
+    if (p) timeValues.end = p;
+  }
+  if (!timeValues.end) {
+    document.getElementById("err-end").textContent = t.errTimeInvalid;
+    document.getElementById("err-end").classList.add("visible");
+    document.getElementById("tig-end").classList.add("invalid");
+    ok = false;
+  } else if (timeValues.start && timeValues.end <= timeValues.start) {
+    document.getElementById("err-end").textContent = t.errEndTime;
+    document.getElementById("err-end").classList.add("visible");
+    document.getElementById("tig-end").classList.add("invalid");
+    ok = false;
+  }
+
+  [["f-volunteers","err-vol","step-volunteers"],
+   ["f-visitors",  "err-vis","step-visitors"],
+   ["f-dialogues", "err-dia","step-dialogues"],
+   ["f-brochures", "err-bro","step-brochures"],
+   ["f-newmuslims","err-nm", "step-newmuslims"]].forEach(([fid,eid,sid]) => {
+    if (parseInt(document.getElementById(fid).value,10) < 0) {
+      document.getElementById(eid).classList.add("visible");
+      document.getElementById(sid).classList.add("invalid");
+      ok = false;
+    }
+  });
+  return ok;
+}
+
+/* ══ Actions ═══════════════════════════════════════════════════════════ */
+function saveReport() {
+  if (!validate()) return;
+  saveToStorage(collectData());
+  toast(I18N[lang].toastSaved);
+}
+
+function doCopy(text) {
+  if (navigator.clipboard && navigator.clipboard.writeText)
+    return navigator.clipboard.writeText(text).then(() => true).catch(() => legacyCopy(text));
+  return Promise.resolve(legacyCopy(text));
+}
+function legacyCopy(text) {
+  const el = document.createElement("div");
+  el.contentEditable = "true";
+  el.style.cssText = "position:fixed;top:0;left:0;opacity:0;white-space:pre-wrap;";
+  el.textContent = text;
+  document.body.appendChild(el);
+  const range = document.createRange();
+  range.selectNodeContents(el);
+  const sel = window.getSelection();
+  sel.removeAllRanges(); sel.addRange(range);
+  let ok = false;
+  try { ok = document.execCommand("copy"); } catch(e) {}
+  sel.removeAllRanges();
+  document.body.removeChild(el);
+  return ok;
+}
+
+function copyClipboard() {
+  const saved = loadFromStorage();
+  doCopy(saved ? buildReportText(saved) : buildReportText(collectData()))
+    .then(() => toast(I18N[lang].toastCopied));
+}
+function copyFromModal() {
+  doCopy(document.getElementById("savedReportText").textContent)
+    .then(() => toast(I18N[lang].toastCopied));
+}
+function selectReportText() {
+  const el = document.getElementById("savedReportText");
+  el.classList.add("flash");
+  setTimeout(() => el.classList.remove("flash"), 500);
+  const range = document.createRange();
+  range.selectNodeContents(el);
+  const sel = window.getSelection();
+  sel.removeAllRanges(); sel.addRange(range);
+  toast(I18N[lang].toastSelected);
+}
+
+function clearForm() {
+  document.getElementById("f-date").value       = today();
+  document.getElementById("f-volunteers").value = 0;
+  document.getElementById("f-visitors").value   = 0;
+  document.getElementById("f-dialogues").value  = 0;
+  document.getElementById("f-brochures").value  = 0;
+  document.getElementById("f-newmuslims").value = 0;
+  timeValues.start = ""; timeValues.end = "";
+  document.getElementById("f-start-text").value = "";
+  document.getElementById("f-end-text").value   = "";
+  document.getElementById("tig-start").classList.remove("invalid");
+  document.getElementById("tig-end").classList.remove("invalid");
+  clearErrors();
+  toast(I18N[lang].toastCleared);
+}
+
+function openReportModal() {
+  const saved = loadFromStorage();
+  if (!saved) { toast(I18N[lang].toastNoSaved); return; }
+  set("savedReportText", buildReportText(saved));
+  document.getElementById("reportModalOverlay").classList.add("open");
+}
+function closeReportModal() { document.getElementById("reportModalOverlay").classList.remove("open"); }
+function handleReportOverlayClick(e) {
+  if (e.target === document.getElementById("reportModalOverlay")) closeReportModal();
+}
+
+function loadSavedToForm() {
+  const saved = loadFromStorage();
+  if (!saved) { toast(I18N[lang].toastNoSaved); return; }
+  document.getElementById("f-date").value       = saved.date       || today();
+  document.getElementById("f-volunteers").value = saved.volunteers ?? 0;
+  document.getElementById("f-visitors").value   = saved.visitors   ?? 0;
+  document.getElementById("f-dialogues").value  = saved.dialogues  ?? 0;
+  document.getElementById("f-brochures").value  = saved.brochures  ?? 0;
+  document.getElementById("f-newmuslims").value = saved.newmuslims ?? 0;
+  ["start","end"].forEach(k => {
+    timeValues[k] = saved[k] || "";
+    const textEl = document.getElementById("f-"+k+"-text");
+    if (textEl) textEl.value = saved[k] ? fmtTime(saved[k]) : "";
+    document.getElementById("tig-"+k).classList.remove("invalid");
+  });
+  closeReportModal();
+  window.scrollTo({ top: 0, behavior: "smooth" });
+  toast(I18N[lang].toastLoaded);
+}
+
+/* ══ Toast ═════════════════════════════════════════════════════════════ */
+let toastTimer = null;
+function toast(msg) {
+  const el = document.getElementById("toast");
+  el.textContent = msg;
+  el.classList.add("show");
+  if (toastTimer) clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => el.classList.remove("show"), 2800);
+}
+
+/* ══ Init ══════════════════════════════════════════════════════════════ */
+(function init() {
+  document.getElementById("f-date").value = today();
+  const saved = loadFromStorage();
+  if (saved) {
+    document.getElementById("f-date").value       = saved.date       || today();
+    document.getElementById("f-volunteers").value = saved.volunteers ?? 0;
+    document.getElementById("f-visitors").value   = saved.visitors   ?? 0;
+    document.getElementById("f-dialogues").value  = saved.dialogues  ?? 0;
+    document.getElementById("f-brochures").value  = saved.brochures  ?? 0;
+    document.getElementById("f-newmuslims").value = saved.newmuslims ?? 0;
+    ["start","end"].forEach(k => {
+      if (saved[k]) {
+        timeValues[k] = saved[k];
+        const textEl = document.getElementById("f-"+k+"-text");
+        if (textEl) textEl.value = fmtTime(saved[k]);
+      }
+    });
+  }
+  applyLang();
+})();
+
+/* ══ Scroll hint ═══════════════════════════════════════════════════════ */
+(function setupScrollHint() {
+  const hint = document.getElementById("scrollHint");
+  if (!hint) return;
+
+  function checkScroll() {
+    // Hide hint when within 40px of the bottom of scrollable content
+    const distFromBottom = document.documentElement.scrollHeight
+                         - window.scrollY
+                         - window.innerHeight;
+    if (distFromBottom < 40) {
+      hint.classList.add("hidden");
+    } else {
+      hint.classList.remove("hidden");
+    }
+  }
+
+  window.addEventListener("scroll", checkScroll, { passive: true });
+  // Also check on resize (e.g. keyboard opens/closes)
+  window.addEventListener("resize", checkScroll, { passive: true });
+  // Initial check after paint
+  requestAnimationFrame(checkScroll);
+})();
+
+</script>
+
+<!-- ═══ SCROLL HINT ═══ -->
+<div class="scroll-hint" id="scrollHint">
+  <div class="scroll-hint-arrow">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 12" width="22" height="13" fill="none">
+      <polyline points="2,2 10,10 18,2" stroke="#1565C0" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 12" width="22" height="13" fill="none" style="opacity:.45;margin-top:-6px">
+      <polyline points="2,2 10,10 18,2" stroke="#1565C0" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>
+  </div>
+</div>
+</body>
+</html>
