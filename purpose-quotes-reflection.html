@@ -1,0 +1,410 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Purpose & Diligence — Quote Reflections</title>
+<style>
+  :root{
+    --bg: #0f1a1a;
+    --bg-2: #142424;
+    --panel: #17282a;
+    --line: #294341;
+    --text: #eae3d2;
+    --text-dim: #8fa6a3;
+    --gold: #d4af6a;
+    --gold-dim: #8a6d2c;
+    --teal: #4fd6c4;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    min-height:100vh;
+    font-family: Georgia, 'Times New Roman', serif;
+    color:var(--text);
+    background: radial-gradient(circle at 50% 0%, var(--bg-2), var(--bg));
+  }
+  .wrap{
+    max-width:760px;
+    margin:0 auto;
+    padding:40px 20px 70px;
+  }
+  header{text-align:center; margin-bottom:24px;}
+  header .glyph{font-size:28px; display:block; margin-bottom:6px; color:var(--gold);}
+  h1{
+    font-family: 'Segoe UI', Tahoma, sans-serif;
+    font-size:21px;
+    font-weight:600;
+    margin:0 0 6px;
+    letter-spacing:.3px;
+  }
+  .subtitle{
+    font-family: 'Segoe UI', Tahoma, sans-serif;
+    color:var(--text-dim);
+    font-size:12.5px;
+    margin:0;
+  }
+
+  .overall{
+    background:var(--panel);
+    border:1px solid var(--line);
+    border-radius:10px;
+    padding:14px 18px;
+    margin-bottom:26px;
+    font-family:'Segoe UI', Tahoma, sans-serif;
+  }
+  .overall-top{
+    display:flex;
+    justify-content:space-between;
+    font-size:12px;
+    color:var(--text-dim);
+    margin-bottom:8px;
+  }
+  .overall-top b{color:var(--gold);}
+  .bar{height:7px; background:var(--line); border-radius:4px; overflow:hidden;}
+  .bar>div{height:100%; background:linear-gradient(90deg,var(--gold-dim),var(--gold)); transition:width .35s ease;}
+
+  .tabs{
+    display:flex;
+    gap:6px;
+    flex-wrap:wrap;
+    margin-bottom:16px;
+    font-family:'Segoe UI', Tahoma, sans-serif;
+  }
+  .tab{
+    background:var(--panel);
+    border:1px solid var(--line);
+    color:var(--text-dim);
+    font-size:11.5px;
+    padding:7px 12px;
+    border-radius:20px;
+    cursor:pointer;
+    white-space:nowrap;
+  }
+  .tab.active{
+    background:var(--gold-dim);
+    border-color:var(--gold);
+    color:var(--text);
+  }
+
+  .category{display:none;}
+  .category.active{display:block;}
+
+  .cat-header{
+    font-family:'Segoe UI', Tahoma, sans-serif;
+    font-size:13px;
+    color:var(--teal);
+    text-transform:uppercase;
+    letter-spacing:1px;
+    margin-bottom:10px;
+  }
+
+  .slider{
+    position:relative;
+    overflow:hidden;
+    border-radius:12px;
+    border:1px solid var(--line);
+    background:var(--panel);
+    min-height:220px;
+  }
+  .track{
+    display:flex;
+    transition:transform .45s cubic-bezier(.65,0,.35,1);
+  }
+  .slide{
+    flex:0 0 100%;
+    padding:30px 28px 22px;
+    display:flex;
+    flex-direction:column;
+    justify-content:center;
+    min-height:220px;
+  }
+  .quote-text{
+    font-size:17px;
+    line-height:1.6;
+    color:var(--text);
+    margin:0 0 14px;
+  }
+  .quote-attr{
+    font-family:'Segoe UI', Tahoma, sans-serif;
+    font-size:12.5px;
+    color:var(--gold);
+    font-weight:600;
+    margin-bottom:16px;
+  }
+  .reflect-row{
+    display:flex;
+    align-items:center;
+    gap:8px;
+    font-family:'Segoe UI', Tahoma, sans-serif;
+    font-size:12px;
+    color:var(--text-dim);
+  }
+  .reflect-row input{
+    accent-color: var(--teal);
+    width:15px; height:15px;
+    cursor:pointer;
+  }
+  .reflect-row.done{color:var(--teal);}
+
+  .nav-row{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    padding:10px 14px;
+    border-top:1px solid var(--line);
+    font-family:'Segoe UI', Tahoma, sans-serif;
+  }
+  .nav-btn{
+    background:none;
+    border:1px solid var(--line);
+    color:var(--text);
+    font-size:13px;
+    width:30px; height:30px;
+    border-radius:50%;
+    cursor:pointer;
+  }
+  .nav-btn:hover{border-color:var(--gold); color:var(--gold);}
+  .dots{display:flex; gap:6px;}
+  .dot{
+    width:6px; height:6px;
+    border-radius:50%;
+    background:var(--line);
+    cursor:pointer;
+  }
+  .dot.active{background:var(--gold);}
+
+  .footer-note{text-align:center; margin-top:28px; font-family:'Segoe UI', Tahoma, sans-serif;}
+  .reset-btn{
+    background:none;
+    border:1px solid var(--line);
+    color:var(--text-dim);
+    font-size:11.5px;
+    padding:6px 12px;
+    border-radius:6px;
+    cursor:pointer;
+  }
+  .reset-btn:hover{border-color:var(--bad,#e0715c); color:#e0715c;}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <span class="glyph">☾</span>
+    <h1>Purpose & Diligence</h1>
+    <p class="subtitle">Quotes to work harder, smarter, and for a greater purpose</p>
+  </header>
+
+  <div class="overall">
+    <div class="overall-top">
+      <span>REFLECTED ON</span>
+      <span><b id="overallPct">0%</b> — <span id="overallCount">0/0</span></span>
+    </div>
+    <div class="bar"><div id="overallBar" style="width:0%"></div></div>
+  </div>
+
+  <div class="tabs" id="tabs"></div>
+  <div id="categories"></div>
+
+  <div class="footer-note">
+    <button class="reset-btn" id="resetBtn">Reset all reflections</button>
+  </div>
+
+</div>
+
+<script>
+const CATEGORIES = [
+  {
+    key: "worship",
+    name: "Work as Worship",
+    quotes: [
+      { text: "I did not create the jinn and mankind except to worship Me.", attr: "Qur'an 51:56" },
+      { text: "The strong believer is better and more beloved to Allah than the weak believer, while there is good in both.", attr: "Prophet Muhammad ﷺ · Sahih Muslim" },
+      { text: "Allah loves that when one of you does a job, he perfects it (ihsan).", attr: "Prophet Muhammad ﷺ · Al-Bayhaqi" },
+      { text: "Work for your worldly life as if you will live forever, and work for your Hereafter as if you will die tomorrow.", attr: "Imam Ali (RA)" },
+      { text: "None of you should sit idle from seeking sustenance while saying, 'O Allah, provide for me,' knowing well that the sky does not rain gold or silver.", attr: "Umar ibn al-Khattab (RA)" }
+    ]
+  },
+  {
+    key: "mastery",
+    name: "Effort & Mastery",
+    quotes: [
+      { text: "We are what we repeatedly do. Excellence, then, is not an act, but a habit.", attr: "Aristotle" },
+      { text: "Genius is one percent inspiration and ninety-nine percent perspiration.", attr: "Thomas Edison" },
+      { text: "Sound knowledge and sound action are the two wings by which a person rises; neither alone suffices.", attr: "Ibn al-Qayyim" }
+    ]
+  },
+  {
+    key: "smart",
+    name: "Work Smart",
+    quotes: [
+      { text: "Efficiency is doing things right; effectiveness is doing the right things.", attr: "Peter Drucker" },
+      { text: "Give me six hours to chop down a tree and I will spend the first four sharpening the axe.", attr: "Abraham Lincoln" }
+    ]
+  },
+  {
+    key: "purpose",
+    name: "Rising Above Mere Existence",
+    quotes: [
+      { text: "A life spent only chasing food, comfort, and rest, with no reflection on one's Creator, differs little from that of animals; reflection and purpose are what elevate a person.", attr: "Al-Ghazali" },
+      { text: "Those who have a 'why' to live, can bear with almost any 'how'.", attr: "Viktor Frankl" },
+      { text: "Knowledge and disciplined striving, paired with sincerity, are what distinguish a purposeful life from mere survival.", attr: "Imam Ash-Shafi'i" }
+    ]
+  },
+  {
+    key: "discipline",
+    name: "Discipline & Consistency",
+    quotes: [
+      { text: "The most beloved of deeds to Allah are those done consistently, even if small.", attr: "Prophet Muhammad ﷺ · Sahih al-Bukhari" },
+      { text: "The ink of the scholar is weighed against the blood of the martyr.", attr: "Imam Ahmad ibn Hanbal" }
+    ]
+  }
+];
+
+const STORAGE_KEY = "purpose_quotes_reflect_v1";
+
+function loadState(){
+  try{
+    const raw = localStorage.getItem(STORAGE_KEY);
+    return raw ? JSON.parse(raw) : {};
+  }catch(e){ return {}; }
+}
+function saveState(state){
+  try{ localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); }
+  catch(e){ console.error("Could not save reflection state", e); }
+}
+
+let state = loadState();
+let activeCat = 0;
+const slideIndex = {}; // per category current slide
+
+CATEGORIES.forEach((c,i) => slideIndex[i] = 0);
+
+const tabsEl = document.getElementById("tabs");
+const catsEl = document.getElementById("categories");
+
+function keyFor(catKey, qIdx){ return catKey + "_" + qIdx; }
+
+function buildTabs(){
+  tabsEl.innerHTML = "";
+  CATEGORIES.forEach((cat, idx) => {
+    const t = document.createElement("div");
+    t.className = "tab" + (idx === activeCat ? " active" : "");
+    t.textContent = cat.name;
+    t.addEventListener("click", () => { activeCat = idx; renderAll(); });
+    tabsEl.appendChild(t);
+  });
+}
+
+function buildCategories(){
+  catsEl.innerHTML = "";
+  CATEGORIES.forEach((cat, cIdx) => {
+    const catDiv = document.createElement("div");
+    catDiv.className = "category" + (cIdx === activeCat ? " active" : "");
+
+    const header = document.createElement("div");
+    header.className = "cat-header";
+    header.textContent = cat.name;
+    catDiv.appendChild(header);
+
+    const slider = document.createElement("div");
+    slider.className = "slider";
+
+    const track = document.createElement("div");
+    track.className = "track";
+    track.style.transform = `translateX(-${slideIndex[cIdx]*100}%)`;
+
+    cat.quotes.forEach((q, qIdx) => {
+      const k = keyFor(cat.key, qIdx);
+      const checked = !!state[k];
+      const slide = document.createElement("div");
+      slide.className = "slide";
+      slide.innerHTML = `
+        <p class="quote-text">"${q.text}"</p>
+        <div class="quote-attr">— ${q.attr}</div>
+        <div class="reflect-row ${checked ? 'done' : ''}">
+          <input type="checkbox" id="rc_${cIdx}_${qIdx}" ${checked ? "checked" : ""}>
+          <label for="rc_${cIdx}_${qIdx}">Reflected on this today</label>
+        </div>
+      `;
+      slide.querySelector("input").addEventListener("change", (e) => {
+        state[k] = e.target.checked;
+        saveState(state);
+        renderAll();
+      });
+      track.appendChild(slide);
+    });
+
+    slider.appendChild(track);
+
+    const navRow = document.createElement("div");
+    navRow.className = "nav-row";
+
+    const prevBtn = document.createElement("button");
+    prevBtn.className = "nav-btn";
+    prevBtn.textContent = "‹";
+    prevBtn.addEventListener("click", () => {
+      slideIndex[cIdx] = (slideIndex[cIdx] - 1 + cat.quotes.length) % cat.quotes.length;
+      renderAll();
+    });
+
+    const dots = document.createElement("div");
+    dots.className = "dots";
+    cat.quotes.forEach((_, qIdx) => {
+      const d = document.createElement("div");
+      d.className = "dot" + (qIdx === slideIndex[cIdx] ? " active" : "");
+      d.addEventListener("click", () => { slideIndex[cIdx] = qIdx; renderAll(); });
+      dots.appendChild(d);
+    });
+
+    const nextBtn = document.createElement("button");
+    nextBtn.className = "nav-btn";
+    nextBtn.textContent = "›";
+    nextBtn.addEventListener("click", () => {
+      slideIndex[cIdx] = (slideIndex[cIdx] + 1) % cat.quotes.length;
+      renderAll();
+    });
+
+    navRow.appendChild(prevBtn);
+    navRow.appendChild(dots);
+    navRow.appendChild(nextBtn);
+
+    catDiv.appendChild(slider);
+    catDiv.appendChild(navRow);
+    catsEl.appendChild(catDiv);
+  });
+}
+
+function updateOverall(){
+  let total = 0, done = 0;
+  CATEGORIES.forEach(cat => {
+    cat.quotes.forEach((_, qIdx) => {
+      total++;
+      if(state[keyFor(cat.key, qIdx)]) done++;
+    });
+  });
+  const pct = total ? Math.round((done/total)*100) : 0;
+  document.getElementById("overallPct").textContent = pct + "%";
+  document.getElementById("overallCount").textContent = done + "/" + total;
+  document.getElementById("overallBar").style.width = pct + "%";
+}
+
+function renderAll(){
+  buildTabs();
+  buildCategories();
+  updateOverall();
+}
+
+document.getElementById("resetBtn").addEventListener("click", () => {
+  if(confirm("Clear all reflection checkmarks?")){
+    state = {};
+    saveState(state);
+    renderAll();
+  }
+});
+
+renderAll();
+</script>
+</body>
+</html>

@@ -1,0 +1,425 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Responsibilities of a Man — Checklist</title>
+<style>
+  :root{
+    --bg: #0f1e1c;
+    --panel: #142825;
+    --panel-2: #1a3330;
+    --gold: #c9a15a;
+    --gold-soft: #e3c98a;
+    --text: #eae5d9;
+    --text-dim: #a9b7b3;
+    --line: #2a4440;
+    --done: #4f7d6f;
+    --radius: 10px;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Georgia', 'Times New Roman', serif;
+    -webkit-font-smoothing:antialiased;
+  }
+  header{
+    padding: 28px 20px 18px;
+    text-align:center;
+    border-bottom: 1px solid var(--line);
+    background: linear-gradient(180deg, #102420, transparent);
+  }
+  header h1{
+    margin:0;
+    font-size: 1.5rem;
+    letter-spacing: 0.02em;
+    color: var(--gold-soft);
+    font-weight: 600;
+  }
+  header p{
+    margin: 6px 0 0;
+    color: var(--text-dim);
+    font-size: 0.85rem;
+    font-family: -apple-system, sans-serif;
+  }
+  .progress-wrap{
+    max-width: 640px;
+    margin: 16px auto 0;
+    padding: 0 20px;
+  }
+  .progress-bar{
+    height: 8px;
+    background: var(--panel);
+    border-radius: 20px;
+    overflow:hidden;
+    border: 1px solid var(--line);
+  }
+  .progress-fill{
+    height:100%;
+    background: linear-gradient(90deg, var(--done), var(--gold));
+    width:0%;
+    transition: width 0.4s ease;
+  }
+  .progress-label{
+    text-align:center;
+    font-size:0.75rem;
+    color: var(--text-dim);
+    margin-top:6px;
+    font-family: -apple-system, sans-serif;
+  }
+  main{
+    max-width: 640px;
+    margin: 0 auto;
+    padding: 20px 16px 60px;
+  }
+  .section{
+    margin-bottom: 22px;
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    overflow:hidden;
+  }
+  .section-head{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    padding: 14px 16px;
+    cursor:pointer;
+    background: var(--panel-2);
+    user-select:none;
+  }
+  .section-head h2{
+    margin:0;
+    font-size: 1.02rem;
+    color: var(--gold-soft);
+    font-weight:600;
+  }
+  .section-count{
+    font-size:0.72rem;
+    color: var(--text-dim);
+    font-family: -apple-system, sans-serif;
+    white-space:nowrap;
+    margin-left:10px;
+  }
+  .chevron{
+    transition: transform 0.25s ease;
+    color: var(--gold);
+    margin-left:8px;
+  }
+  .section.collapsed .chevron{ transform: rotate(-90deg); }
+  .section-body{
+    max-height: 2000px;
+    transition: max-height 0.3s ease, padding 0.3s ease;
+    padding: 6px 16px 14px;
+  }
+  .section.collapsed .section-body{
+    max-height:0;
+    padding-top:0;
+    padding-bottom:0;
+    overflow:hidden;
+  }
+  .item{
+    display:flex;
+    align-items:flex-start;
+    gap:10px;
+    padding: 10px 4px;
+    border-bottom: 1px dashed var(--line);
+  }
+  .item:last-child{ border-bottom:none; }
+  .item input[type=checkbox]{
+    margin-top:4px;
+    width:18px;
+    height:18px;
+    accent-color: var(--gold);
+    flex-shrink:0;
+    cursor:pointer;
+  }
+  .item-text{
+    flex:1;
+  }
+  .item-text .label{
+    font-size:0.94rem;
+    line-height:1.4;
+    color: var(--text);
+  }
+  .item.checked .label{
+    color: var(--text-dim);
+    text-decoration: line-through;
+    text-decoration-color: var(--done);
+  }
+  .item-text .ref{
+    display:block;
+    font-size:0.72rem;
+    color: var(--gold);
+    margin-top:3px;
+    font-family: -apple-system, sans-serif;
+    font-style:italic;
+  }
+  .item-text .example{
+    display:block;
+    font-size:0.78rem;
+    color: var(--text-dim);
+    margin-top:4px;
+    font-family: -apple-system, sans-serif;
+    line-height:1.4;
+    border-left: 2px solid var(--line);
+    padding-left:8px;
+  }
+  footer{
+    text-align:center;
+    padding: 20px;
+    font-size:0.72rem;
+    color: var(--text-dim);
+    font-family: -apple-system, sans-serif;
+  }
+  .reset-btn{
+    display:block;
+    margin: 26px auto 0;
+    padding: 10px 22px;
+    background: transparent;
+    border: 1px solid var(--gold);
+    color: var(--gold-soft);
+    border-radius: 20px;
+    font-family: -apple-system, sans-serif;
+    font-size: 0.8rem;
+    cursor:pointer;
+  }
+  .reset-btn:active{ background: var(--panel-2); }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>Responsibilities of a Man</h1>
+  <p>Grounded in Qur'an &amp; Sahih Hadith</p>
+</header>
+
+<div class="progress-wrap">
+  <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
+  <div class="progress-label" id="progressLabel">0 of 0 reflected on</div>
+</div>
+
+<main id="main"></main>
+
+<button class="reset-btn" id="resetBtn">Reset all checks</button>
+
+<footer>Offline &middot; saved on this device only</footer>
+
+<script>
+const DATA = [
+  {
+    title: "Spiritual Obligations",
+    items: [
+      {
+        label: "Establish the five daily prayers and maintain God-consciousness (Taqwa)",
+        ref: "Qur'an 2:238, 29:45"
+      },
+      {
+        label: "Lead the household in faith and protect them from wrongdoing",
+        ref: "Qur'an 66:6",
+        example: "\"O you who believe, protect yourselves and your families from a Fire...\""
+      },
+      {
+        label: "Actively instruct family members to pray",
+        ref: "Abu Dawud, Sunan (Book of Prayer)",
+        example: "The Prophet ﷺ said: \"Command your family to pray...\""
+      }
+    ]
+  },
+  {
+    title: "As a Husband",
+    items: [
+      {
+        label: "Treat his wife with kindness, fairness, and good companionship",
+        ref: "Qur'an 4:19, 30:21"
+      },
+      {
+        label: "Provide financially — mahr and ongoing maintenance (nafaqah)",
+        ref: "Qur'an 4:34, 65:7"
+      },
+      {
+        label: "Strive to be excellent in character toward his wife",
+        ref: "Ibn Majah, Sunan",
+        example: "\"The best of you is the best to his wife, and I am the best of you to my wife.\""
+      },
+      {
+        label: "Recognize good character as a marker of complete faith",
+        ref: "Tirmidhi, Sunan",
+        example: "\"The believers most complete in faith are those best in character, and the best of you are those best to their wives.\""
+      }
+    ]
+  },
+  {
+    title: "As a Father",
+    items: [
+      {
+        label: "Educate and morally guide his children",
+        ref: "Qur'an 66:6"
+      },
+      {
+        label: "Treat children justly and equally, including in gifts",
+        ref: "Bukhari &amp; Muslim",
+        example: "Prophet ﷺ refused to witness An-Nu'man bin Basheer's father giving an unequal gift to one son."
+      },
+      {
+        label: "Show mercy, affection, and physical warmth to children",
+        ref: "Bukhari",
+        example: "When a man said he never kissed his children, the Prophet ﷺ replied: \"He who does not show mercy will not be shown mercy.\""
+      }
+    ]
+  },
+  {
+    title: "As Provider &amp; Guardian (Qawwam)",
+    items: [
+      {
+        label: "Understand his role as protector/maintainer as a responsibility, not a claim to superiority",
+        ref: "Qur'an 4:34"
+      },
+      {
+        label: "Bear primary financial responsibility for wife and children, even if she has her own wealth",
+        ref: "Classical fiqh consensus, derived from Qur'an 4:34"
+      }
+    ]
+  },
+  {
+    title: "As a Son",
+    items: [
+      {
+        label: "Speak kindly, act humbly, and pray for parents — especially in their old age",
+        ref: "Qur'an 17:23-24"
+      },
+      {
+        label: "Give mother the greatest precedence in good treatment, then father",
+        ref: "Bukhari &amp; Muslim",
+        example: "A man asked who deserves his best treatment most. The Prophet ﷺ said \"your mother\" three times, then \"your father.\""
+      }
+    ]
+  },
+  {
+    title: "As a Community Member",
+    items: [
+      {
+        label: "Uphold justice and honesty in all dealings",
+        ref: "Qur'an 4:135"
+      },
+      {
+        label: "Wish for others what he wishes for himself",
+        ref: "Bukhari &amp; Muslim",
+        example: "\"None of you truly believes until he loves for his brother what he loves for himself.\""
+      },
+      {
+        label: "Protect and maintain ties of kinship",
+        ref: "Qur'an 4:1"
+      }
+    ]
+  },
+  {
+    title: "Character &amp; Conduct",
+    items: [
+      {
+        label: "Practice modesty and lower his gaze",
+        ref: "Qur'an 24:30"
+      },
+      {
+        label: "Control anger and avoid harming others",
+        ref: "Bukhari",
+        example: "\"The strong man is not the one who wrestles well; rather it is the one who controls himself when angry.\""
+      }
+    ]
+  }
+];
+
+const STORAGE_KEY = "manResponsibilitiesChecklistV1";
+
+function loadState(){
+  try{
+    return JSON.parse(localStorage.getItem(STORAGE_KEY)) || {};
+  }catch(e){ return {}; }
+}
+function saveState(state){
+  try{ localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); }catch(e){}
+}
+
+let state = loadState();
+
+function itemId(si, ii){ return "s" + si + "i" + ii; }
+
+function render(){
+  const main = document.getElementById("main");
+  main.innerHTML = "";
+  let total = 0, checked = 0;
+
+  DATA.forEach((section, si) => {
+    total += section.items.length;
+    const secChecked = section.items.filter((it, ii) => state[itemId(si, ii)]).length;
+    checked += secChecked;
+
+    const secEl = document.createElement("div");
+    secEl.className = "section";
+    secEl.id = "section-" + si;
+
+    const head = document.createElement("div");
+    head.className = "section-head";
+    head.innerHTML = `
+      <h2>${section.title}</h2>
+      <div style="display:flex;align-items:center;">
+        <span class="section-count">${secChecked}/${section.items.length}</span>
+        <span class="chevron">&#9660;</span>
+      </div>
+    `;
+    head.addEventListener("click", () => {
+      secEl.classList.toggle("collapsed");
+    });
+
+    const body = document.createElement("div");
+    body.className = "section-body";
+
+    section.items.forEach((it, ii) => {
+      const id = itemId(si, ii);
+      const isChecked = !!state[id];
+      const row = document.createElement("div");
+      row.className = "item" + (isChecked ? " checked" : "");
+
+      row.innerHTML = `
+        <input type="checkbox" id="${id}" ${isChecked ? "checked" : ""}>
+        <div class="item-text">
+          <label class="label" for="${id}">${it.label}</label>
+          <span class="ref">${it.ref}</span>
+          ${it.example ? `<span class="example">${it.example}</span>` : ""}
+        </div>
+      `;
+
+      row.querySelector("input").addEventListener("change", (e) => {
+        state[id] = e.target.checked;
+        saveState(state);
+        render();
+      });
+
+      body.appendChild(row);
+    });
+
+    secEl.appendChild(head);
+    secEl.appendChild(body);
+    main.appendChild(secEl);
+  });
+
+  document.getElementById("progressLabel").textContent = `${checked} of ${total} reflected on`;
+  const pct = total ? Math.round((checked/total)*100) : 0;
+  document.getElementById("progressFill").style.width = pct + "%";
+}
+
+document.getElementById("resetBtn").addEventListener("click", () => {
+  if(confirm("Reset all checks?")){
+    state = {};
+    saveState(state);
+    render();
+  }
+});
+
+render();
+</script>
+
+</body>
+</html>

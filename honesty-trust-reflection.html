@@ -1,0 +1,403 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Honesty & Trust — Quote Reflections</title>
+<style>
+  :root{
+    --bg: #0f1a1a;
+    --bg-2: #142424;
+    --panel: #17282a;
+    --line: #294341;
+    --text: #eae3d2;
+    --text-dim: #8fa6a3;
+    --gold: #d4af6a;
+    --gold-dim: #8a6d2c;
+    --teal: #4fd6c4;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    min-height:100vh;
+    font-family: Georgia, 'Times New Roman', serif;
+    color:var(--text);
+    background: radial-gradient(circle at 50% 0%, var(--bg-2), var(--bg));
+  }
+  .wrap{
+    max-width:760px;
+    margin:0 auto;
+    padding:40px 20px 70px;
+  }
+  header{text-align:center; margin-bottom:24px;}
+  header .glyph{font-size:28px; display:block; margin-bottom:6px; color:var(--gold);}
+  h1{
+    font-family: 'Segoe UI', Tahoma, sans-serif;
+    font-size:21px;
+    font-weight:600;
+    margin:0 0 6px;
+    letter-spacing:.3px;
+  }
+  .subtitle{
+    font-family: 'Segoe UI', Tahoma, sans-serif;
+    color:var(--text-dim);
+    font-size:12.5px;
+    margin:0;
+  }
+
+  .overall{
+    background:var(--panel);
+    border:1px solid var(--line);
+    border-radius:10px;
+    padding:14px 18px;
+    margin-bottom:26px;
+    font-family:'Segoe UI', Tahoma, sans-serif;
+  }
+  .overall-top{
+    display:flex;
+    justify-content:space-between;
+    font-size:12px;
+    color:var(--text-dim);
+    margin-bottom:8px;
+  }
+  .overall-top b{color:var(--gold);}
+  .bar{height:7px; background:var(--line); border-radius:4px; overflow:hidden;}
+  .bar>div{height:100%; background:linear-gradient(90deg,var(--gold-dim),var(--gold)); transition:width .35s ease;}
+
+  .tabs{
+    display:flex;
+    gap:6px;
+    flex-wrap:wrap;
+    margin-bottom:16px;
+    font-family:'Segoe UI', Tahoma, sans-serif;
+  }
+  .tab{
+    background:var(--panel);
+    border:1px solid var(--line);
+    color:var(--text-dim);
+    font-size:11.5px;
+    padding:7px 12px;
+    border-radius:20px;
+    cursor:pointer;
+    white-space:nowrap;
+  }
+  .tab.active{
+    background:var(--gold-dim);
+    border-color:var(--gold);
+    color:var(--text);
+  }
+
+  .category{display:none;}
+  .category.active{display:block;}
+
+  .cat-header{
+    font-family:'Segoe UI', Tahoma, sans-serif;
+    font-size:13px;
+    color:var(--teal);
+    text-transform:uppercase;
+    letter-spacing:1px;
+    margin-bottom:10px;
+  }
+
+  .slider{
+    position:relative;
+    overflow:hidden;
+    border-radius:12px;
+    border:1px solid var(--line);
+    background:var(--panel);
+    min-height:220px;
+  }
+  .track{
+    display:flex;
+    transition:transform .45s cubic-bezier(.65,0,.35,1);
+  }
+  .slide{
+    flex:0 0 100%;
+    padding:30px 28px 22px;
+    display:flex;
+    flex-direction:column;
+    justify-content:center;
+    min-height:220px;
+  }
+  .quote-text{
+    font-size:16.5px;
+    line-height:1.6;
+    color:var(--text);
+    margin:0 0 14px;
+  }
+  .quote-attr{
+    font-family:'Segoe UI', Tahoma, sans-serif;
+    font-size:12.5px;
+    color:var(--gold);
+    font-weight:600;
+    margin-bottom:16px;
+  }
+  .reflect-row{
+    display:flex;
+    align-items:center;
+    gap:8px;
+    font-family:'Segoe UI', Tahoma, sans-serif;
+    font-size:12px;
+    color:var(--text-dim);
+  }
+  .reflect-row input{
+    accent-color: var(--teal);
+    width:15px; height:15px;
+    cursor:pointer;
+  }
+  .reflect-row.done{color:var(--teal);}
+
+  .nav-row{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    padding:10px 14px;
+    border-top:1px solid var(--line);
+    font-family:'Segoe UI', Tahoma, sans-serif;
+  }
+  .nav-btn{
+    background:none;
+    border:1px solid var(--line);
+    color:var(--text);
+    font-size:13px;
+    width:30px; height:30px;
+    border-radius:50%;
+    cursor:pointer;
+  }
+  .nav-btn:hover{border-color:var(--gold); color:var(--gold);}
+  .dots{display:flex; gap:6px;}
+  .dot{
+    width:6px; height:6px;
+    border-radius:50%;
+    background:var(--line);
+    cursor:pointer;
+  }
+  .dot.active{background:var(--gold);}
+
+  .footer-note{text-align:center; margin-top:28px; font-family:'Segoe UI', Tahoma, sans-serif;}
+  .reset-btn{
+    background:none;
+    border:1px solid var(--line);
+    color:var(--text-dim);
+    font-size:11.5px;
+    padding:6px 12px;
+    border-radius:6px;
+    cursor:pointer;
+  }
+  .reset-btn:hover{border-color:#e0715c; color:#e0715c;}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <span class="glyph">⚖</span>
+    <h1>Honesty & Trust</h1>
+    <p class="subtitle">Qur'an & Hadith on honest dealing, trusts, and commitments</p>
+  </header>
+
+  <div class="overall">
+    <div class="overall-top">
+      <span>REFLECTED ON</span>
+      <span><b id="overallPct">0%</b> — <span id="overallCount">0/0</span></span>
+    </div>
+    <div class="bar"><div id="overallBar" style="width:0%"></div></div>
+  </div>
+
+  <div class="tabs" id="tabs"></div>
+  <div id="categories"></div>
+
+  <div class="footer-note">
+    <button class="reset-btn" id="resetBtn">Reset all reflections</button>
+  </div>
+
+</div>
+
+<script>
+const CATEGORIES = [
+  {
+    key: "trade",
+    name: "Honesty in Trade & Work",
+    quotes: [
+      { text: "Woe to those who give less than due in measure and weight, who, when they take a measure from people, take in full, but if they give by measure or by weight to them, they cause loss.", attr: "Qur'an 83:1–3" },
+      { text: "Give full measure when you measure, and weigh with an even balance. That is the best way and best in result.", attr: "Qur'an 17:35" },
+      { text: "The truthful and trustworthy merchant will be with the prophets, the truthful, and the martyrs.", attr: "Prophet Muhammad ﷺ · Tirmidhi" },
+      { text: "Whoever deceives is not one of us.", attr: "Prophet Muhammad ﷺ · Sahih Muslim" }
+    ]
+  },
+  {
+    key: "trusts",
+    name: "Fulfilling Trusts & Commitments",
+    quotes: [
+      { text: "Indeed, Allah commands you to render trusts to whom they are due.", attr: "Qur'an 4:58" },
+      { text: "True believers are to their trusts and their promises attentive.", attr: "Qur'an 23:8" },
+      { text: "O you who believe, fulfill all contracts.", attr: "Qur'an 5:1" },
+      { text: "There is no faith for one who does not have trustworthiness, and no religion for one who does not fulfill his commitments.", attr: "Prophet Muhammad ﷺ · Musnad Ahmad" },
+      { text: "The signs of a hypocrite are three: when he speaks, he lies; when he promises, he breaks it; and when he is entrusted, he betrays.", attr: "Prophet Muhammad ﷺ · Sahih al-Bukhari" }
+    ]
+  },
+  {
+    key: "employer",
+    name: "Employer–Employee Dealings",
+    quotes: [
+      { text: "Give the worker his wages before his sweat dries.", attr: "Prophet Muhammad ﷺ · Ibn Majah" },
+      { text: "Workers are your brothers whom Allah has placed under your authority; give them fair food and clothing and do not burden them beyond capacity.", attr: "Prophet Muhammad ﷺ · Sahih al-Bukhari" }
+    ]
+  },
+  {
+    key: "society",
+    name: "Honest Dealings in Society",
+    quotes: [
+      { text: "Do not consume one another's wealth unjustly.", attr: "Qur'an 2:188" },
+      { text: "The two parties in a transaction have the right to cancel it as long as they have not separated, and if they were honest and disclosed defects, they were blessed in their transaction; but if they concealed defects and lied, the blessing was erased.", attr: "Prophet Muhammad ﷺ · Sahih al-Bukhari" },
+      { text: "None of you truly believes until he loves for his brother what he loves for himself.", attr: "Prophet Muhammad ﷺ · Sahih al-Bukhari" }
+    ]
+  }
+];
+
+const STORAGE_KEY = "honesty_trust_quotes_reflect_v1";
+
+function loadState(){
+  try{
+    const raw = localStorage.getItem(STORAGE_KEY);
+    return raw ? JSON.parse(raw) : {};
+  }catch(e){ return {}; }
+}
+function saveState(state){
+  try{ localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); }
+  catch(e){ console.error("Could not save reflection state", e); }
+}
+
+let state = loadState();
+let activeCat = 0;
+const slideIndex = {};
+
+CATEGORIES.forEach((c,i) => slideIndex[i] = 0);
+
+const tabsEl = document.getElementById("tabs");
+const catsEl = document.getElementById("categories");
+
+function keyFor(catKey, qIdx){ return catKey + "_" + qIdx; }
+
+function buildTabs(){
+  tabsEl.innerHTML = "";
+  CATEGORIES.forEach((cat, idx) => {
+    const t = document.createElement("div");
+    t.className = "tab" + (idx === activeCat ? " active" : "");
+    t.textContent = cat.name;
+    t.addEventListener("click", () => { activeCat = idx; renderAll(); });
+    tabsEl.appendChild(t);
+  });
+}
+
+function buildCategories(){
+  catsEl.innerHTML = "";
+  CATEGORIES.forEach((cat, cIdx) => {
+    const catDiv = document.createElement("div");
+    catDiv.className = "category" + (cIdx === activeCat ? " active" : "");
+
+    const header = document.createElement("div");
+    header.className = "cat-header";
+    header.textContent = cat.name;
+    catDiv.appendChild(header);
+
+    const slider = document.createElement("div");
+    slider.className = "slider";
+
+    const track = document.createElement("div");
+    track.className = "track";
+    track.style.transform = `translateX(-${slideIndex[cIdx]*100}%)`;
+
+    cat.quotes.forEach((q, qIdx) => {
+      const k = keyFor(cat.key, qIdx);
+      const checked = !!state[k];
+      const slide = document.createElement("div");
+      slide.className = "slide";
+      slide.innerHTML = `
+        <p class="quote-text">"${q.text}"</p>
+        <div class="quote-attr">— ${q.attr}</div>
+        <div class="reflect-row ${checked ? 'done' : ''}">
+          <input type="checkbox" id="rc_${cIdx}_${qIdx}" ${checked ? "checked" : ""}>
+          <label for="rc_${cIdx}_${qIdx}">Reflected on this today</label>
+        </div>
+      `;
+      slide.querySelector("input").addEventListener("change", (e) => {
+        state[k] = e.target.checked;
+        saveState(state);
+        renderAll();
+      });
+      track.appendChild(slide);
+    });
+
+    slider.appendChild(track);
+
+    const navRow = document.createElement("div");
+    navRow.className = "nav-row";
+
+    const prevBtn = document.createElement("button");
+    prevBtn.className = "nav-btn";
+    prevBtn.textContent = "‹";
+    prevBtn.addEventListener("click", () => {
+      slideIndex[cIdx] = (slideIndex[cIdx] - 1 + cat.quotes.length) % cat.quotes.length;
+      renderAll();
+    });
+
+    const dots = document.createElement("div");
+    dots.className = "dots";
+    cat.quotes.forEach((_, qIdx) => {
+      const d = document.createElement("div");
+      d.className = "dot" + (qIdx === slideIndex[cIdx] ? " active" : "");
+      d.addEventListener("click", () => { slideIndex[cIdx] = qIdx; renderAll(); });
+      dots.appendChild(d);
+    });
+
+    const nextBtn = document.createElement("button");
+    nextBtn.className = "nav-btn";
+    nextBtn.textContent = "›";
+    nextBtn.addEventListener("click", () => {
+      slideIndex[cIdx] = (slideIndex[cIdx] + 1) % cat.quotes.length;
+      renderAll();
+    });
+
+    navRow.appendChild(prevBtn);
+    navRow.appendChild(dots);
+    navRow.appendChild(nextBtn);
+
+    catDiv.appendChild(slider);
+    catDiv.appendChild(navRow);
+    catsEl.appendChild(catDiv);
+  });
+}
+
+function updateOverall(){
+  let total = 0, done = 0;
+  CATEGORIES.forEach(cat => {
+    cat.quotes.forEach((_, qIdx) => {
+      total++;
+      if(state[keyFor(cat.key, qIdx)]) done++;
+    });
+  });
+  const pct = total ? Math.round((done/total)*100) : 0;
+  document.getElementById("overallPct").textContent = pct + "%";
+  document.getElementById("overallCount").textContent = done + "/" + total;
+  document.getElementById("overallBar").style.width = pct + "%";
+}
+
+function renderAll(){
+  buildTabs();
+  buildCategories();
+  updateOverall();
+}
+
+document.getElementById("resetBtn").addEventListener("click", () => {
+  if(confirm("Clear all reflection checkmarks?")){
+    state = {};
+    saveState(state);
+    renderAll();
+  }
+});
+
+renderAll();
+</script>
+</body>
+</html>

@@ -1,0 +1,478 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Halal Earning — Checklist</title>
+<style>
+  :root{
+    --bg: #0f1e1c;
+    --panel: #142825;
+    --panel-2: #1a3330;
+    --gold: #c9a15a;
+    --gold-soft: #e3c98a;
+    --text: #eae5d9;
+    --text-dim: #a9b7b3;
+    --line: #2a4440;
+    --done: #4f7d6f;
+    --forbid: #b25c4a;
+    --radius: 10px;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Georgia', 'Times New Roman', serif;
+    -webkit-font-smoothing:antialiased;
+  }
+  header{
+    padding: 28px 20px 18px;
+    text-align:center;
+    border-bottom: 1px solid var(--line);
+    background: linear-gradient(180deg, #102420, transparent);
+  }
+  header h1{
+    margin:0;
+    font-size: 1.5rem;
+    letter-spacing: 0.02em;
+    color: var(--gold-soft);
+    font-weight: 600;
+  }
+  header p{
+    margin: 6px 0 0;
+    color: var(--text-dim);
+    font-size: 0.85rem;
+    font-family: -apple-system, sans-serif;
+  }
+  .progress-wrap{
+    max-width: 640px;
+    margin: 16px auto 0;
+    padding: 0 20px;
+  }
+  .progress-bar{
+    height: 8px;
+    background: var(--panel);
+    border-radius: 20px;
+    overflow:hidden;
+    border: 1px solid var(--line);
+  }
+  .progress-fill{
+    height:100%;
+    background: linear-gradient(90deg, var(--done), var(--gold));
+    width:0%;
+    transition: width 0.4s ease;
+  }
+  .progress-label{
+    text-align:center;
+    font-size:0.75rem;
+    color: var(--text-dim);
+    margin-top:6px;
+    font-family: -apple-system, sans-serif;
+  }
+  main{
+    max-width: 640px;
+    margin: 0 auto;
+    padding: 20px 16px 60px;
+  }
+  .section{
+    margin-bottom: 22px;
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    overflow:hidden;
+  }
+  .section.forbidden{
+    border-color: #4a2e28;
+  }
+  .section-head{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    padding: 14px 16px;
+    cursor:pointer;
+    background: var(--panel-2);
+    user-select:none;
+  }
+  .section.forbidden .section-head{
+    background: #241a17;
+  }
+  .section-head h2{
+    margin:0;
+    font-size: 1.02rem;
+    color: var(--gold-soft);
+    font-weight:600;
+  }
+  .section.forbidden .section-head h2{
+    color: #e0a292;
+  }
+  .section-count{
+    font-size:0.72rem;
+    color: var(--text-dim);
+    font-family: -apple-system, sans-serif;
+    white-space:nowrap;
+    margin-left:10px;
+  }
+  .chevron{
+    transition: transform 0.25s ease;
+    color: var(--gold);
+    margin-left:8px;
+  }
+  .section.forbidden .chevron{ color: var(--forbid); }
+  .section.collapsed .chevron{ transform: rotate(-90deg); }
+  .section-body{
+    max-height: 2000px;
+    transition: max-height 0.3s ease, padding 0.3s ease;
+    padding: 6px 16px 14px;
+  }
+  .section.collapsed .section-body{
+    max-height:0;
+    padding-top:0;
+    padding-bottom:0;
+    overflow:hidden;
+  }
+  .item{
+    display:flex;
+    align-items:flex-start;
+    gap:10px;
+    padding: 10px 4px;
+    border-bottom: 1px dashed var(--line);
+  }
+  .item:last-child{ border-bottom:none; }
+  .item input[type=checkbox]{
+    margin-top:4px;
+    width:18px;
+    height:18px;
+    accent-color: var(--gold);
+    flex-shrink:0;
+    cursor:pointer;
+  }
+  .section.forbidden .item input[type=checkbox]{
+    accent-color: var(--forbid);
+  }
+  .item-text{
+    flex:1;
+  }
+  .item-text .label{
+    font-size:0.94rem;
+    line-height:1.4;
+    color: var(--text);
+  }
+  .item.checked .label{
+    color: var(--text-dim);
+    text-decoration: line-through;
+    text-decoration-color: var(--done);
+  }
+  .section.forbidden .item.checked .label{
+    text-decoration-color: var(--forbid);
+  }
+  .item-text .ref{
+    display:block;
+    font-size:0.72rem;
+    color: var(--gold);
+    margin-top:3px;
+    font-family: -apple-system, sans-serif;
+    font-style:italic;
+  }
+  .section.forbidden .item-text .ref{
+    color: var(--forbid);
+  }
+  .item-text .example{
+    display:block;
+    font-size:0.78rem;
+    color: var(--text-dim);
+    margin-top:4px;
+    font-family: -apple-system, sans-serif;
+    line-height:1.4;
+    border-left: 2px solid var(--line);
+    padding-left:8px;
+  }
+  footer{
+    text-align:center;
+    padding: 20px;
+    font-size:0.72rem;
+    color: var(--text-dim);
+    font-family: -apple-system, sans-serif;
+  }
+  .reset-btn{
+    display:block;
+    margin: 26px auto 0;
+    padding: 10px 22px;
+    background: transparent;
+    border: 1px solid var(--gold);
+    color: var(--gold-soft);
+    border-radius: 20px;
+    font-family: -apple-system, sans-serif;
+    font-size: 0.8rem;
+    cursor:pointer;
+  }
+  .reset-btn:active{ background: var(--panel-2); }
+  .note{
+    font-size:0.76rem;
+    color: var(--text-dim);
+    font-family: -apple-system, sans-serif;
+    line-height:1.5;
+    padding: 14px 4px 4px;
+    border-top: 1px dashed var(--line);
+    margin-top: 6px;
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>Halal Ways of Earning</h1>
+  <p>Grounded in Qur'an &amp; Sahih Hadith</p>
+</header>
+
+<div class="progress-wrap">
+  <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
+  <div class="progress-label" id="progressLabel">0 of 0 reflected on</div>
+</div>
+
+<main id="main"></main>
+
+<button class="reset-btn" id="resetBtn">Reset all checks</button>
+
+<footer>Offline &middot; saved on this device only</footer>
+
+<script>
+const DATA = [
+  {
+    title: "General Principle",
+    items: [
+      {
+        label: "Seek Allah's bounty through honest effort after fulfilling worship",
+        ref: "Qur'an 62:10",
+        example: "\"...disperse through the land and seek the bounty of Allah.\""
+      },
+      {
+        label: "Understand trade is permitted, usury (riba) is forbidden",
+        ref: "Qur'an 2:275",
+        example: "\"Allah has permitted trade and forbidden usury (riba).\""
+      }
+    ]
+  },
+  {
+    title: "Best Forms of Earning",
+    items: [
+      {
+        label: "Value earning through one's own hands and effort",
+        ref: "Bukhari",
+        example: "\"No one has ever eaten better food than that which he eats out of the work of his own hand. Dawud (David) used to eat from the earnings of his manual labor.\""
+      },
+      {
+        label: "Practice honest, trustworthy trade",
+        ref: "Tirmidhi (graded sahih)",
+        example: "\"The truthful, trustworthy merchant will be with the prophets, the truthful, and the martyrs.\""
+      }
+    ]
+  },
+  {
+    title: "Trade &amp; Business",
+    items: [
+      {
+        label: "Conduct buying and selling based on mutual consent",
+        ref: "Qur'an 2:275; Ibn Majah",
+        example: "\"The sale is only completed by mutual consent.\""
+      },
+      {
+        label: "Avoid cheating or fraud in any transaction",
+        ref: "Muslim",
+        example: "\"Whoever cheats is not one of us.\""
+      },
+      {
+        label: "Give full, honest measure and weight",
+        ref: "Qur'an 83:1-3"
+      }
+    ]
+  },
+  {
+    title: "Agriculture &amp; Cultivation",
+    items: [
+      {
+        label: "Farm or cultivate land as a rewarded, ongoing charitable act",
+        ref: "Bukhari &amp; Muslim",
+        example: "\"If a Muslim plants a tree or sows a field, and a human, bird, or animal eats from it, it is charity (sadaqah) for him.\""
+      }
+    ]
+  },
+  {
+    title: "Employment &amp; Wages",
+    items: [
+      {
+        label: "Pay workers promptly, without delay",
+        ref: "Ibn Majah",
+        example: "\"Give the worker his wages before his sweat dries.\""
+      },
+      {
+        label: "Set clear, fair contract terms before work begins",
+        ref: "General fiqh principle from hadith on wages"
+      }
+    ]
+  },
+  {
+    title: "Craftsmanship &amp; Skilled Labor",
+    items: [
+      {
+        label: "Practice any lawful craft or profession that produces real value",
+        ref: "Qur'an 34:10-11",
+        example: "Referenced through Dawud's (David's) example of ironworking and craftsmanship."
+      }
+    ]
+  },
+  {
+    title: "Partnerships &amp; Investment",
+    items: [
+      {
+        label: "Use profit-sharing (Mudarabah) or joint-venture (Musharakah) structures with shared risk, not fixed guaranteed return",
+        ref: "Based on Qur'an 2:275; precedent of Khadijah (RA) financing trade caravans"
+      }
+    ]
+  },
+  {
+    title: "Forbidden Earnings — Avoid",
+    forbidden: true,
+    items: [
+      {
+        label: "Riba (interest/usury)",
+        ref: "Qur'an 2:275-279"
+      },
+      {
+        label: "Gambling (maysir)",
+        ref: "Qur'an 5:90-91"
+      },
+      {
+        label: "Giving or accepting bribes",
+        ref: "Tirmidhi, Abu Dawud",
+        example: "\"Allah's curse is upon the one who bribes and the one who accepts a bribe.\""
+      },
+      {
+        label: "Selling forbidden goods (e.g., alcohol, pork)",
+        ref: "Bukhari &amp; Muslim"
+      },
+      {
+        label: "Fraud, deception, or hoarding to manipulate prices",
+        ref: "Muslim, Abu Dawud"
+      },
+      {
+        label: "Earnings from prostitution, sorcery, or other unjust means",
+        ref: "Bukhari"
+      }
+    ]
+  },
+  {
+    title: "Charity as Part of the Earning Cycle",
+    items: [
+      {
+        label: "Pay Zakat on eligible wealth earned",
+        ref: "Qur'an 2:267"
+      },
+      {
+        label: "Give voluntary charity (sadaqah) to purify wealth",
+        ref: "Qur'an 9:103"
+      }
+    ]
+  }
+];
+
+const STORAGE_KEY = "halalEarningChecklistV1";
+
+function loadState(){
+  try{
+    return JSON.parse(localStorage.getItem(STORAGE_KEY)) || {};
+  }catch(e){ return {}; }
+}
+function saveState(state){
+  try{ localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); }catch(e){}
+}
+
+let state = loadState();
+
+function itemId(si, ii){ return "s" + si + "i" + ii; }
+
+function render(){
+  const main = document.getElementById("main");
+  main.innerHTML = "";
+  let total = 0, checked = 0;
+
+  DATA.forEach((section, si) => {
+    total += section.items.length;
+    const secChecked = section.items.filter((it, ii) => state[itemId(si, ii)]).length;
+    checked += secChecked;
+
+    const secEl = document.createElement("div");
+    secEl.className = "section" + (section.forbidden ? " forbidden" : "");
+    secEl.id = "section-" + si;
+
+    const head = document.createElement("div");
+    head.className = "section-head";
+    head.innerHTML = `
+      <h2>${section.title}</h2>
+      <div style="display:flex;align-items:center;">
+        <span class="section-count">${secChecked}/${section.items.length}</span>
+        <span class="chevron">&#9660;</span>
+      </div>
+    `;
+    head.addEventListener("click", () => {
+      secEl.classList.toggle("collapsed");
+    });
+
+    const body = document.createElement("div");
+    body.className = "section-body";
+
+    section.items.forEach((it, ii) => {
+      const id = itemId(si, ii);
+      const isChecked = !!state[id];
+      const row = document.createElement("div");
+      row.className = "item" + (isChecked ? " checked" : "");
+
+      row.innerHTML = `
+        <input type="checkbox" id="${id}" ${isChecked ? "checked" : ""}>
+        <div class="item-text">
+          <label class="label" for="${id}">${it.label}</label>
+          <span class="ref">${it.ref}</span>
+          ${it.example ? `<span class="example">${it.example}</span>` : ""}
+        </div>
+      `;
+
+      row.querySelector("input").addEventListener("change", (e) => {
+        state[id] = e.target.checked;
+        saveState(state);
+        render();
+      });
+
+      body.appendChild(row);
+    });
+
+    secEl.appendChild(head);
+    secEl.appendChild(body);
+
+    if(section.forbidden){
+      const note = document.createElement("div");
+      note.className = "note";
+      note.textContent = "Check these off as a personal confirmation that you are avoiding them, not aspiring to them.";
+      body.appendChild(note);
+    }
+
+    main.appendChild(secEl);
+  });
+
+  document.getElementById("progressLabel").textContent = `${checked} of ${total} reflected on`;
+  const pct = total ? Math.round((checked/total)*100) : 0;
+  document.getElementById("progressFill").style.width = pct + "%";
+}
+
+document.getElementById("resetBtn").addEventListener("click", () => {
+  if(confirm("Reset all checks?")){
+    state = {};
+    saveState(state);
+    render();
+  }
+});
+
+render();
+</script>
+
+</body>
+</html>
