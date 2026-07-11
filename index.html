@@ -1,1963 +1,1498 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="dark">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Bookmark Dashboard</title>
 
+<!-- Bootstrap 5.3.x -->
 <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-  <link rel="stylesheet" href="menu.css">
-  
-<title>Marker — Bookmark Dashboard</title>
-<meta name="description" content="A fast bookmark dashboard for your most-used links. All data stays on your device." />
-<meta name="theme-color" content="#10151F" />
+<!-- Bootstrap Icons -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+<!-- Fonts -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 
 <style>
-/* ==========================================================================
-   styles.css
-   Design language: "control tower for your links."
-   A calm instrument panel, not a toy. Cards are literal ribbon bookmarks
-   (notched bottom edge) — the one signature motif the whole UI is built
-   around. Everything else stays quiet so that motif reads clearly.
-   ========================================================================== */
-
-/* ---------------------------------------------------------------------- */
-/* Design tokens                                                          */
-/* ---------------------------------------------------------------------- */
-
-:root {
-  /* Surfaces (light) */
-  --bg: #F6F5F1;
-  --bg-raised: #FFFFFF;
-  --bg-sunken: #ECEAE4;
-  --border: rgba(15, 23, 42, 0.10);
-  --border-strong: rgba(15, 23, 42, 0.18);
-
-  /* Text (light) */
-  --text: #1B1F2A;
-  --text-muted: #5B6272;
-  --text-faint: #8B90A0;
-
-  /* Brand */
-  --accent: #3457D5;
-  --accent-strong: #2A46B4;
-  --accent-soft: rgba(52, 87, 213, 0.12);
-  --amber: #F2A93B;
-  --amber-soft: rgba(242, 169, 59, 0.16);
-  --danger: #D5433F;
-  --danger-soft: rgba(213, 67, 63, 0.12);
-
-  /* Category hues */
-  --cat-general: #64748B;
-  --cat-spiritual: #2F9E7A;
-  --cat-health: #E0556F;
-  --cat-study: #7C5CFC;
-  --cat-work: #DE9420;
-  --cat-other: #8A8F98;
-
-  /* Type */
-  --font-display: -apple-system, "Segoe UI Semibold", "Inter", ui-sans-serif, system-ui, sans-serif;
-  --font-body: -apple-system, "Segoe UI", "Inter", ui-sans-serif, system-ui, sans-serif;
-  --font-mono: ui-monospace, "SF Mono", "Cascadia Code", Consolas, "Roboto Mono", monospace;
-
-  /* Scale */
-  --radius-sm: 8px;
-  --radius-md: 14px;
-  --radius-lg: 20px;
-  --shadow-sm: 0 1px 2px rgba(15, 23, 42, 0.06);
-  --shadow-md: 0 8px 24px rgba(15, 23, 42, 0.10);
-  --shadow-lg: 0 20px 48px rgba(15, 23, 42, 0.18);
-
-  --header-h: 68px;
-  --transition-fast: 140ms cubic-bezier(0.4, 0, 0.2, 1);
-  --transition-med: 240ms cubic-bezier(0.4, 0, 0.2, 1);
-
-  color-scheme: light;
-}
-
-[data-theme='dark'] {
-  --bg: #0E1320;
-  --bg-raised: #171E2B;
-  --bg-sunken: #0A0E17;
-  --border: rgba(255, 255, 255, 0.08);
-  --border-strong: rgba(255, 255, 255, 0.16);
-
-  --text: #E8EAF0;
-  --text-muted: #9AA2B4;
-  --text-faint: #6B7284;
-
-  --accent: #6C8CFF;
-  --accent-strong: #8AA2FF;
-  --accent-soft: rgba(108, 140, 255, 0.16);
-  --amber: #F5B95B;
-  --amber-soft: rgba(245, 185, 91, 0.14);
-  --danger: #EF6E6A;
-  --danger-soft: rgba(239, 110, 106, 0.14);
-
-  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.3);
-  --shadow-md: 0 8px 24px rgba(0, 0, 0, 0.4);
-  --shadow-lg: 0 24px 56px rgba(0, 0, 0, 0.55);
-
-  color-scheme: dark;
-}
-
-@media (prefers-reduced-motion: reduce) {
-  *, *::before, *::after {
-    animation-duration: 0.001ms !important;
-    animation-iteration-count: 1 !important;
-    transition-duration: 0.001ms !important;
-    scroll-behavior: auto !important;
-  }
-}
-
-/* ---------------------------------------------------------------------- */
-/* Reset + base                                                           */
-/* ---------------------------------------------------------------------- */
-
-*, *::before, *::after { box-sizing: border-box; }
-
-/* Guarantees the native `hidden` attribute always wins, even against
-   components (like .confirm-dialog, .editor-panel) that set their own
-   `display` value. Without this, a same-specificity clash meant elements
-   could render even while `hidden` was correctly set by JS. */
-[hidden] { display: none !important; }
-
-html, body {
-  margin: 0;
-  padding: 0;
-  height: 100%;
-}
-
-body {
-  background: var(--bg);
-  color: var(--text);
-  font-family: var(--font-body);
-  font-size: 15px;
-  line-height: 1.5;
-  -webkit-font-smoothing: antialiased;
-  transition: background var(--transition-med), color var(--transition-med);
-}
-
-body.no-scroll { overflow: hidden; }
-
-h1, h2, h3 { font-family: var(--font-display); margin: 0; }
-
-button, input, select {
-  font-family: inherit;
-  font-size: inherit;
-  color: inherit;
-}
-
-button { cursor: pointer; }
-
-a { color: var(--accent); }
-
-.visually-hidden {
-  position: absolute;
-  width: 1px; height: 1px;
-  overflow: hidden;
-  clip: rect(0 0 0 0);
-  white-space: nowrap;
-}
-
-.skip-link {
-  position: absolute;
-  left: 12px;
-  top: -48px;
-  background: var(--accent);
-  color: #fff;
-  padding: 10px 16px;
-  border-radius: var(--radius-sm);
-  z-index: 200;
-  transition: top var(--transition-fast);
-}
-.skip-link:focus { top: 12px; }
-
-:focus-visible {
-  outline: 2px solid var(--accent);
-  outline-offset: 2px;
-  border-radius: 4px;
-}
-
-/* ---------------------------------------------------------------------- */
-/* Header                                                                 */
-/* ---------------------------------------------------------------------- */
-
-.app-header {
-  position: sticky;
-  top: 0;
-  z-index: 40;
-  display: flex;
-  align-items: center;
-  gap: 16px;
-  height: var(--header-h);
-  padding: 0 20px;
-  background: var(--bg-raised);
-  border-bottom: 1px solid var(--border);
-  backdrop-filter: saturate(1.4) blur(8px);
-}
-
-.app-header__brand {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  flex-shrink: 0;
-}
-
-.app-header__mark {
-  width: 26px;
-  height: 26px;
-  border-radius: 7px;
-  background: linear-gradient(160deg, var(--accent), var(--accent-strong));
-  position: relative;
-  flex-shrink: 0;
-}
-.app-header__mark::after {
-  content: '';
-  position: absolute;
-  left: 50%;
-  top: 22%;
-  width: 8px;
-  height: 13px;
-  transform: translateX(-50%);
-  background: var(--bg-raised);
-  clip-path: polygon(0 0, 100% 0, 100% 100%, 50% 78%, 0 100%);
-}
-
-.app-header__title {
-  font-family: var(--font-display);
-  font-weight: 700;
-  font-size: 1.05rem;
-  letter-spacing: -0.01em;
-}
-
-.app-header__search {
-  flex: 1;
-  max-width: 460px;
-  position: relative;
-  display: flex;
-  align-items: center;
-}
-
-.app-header__search-icon {
-  position: absolute;
-  left: 14px;
-  color: var(--text-faint);
-  pointer-events: none;
-  font-size: 1rem;
-}
-
-.app-header__search input {
-  width: 100%;
-  height: 42px;
-  padding: 0 14px 0 38px;
-  border-radius: var(--radius-md);
-  border: 1px solid var(--border);
-  background: var(--bg-sunken);
-  color: var(--text);
-  transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
-}
-.app-header__search input:focus {
-  outline: none;
-  border-color: var(--accent);
-  box-shadow: 0 0 0 3px var(--accent-soft);
-}
-.app-header__search input::placeholder { color: var(--text-faint); }
-
-.app-header__actions {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  flex-shrink: 0;
-}
-
-/* ---------------------------------------------------------------------- */
-/* Buttons                                                                 */
-/* ---------------------------------------------------------------------- */
-
-.btn {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  height: 42px;
-  padding: 0 16px;
-  border-radius: var(--radius-md);
-  border: 1px solid transparent;
-  font-weight: 600;
-  font-size: 0.9rem;
-  transition: transform var(--transition-fast), background var(--transition-fast), border-color var(--transition-fast);
-  min-height: 44px;
-}
-.btn:active { transform: scale(0.97); }
-
-.btn--primary {
-  background: var(--accent);
-  color: #fff;
-}
-.btn--primary:hover { background: var(--accent-strong); }
-
-.btn--ghost {
-  background: transparent;
-  border-color: var(--border-strong);
-  color: var(--text);
-}
-.btn--ghost:hover { background: var(--bg-sunken); }
-
-.btn--danger {
-  background: var(--danger);
-  color: #fff;
-}
-.btn--danger:hover { filter: brightness(1.08); }
-
-.btn--small { height: 36px; padding: 0 12px; font-size: 0.82rem; min-height: 36px; }
-
-.icon-btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 40px;
-  height: 40px;
-  min-width: 44px;
-  min-height: 44px;
-  border-radius: var(--radius-sm);
-  border: 1px solid transparent;
-  background: transparent;
-  color: var(--text-muted);
-  transition: background var(--transition-fast), color var(--transition-fast);
-}
-.icon-btn:hover { background: var(--bg-sunken); color: var(--text); }
-.icon-btn--lg { font-size: 1.1rem; }
-.icon-btn--active { color: var(--amber); }
-.icon-btn--danger:hover { color: var(--danger); background: var(--danger-soft); }
-
-/* ---------------------------------------------------------------------- */
-/* Main layout                                                            */
-/* ---------------------------------------------------------------------- */
-
-.app-main {
-  max-width: 1180px;
-  margin: 0 auto;
-  padding: 24px 20px 64px;
-}
-
-/* ---------------------------------------------------------------------- */
-/* Stats bar                                                              */
-/* ---------------------------------------------------------------------- */
-
-.stats-bar {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(110px, 1fr));
-  gap: 10px;
-  margin-bottom: 20px;
-}
-
-.stat-card {
-  background: var(--bg-raised);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-md);
-  padding: 14px 14px 12px;
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-  box-shadow: var(--shadow-sm);
-}
-
-.stat-card__icon { font-size: 1rem; margin-bottom: 2px; }
-.stat-card__value { font-family: var(--font-display); font-weight: 700; font-size: 1.5rem; letter-spacing: -0.02em; }
-.stat-card__label { font-size: 0.76rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.04em; }
-
-.stat-card--primary .stat-card__value { color: var(--accent); }
-.stat-card--pinned .stat-card__value { color: var(--amber); }
-
-/* ---------------------------------------------------------------------- */
-/* Chip row (category filters)                                            */
-/* ---------------------------------------------------------------------- */
-
-.chip-row {
-  display: flex;
-  gap: 8px;
-  overflow-x: auto;
-  padding-bottom: 6px;
-  margin-bottom: 14px;
-  scrollbar-width: thin;
-}
-.chip-row::-webkit-scrollbar { height: 6px; }
-.chip-row::-webkit-scrollbar-thumb { background: var(--border-strong); border-radius: 3px; }
-
-.chip {
-  flex-shrink: 0;
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  height: 38px;
-  padding: 0 14px;
-  border-radius: 999px;
-  border: 1px solid var(--border);
-  background: var(--bg-raised);
-  color: var(--text-muted);
-  font-weight: 600;
-  font-size: 0.86rem;
-  transition: all var(--transition-fast);
-  min-height: 44px;
-}
-.chip:hover { border-color: var(--border-strong); color: var(--text); }
-.chip--active {
-  background: var(--accent-soft);
-  border-color: var(--accent);
-  color: var(--accent);
-}
-[data-theme='dark'] .chip--active { color: var(--accent-strong); }
-.chip__icon { font-size: 0.95rem; }
-
-/* ---------------------------------------------------------------------- */
-/* Toolbar                                                                 */
-/* ---------------------------------------------------------------------- */
-
-.toolbar {
-  display: flex;
-  justify-content: flex-end;
-  margin-bottom: 18px;
-}
-
-.toolbar__sort {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  font-size: 0.85rem;
-  color: var(--text-muted);
+/* ============================================================
+   DESIGN TOKENS
+   ============================================================ */
+:root{
+  --gold-500:#c9a227;
+  --gold-400:#e0bf52;
+  --gold-100:#f3e6bc;
+  --teal-950:#04201f;
+  --teal-900:#0a3433;
+  --teal-850:#0e403f;
+  --teal-800:#134f4d;
+  --teal-700:#1c645f;
+  --cream-50:#f7f1e2;
+  --ink:#e9ecec7e;
+
+  --font-display:'Fraunces', Georgia, serif;
+  --font-body:'Inter', -apple-system, sans-serif;
+  --font-mono:'JetBrains Mono', monospace;
+
+  --radius-lg:14px;
+  --radius-md:10px;
+  --radius-sm:7px;
+
+  --shadow-soft:0 8px 24px -8px rgba(4,32,31,.45);
+  --shadow-lift:0 14px 34px -10px rgba(4,32,31,.55);
+}
+
+[data-theme="dark"]{
+  --bg:var(--teal-950);
+  --surface:var(--teal-900);
+  --surface-2:var(--teal-850);
+  --surface-3:var(--teal-800);
+  --border-c:rgba(224,191,82,.18);
+  --text:#f2ead2;
+  --text-muted:#b9c9c6;
+  --accent:var(--gold-400);
+  --accent-strong:var(--gold-500);
+  --url-color:#8fb3ae;
+}
+[data-theme="light"]{
+  --bg:var(--cream-50);
+  --surface:#ffffff;
+  --surface-2:#fbf6e8;
+  --surface-3:#f2e8cd;
+  --border-c:rgba(10,52,51,.12);
+  --text:#0f2b2a;
+  --text-muted:#5b6b69;
+  --accent:var(--teal-900);
+  --accent-strong:var(--gold-500);
+  --url-color:#7a6a3a;
+}
+
+*{ box-sizing:border-box; }
+html,body{ height:100%; }
+body{
+  background:var(--bg);
+  color:var(--text);
+  font-family:var(--font-body);
+  transition:background .25s ease, color .25s ease;
+  min-height:100vh;
+}
+::selection{ background:var(--gold-400); color:var(--teal-950); }
+
+h1,h2,h3,h4,.font-display{ font-family:var(--font-display); letter-spacing:.2px; }
+
+/* Focus visibility for accessibility */
+a:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible, [tabindex]:focus-visible{
+  outline:2px solid var(--gold-400);
+  outline-offset:2px;
+}
+
+/* ============================================================
+   HEADER
+   ============================================================ */
+.app-header{
+  background:linear-gradient(180deg, var(--surface) 0%, var(--surface-2) 100%);
+  border-bottom:1px solid var(--border-c);
+  position:sticky; top:0; z-index:1030;
+  box-shadow:var(--shadow-soft);
+}
+.brand-mark{
+  width:40px;height:40px;border-radius:50%;
+  background:radial-gradient(circle at 30% 30%, var(--gold-400), var(--gold-500) 65%, #8a6d16 100%);
+  display:flex;align-items:center;justify-content:center;
+  color:var(--teal-950); font-weight:700; font-family:var(--font-display);
+  box-shadow:inset 0 -3px 6px rgba(0,0,0,.25), 0 2px 6px rgba(0,0,0,.3);
+  flex-shrink:0;
+}
+.brand-title{ font-family:var(--font-display); font-weight:700; font-size:1.35rem; color:var(--text); margin:0; }
+.brand-sub{ font-size:.72rem; color:var(--text-muted); letter-spacing:.14em; text-transform:uppercase; }
+
+.btn-gold{
+  background:var(--gold-500); border:1px solid var(--gold-500); color:var(--teal-950); font-weight:600;
+}
+.btn-gold:hover{ background:var(--gold-400); border-color:var(--gold-400); color:var(--teal-950); }
+.btn-outline-gold{
+  border:1px solid var(--accent-strong); color:var(--text); background:transparent;
+}
+.btn-outline-gold:hover{ background:var(--accent-strong); color:var(--teal-950); }
+.btn-ghost{
+  background:transparent;border:1px solid var(--border-c);color:var(--text);
+}
+.btn-ghost:hover{ background:var(--surface-3); color:var(--text); }
+
+/* ============================================================
+   DASHBOARD CARDS
+   ============================================================ */
+.stat-card{
+  background:var(--surface); border:1px solid var(--border-c); border-radius:var(--radius-lg);
+  padding:1.1rem 1.25rem; box-shadow:var(--shadow-soft); position:relative; overflow:hidden;
+  transition:transform .2s ease, box-shadow .2s ease;
+}
+.stat-card:hover{ transform:translateY(-3px); box-shadow:var(--shadow-lift); }
+.stat-card::after{
+  content:""; position:absolute; right:-10px; top:-10px; width:70px; height:70px; border-radius:50%;
+  background:radial-gradient(circle, var(--accent) 0%, transparent 70%); opacity:.12;
+}
+.stat-value{ font-family:var(--font-display); font-size:2rem; font-weight:700; line-height:1; color:var(--text); }
+.stat-label{ font-size:.75rem; text-transform:uppercase; letter-spacing:.12em; color:var(--text-muted); }
+.stat-icon{ font-size:1.4rem; color:var(--accent-strong); }
+
+/* ============================================================
+   RIBBON SIGNATURE ELEMENT — used on category headers & quick launch
+   ============================================================ */
+.ribbon{
+  position:relative;
+  display:inline-flex; align-items:center; justify-content:center;
+  width:34px; min-width:34px; height:44px;
+  background:linear-gradient(180deg, var(--gold-400), var(--gold-500));
+  clip-path:polygon(0 0, 100% 0, 100% 100%, 50% 78%, 0 100%);
+  color:var(--teal-950); font-weight:700; font-family:var(--font-display); font-size:.95rem;
+  box-shadow:0 3px 8px rgba(0,0,0,.25);
+  flex-shrink:0;
+}
+
+/* ============================================================
+   QUICK LAUNCH
+   ============================================================ */
+.quick-launch-btn{
+  background:var(--surface); border:1px solid var(--border-c); border-radius:var(--radius-md);
+  color:var(--text); text-decoration:none; padding:.85rem .9rem; display:flex; align-items:center; gap:.65rem;
+  transition:all .18s ease; height:100%;
+}
+.quick-launch-btn:hover{
+  border-color:var(--accent-strong); background:var(--surface-2); transform:translateY(-2px);
+  color:var(--text); box-shadow:var(--shadow-soft);
+}
+.quick-launch-btn .ql-name{ font-weight:600; font-size:.92rem; }
+.quick-launch-btn .ql-url{ font-family:var(--font-mono); font-size:.7rem; color:var(--text-muted); }
+
+/* ============================================================
+   SEARCH & TOOLBAR
+   ============================================================ */
+.search-wrap{ position:relative; }
+.search-wrap .bi-search{
+  position:absolute; left:14px; top:50%; transform:translateY(-50%); color:var(--text-muted);
+}
+.form-control-search{
+  background:var(--surface); border:1px solid var(--border-c); color:var(--text);
+  padding-left:2.6rem; border-radius:var(--radius-md); height:46px;
+}
+.form-control-search:focus{
+  background:var(--surface); color:var(--text); border-color:var(--accent-strong);
+  box-shadow:0 0 0 .2rem rgba(201,162,39,.18);
+}
+.form-select, .form-control{
+  background:var(--surface); border:1px solid var(--border-c); color:var(--text);
+}
+.form-select:focus, .form-control:focus{
+  background:var(--surface); color:var(--text); border-color:var(--accent-strong);
+  box-shadow:0 0 0 .2rem rgba(201,162,39,.18);
+}
+.form-select option{ background:var(--surface); color:var(--text); }
+
+/* ============================================================
+   ACCORDION / CATEGORIES
+   ============================================================ */
+.accordion-item{
+  background:transparent; border:1px solid var(--border-c); border-radius:var(--radius-lg)!important;
+  margin-bottom:.9rem; overflow:hidden;
+}
+.accordion-button{
+  background:var(--surface); color:var(--text); font-weight:600; padding:.85rem 1.1rem;
+  gap:.75rem;
+}
+.accordion-button:not(.collapsed){
+  background:var(--surface-2); color:var(--text); box-shadow:none;
+}
+.accordion-button::after{ filter:none; }
+[data-theme="dark"] .accordion-button::after{ filter:invert(1) brightness(2); }
+.accordion-button:focus{ box-shadow:0 0 0 .2rem rgba(201,162,39,.18); }
+.accordion-body{ background:var(--surface); padding:1rem; }
+.cat-count-badge{
+  font-size:.72rem; font-weight:600; padding:.25em .6em; border-radius:20px;
+  background:var(--surface-3); color:var(--text-muted); margin-left:.4rem;
+}
+.cat-actions{ margin-left:auto; display:flex; gap:.35rem; }
+.cat-actions .btn{ padding:.15rem .45rem; font-size:.8rem; }
+
+/* ============================================================
+   BOOKMARK CARD
+   ============================================================ */
+.bookmark-card{
+  background:var(--surface-2); border:1px solid var(--border-c); border-radius:var(--radius-md);
+  padding:.75rem .9rem; margin-bottom:.6rem; display:flex; align-items:center; gap:.85rem;
+  transition:border-color .18s ease, transform .15s ease;
+}
+.bookmark-card:hover{ border-color:var(--accent-strong); }
+.bookmark-card .bm-info{ flex:1 1 auto; min-width:0; }
+.bookmark-card .bm-name{ font-weight:600; font-size:.98rem; color:var(--text); }
+.bookmark-card .bm-url{
+  font-family:var(--font-mono); font-size:.74rem; color:var(--url-color);
+  white-space:nowrap; overflow:hidden; text-overflow:ellipsis; display:block; max-width:100%;
+}
+.bookmark-card .bm-actions{ display:flex; align-items:center; gap:.4rem; flex-shrink:0; }
+.btn-open{
+  background:var(--accent-strong); color:var(--teal-950); border:none; font-weight:600;
+  border-radius:var(--radius-sm); padding:.4rem 1rem; white-space:nowrap;
+}
+.btn-open:hover{ background:var(--gold-400); color:var(--teal-950); }
+.btn-icon{
+  border:1px solid var(--border-c); background:transparent; color:var(--text-muted);
+  border-radius:var(--radius-sm); width:34px; height:34px; display:flex; align-items:center; justify-content:center;
+}
+.btn-icon:hover{ background:var(--surface-3); color:var(--text); }
+.btn-icon.is-fav{ color:var(--gold-500); border-color:var(--gold-500); }
+.btn-icon.fav-on i{ color:var(--gold-500); }
+
+@media (max-width:576px){
+  .bookmark-card{ flex-wrap:wrap; }
+  .bookmark-card .bm-actions{ width:100%; justify-content:flex-end; margin-top:.4rem; }
+}
+
+/* ============================================================
+   CONTEXT MENU
+   ============================================================ */
+.ctx-menu{
+  position:fixed; z-index:2000; background:var(--surface); border:1px solid var(--border-c);
+  border-radius:var(--radius-md); box-shadow:var(--shadow-lift); min-width:170px; padding:.35rem;
+  display:none;
+}
+.ctx-menu button{
+  width:100%; text-align:left; background:none; border:none; color:var(--text); padding:.5rem .7rem;
+  border-radius:var(--radius-sm); font-size:.88rem; display:flex; align-items:center; gap:.55rem;
+}
+.ctx-menu button:hover{ background:var(--surface-3); }
+.ctx-menu button.text-danger:hover{ background:rgba(220,53,69,.15); }
+
+/* ============================================================
+   EMPTY STATE
+   ============================================================ */
+.empty-state{
+  text-align:center; padding:4rem 1rem; color:var(--text-muted);
+}
+.empty-state i{ font-size:2.6rem; color:var(--accent-strong); opacity:.7; }
+
+/* ============================================================
+   MODALS
+   ============================================================ */
+.modal-content{
+  background:var(--surface); color:var(--text); border:1px solid var(--border-c); border-radius:var(--radius-lg);
+}
+.modal-header, .modal-footer{ border-color:var(--border-c); }
+.btn-close{ filter:none; }
+[data-theme="dark"] .btn-close{ filter:invert(1) brightness(2); }
+
+/* ============================================================
+   TOASTS
+   ============================================================ */
+.toast{
+  background:var(--surface); color:var(--text); border:1px solid var(--border-c); border-radius:var(--radius-md);
+}
+.toast .toast-header{ background:var(--surface-2); color:var(--text); border-color:var(--border-c); }
+
+/* ============================================================
+   FOOTER
+   ============================================================ */
+.app-footer{
+  border-top:1px solid var(--border-c); padding:1.5rem 0; color:var(--text-muted); font-size:.82rem;
+  text-align:center; margin-top:3rem;
+}
+
+/* Category color dot */
+.cat-dot{ width:10px; height:10px; border-radius:50%; display:inline-block; flex-shrink:0; }
+
+/* Kbd style for shortcuts modal */
+kbd{ background:var(--surface-3); color:var(--text); border:1px solid var(--border-c); box-shadow:none; }
+
+/* Scrollbar (dark aesthetic) */
+::-webkit-scrollbar{ width:10px; height:10px; }
+::-webkit-scrollbar-track{ background:var(--bg); }
+::-webkit-scrollbar-thumb{ background:var(--surface-3); border-radius:20px; }
+
+.spinner-overlay{
+  position:fixed; inset:0; background:rgba(4,32,31,.55); z-index:3000;
+  display:none; align-items:center; justify-content:center; backdrop-filter:blur(2px);
 }
-
-.toolbar__sort select {
-  height: 36px;
-  padding: 0 10px;
-  border-radius: var(--radius-sm);
-  border: 1px solid var(--border);
-  background: var(--bg-raised);
-  color: var(--text);
-}
-
-/* ---------------------------------------------------------------------- */
-/* Category sections                                                      */
-/* ---------------------------------------------------------------------- */
-
-.sections { display: flex; flex-direction: column; gap: 10px; }
-
-.category-section {
-  background: var(--bg-raised);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-lg);
-  overflow: hidden;
-}
-
-.category-section__header {
-  width: 100%;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 14px 18px;
-  background: transparent;
-  border: none;
-  text-align: left;
-  font-weight: 700;
-  font-family: var(--font-display);
-}
-
-.category-section__caret {
-  font-size: 0.7rem;
-  color: var(--text-faint);
-  transition: transform var(--transition-fast);
-  width: 12px;
-}
-
-.category-section__icon { font-size: 1.05rem; }
-.category-section__title { flex: 1; letter-spacing: -0.01em; }
-
-.category-section__count {
-  font-size: 0.78rem;
-  font-weight: 600;
-  color: var(--text-muted);
-  background: var(--bg-sunken);
-  border-radius: 999px;
-  padding: 2px 9px;
-}
-
-.category-section__body {
-  padding: 4px 18px 18px;
-  animation: reveal var(--transition-med) ease;
-}
-
-@keyframes reveal {
-  from { opacity: 0; transform: translateY(-4px); }
-  to { opacity: 1; transform: translateY(0); }
-}
-
-.card-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
-  gap: 12px;
-}
-
-/* ---------------------------------------------------------------------- */
-/* Bookmark card — the signature "ribbon" motif                           */
-/* ---------------------------------------------------------------------- */
-
-.card {
-  position: relative;
-  display: flex;
-  gap: 12px;
-  padding: 14px 14px 14px 10px;
-  background: var(--bg);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-md);
-  transition: transform var(--transition-fast), box-shadow var(--transition-fast), border-color var(--transition-fast);
-}
-
-.card:hover, .card:focus-within {
-  transform: translateY(-2px);
-  box-shadow: var(--shadow-md);
-  border-color: var(--border-strong);
-}
-
-.card__ribbon {
-  flex-shrink: 0;
-  width: 6px;
-  border-radius: 3px;
-  background: var(--card-accent, var(--accent));
-  position: relative;
-}
-.card__ribbon::after {
-  content: '';
-  position: absolute;
-  left: 0; right: 0; bottom: -1px;
-  height: 7px;
-  background: var(--bg);
-  clip-path: polygon(0 0, 100% 0, 100% 100%, 50% 40%, 0 100%);
-}
-
-.card__pin-badge {
-  position: absolute;
-  top: -6px;
-  right: 10px;
-  font-size: 0.85rem;
-  filter: drop-shadow(0 2px 2px rgba(0,0,0,0.25));
-}
-
-.card__main { flex: 1; min-width: 0; }
-
-.card__head {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  margin-bottom: 3px;
-}
-
-.card__favicon {
-  width: 18px;
-  height: 18px;
-  border-radius: 4px;
-  flex-shrink: 0;
-  object-fit: cover;
-}
-.card__favicon--fallback {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 0.9rem;
-  background: none;
-}
-
-.card__name {
-  font-family: var(--font-display);
-  font-weight: 700;
-  font-size: 0.94rem;
-  letter-spacing: -0.01em;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.card__url {
-  font-family: var(--font-mono);
-  font-size: 0.72rem;
-  color: var(--text-muted);
-  margin: 0 0 6px;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.card__meta {
-  font-size: 0.7rem;
-  color: var(--text-faint);
-  margin: 0;
-}
-
-.card__actions {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-  opacity: 0;
-  transform: translateX(4px);
-  transition: opacity var(--transition-fast), transform var(--transition-fast);
-}
-.card:hover .card__actions,
-.card:focus-within .card__actions {
-  opacity: 1;
-  transform: translateX(0);
-}
-.card__actions .icon-btn { width: 30px; height: 30px; min-width: 30px; min-height: 30px; font-size: 0.85rem; }
-
-@media (hover: none) {
-  .card__actions { opacity: 1; transform: none; }
-}
-
-/* ---------------------------------------------------------------------- */
-/* Empty state                                                            */
-/* ---------------------------------------------------------------------- */
-
-.empty-state {
-  text-align: center;
-  padding: 64px 20px;
-  color: var(--text-muted);
-}
-.empty-state__icon { font-size: 2.4rem; margin: 0 0 8px; }
-.empty-state h2 { font-family: var(--font-display); margin-bottom: 6px; color: var(--text); }
-
-/* ---------------------------------------------------------------------- */
-/* Footer                                                                 */
-/* ---------------------------------------------------------------------- */
-
-.app-footer {
-  text-align: center;
-  padding: 20px;
-  color: var(--text-faint);
-  font-size: 0.78rem;
-}
-
-/* ---------------------------------------------------------------------- */
-/* Slide-over editor panel                                                */
-/* ---------------------------------------------------------------------- */
-
-.editor-overlay {
-  position: fixed;
-  inset: 0;
-  background: rgba(10, 14, 23, 0.45);
-  z-index: 60;
-  opacity: 0;
-  transition: opacity var(--transition-med);
-}
-.editor-overlay--visible { opacity: 1; }
-
-.editor-panel {
-  position: fixed;
-  top: 0;
-  right: 0;
-  bottom: 0;
-  width: min(420px, 100vw);
-  background: var(--bg-raised);
-  border-left: 1px solid var(--border);
-  z-index: 70;
-  display: flex;
-  flex-direction: column;
-  transform: translateX(100%);
-  transition: transform var(--transition-med);
-  box-shadow: var(--shadow-lg);
-}
-.editor-panel--open { transform: translateX(0); }
-
-.editor-panel__header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 20px 22px;
-  border-bottom: 1px solid var(--border);
-}
-.editor-panel__header h2 { font-size: 1.1rem; letter-spacing: -0.01em; }
-
-.editor-form {
-  padding: 22px;
-  display: flex;
-  flex-direction: column;
-  gap: 18px;
-  overflow-y: auto;
-}
-
-.form-field { display: flex; flex-direction: column; gap: 6px; }
-.form-field label { font-size: 0.82rem; font-weight: 600; color: var(--text-muted); }
-
-.form-field input[type='text'],
-.form-field select {
-  height: 44px;
-  padding: 0 12px;
-  border-radius: var(--radius-sm);
-  border: 1px solid var(--border);
-  background: var(--bg-sunken);
-  color: var(--text);
-}
-.form-field input:focus, .form-field select:focus {
-  outline: none;
-  border-color: var(--accent);
-  box-shadow: 0 0 0 3px var(--accent-soft);
-}
-.form-field input[aria-invalid='true'] { border-color: var(--danger); }
-
-.form-error {
-  min-height: 16px;
-  font-size: 0.76rem;
-  color: var(--danger);
-  margin: 0;
-}
-
-.form-field--row { flex-direction: row; align-items: center; }
-
-.switch {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  cursor: pointer;
-  font-size: 0.88rem;
-  font-weight: 600;
-  color: var(--text);
-}
-.switch input { position: absolute; opacity: 0; width: 1px; height: 1px; }
-.switch__track {
-  width: 40px;
-  height: 24px;
-  border-radius: 999px;
-  background: var(--bg-sunken);
-  border: 1px solid var(--border-strong);
-  position: relative;
-  transition: background var(--transition-fast);
-}
-.switch__thumb {
-  position: absolute;
-  top: 2px; left: 2px;
-  width: 18px; height: 18px;
-  border-radius: 50%;
-  background: #fff;
-  box-shadow: var(--shadow-sm);
-  transition: transform var(--transition-fast);
-}
-.switch input:checked + .switch__track { background: var(--accent); }
-.switch input:checked + .switch__track .switch__thumb { transform: translateX(16px); }
-.switch input:focus-visible + .switch__track { outline: 2px solid var(--accent); outline-offset: 2px; }
-
-.editor-form__actions {
-  display: flex;
-  justify-content: flex-end;
-  gap: 10px;
-  margin-top: 4px;
-}
-
-/* ---------------------------------------------------------------------- */
-/* Confirm dialog                                                         */
-/* ---------------------------------------------------------------------- */
-
-.confirm-dialog {
-  position: fixed;
-  inset: 0;
-  z-index: 80;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: rgba(10, 14, 23, 0.5);
-  padding: 20px;
-  animation: fadeIn var(--transition-fast);
-}
-@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-
-.confirm-dialog__box {
-  background: var(--bg-raised);
-  border-radius: var(--radius-lg);
-  padding: 24px;
-  max-width: 380px;
-  width: 100%;
-  box-shadow: var(--shadow-lg);
-}
-.confirm-dialog__box p { margin: 0 0 18px; }
-.confirm-dialog__actions { display: flex; justify-content: flex-end; gap: 10px; }
-
-/* ---------------------------------------------------------------------- */
-/* Toasts                                                                 */
-/* ---------------------------------------------------------------------- */
-
-.toast-region {
-  position: fixed;
-  bottom: 20px;
-  left: 50%;
-  transform: translateX(-50%);
-  z-index: 90;
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  align-items: center;
-  pointer-events: none;
-}
-
-.toast {
-  background: var(--text);
-  color: var(--bg);
-  padding: 10px 18px;
-  border-radius: 999px;
-  font-size: 0.85rem;
-  font-weight: 600;
-  box-shadow: var(--shadow-md);
-  opacity: 0;
-  transform: translateY(8px);
-  transition: opacity var(--transition-fast), transform var(--transition-fast);
-}
-.toast--visible { opacity: 1; transform: translateY(0); }
-
-/* ---------------------------------------------------------------------- */
-/* Responsive breakpoints                                                 */
-/* ---------------------------------------------------------------------- */
-
-@media (max-width: 720px) {
-  .app-header { gap: 10px; padding: 0 12px; }
-  .app-header__title { display: none; }
-  .app-header__actions .btn span:last-child { display: none; }
-  .app-main { padding: 18px 12px 48px; }
-  .card-grid { grid-template-columns: 1fr; }
-  .editor-panel { width: 100vw; }
-  .stats-bar { grid-template-columns: repeat(3, 1fr); }
-}
-
-@media (max-width: 420px) {
-  .app-header__search-icon { left: 12px; }
-  .app-header__search input { padding-left: 34px; }
-  .stats-bar { grid-template-columns: repeat(2, 1fr); }
-}
-
-/* Landscape phones: keep header compact */
-@media (max-height: 420px) and (orientation: landscape) {
-  .app-header { height: 56px; }
-  :root { --header-h: 56px; }
-}
-
 </style>
 </head>
 <body>
 
-  <div data-menu-root></div>   <!-- menu renders here -->
-  <header>...</header>
-  
-  <a class="skip-link" href="#main-content">Skip to content</a>
-
-  <!-- ==================== HEADER ==================== -->
-  <header class="app-header">
-    <div class="app-header__brand">
-      <span class="app-header__mark" aria-hidden="true"></span>
-      <span class="app-header__title">Marker</span>
+<!-- ============================================================
+     HEADER
+     ============================================================ -->
+<header class="app-header py-2">
+  <div class="container-xxl d-flex align-items-center gap-3 flex-wrap py-1">
+    <div class="d-flex align-items-center gap-2">
+      <div class="brand-mark"><i class="bi bi-bookmark-star-fill"></i></div>
+      <div>
+        <p class="brand-title" id="pageHeading">Bookmark Dashboard</p>
+        <div class="brand-sub">Personal Productivity</div>
+      </div>
     </div>
 
-    <div class="app-header__search">
-      <label for="search-input" class="visually-hidden">Search bookmarks by name</label>
-      <span class="app-header__search-icon" aria-hidden="true">⌕</span>
-      <input
-        id="search-input"
-        type="search"
-        placeholder="Search your links…"
-        autocomplete="off"
-        spellcheck="false"
-      />
-    </div>
-
-    <div class="app-header__actions">
-      <button id="theme-toggle" class="icon-btn icon-btn--lg" type="button" aria-label="Switch theme">🌙</button>
-      <button id="add-bookmark-btn" class="btn btn--primary" type="button">
-        <span aria-hidden="true">+</span> Add bookmark
+    <div class="ms-auto d-flex align-items-center gap-2 flex-wrap">
+      <button class="btn btn-ghost btn-sm" id="btnShortcuts" title="Keyboard shortcuts" aria-label="Show keyboard shortcuts">
+        <i class="bi bi-keyboard"></i>
+      </button>
+      <button class="btn btn-ghost btn-sm" id="btnTheme" title="Toggle theme (Ctrl+D)" aria-label="Toggle dark or light theme">
+        <i class="bi bi-moon-stars-fill" id="themeIcon"></i>
+      </button>
+      <button class="btn btn-outline-gold btn-sm" id="btnExport" title="Export (Ctrl+E)">
+        <i class="bi bi-download me-1"></i>Export
+      </button>
+      <button class="btn btn-outline-gold btn-sm" id="btnImport" title="Import (Ctrl+I)">
+        <i class="bi bi-upload me-1"></i>Import
+      </button>
+      <input type="file" id="fileImportInput" accept=".csv,.json" class="d-none">
+      <button class="btn btn-gold btn-sm" id="btnAddBookmark" title="Add bookmark (Ctrl+N)">
+        <i class="bi bi-plus-lg me-1"></i>Add Bookmark
       </button>
     </div>
-  </header>
+  </div>
+</header>
 
-  <main id="main-content" class="app-main">
-    <!-- ==================== STATS ==================== -->
-    <section aria-label="Bookmark statistics" id="stats-bar" class="stats-bar"></section>
+<main class="container-xxl py-4">
 
-    <!-- ==================== CATEGORY FILTERS ==================== -->
-    <nav aria-label="Filter by category" id="category-filters" class="chip-row"></nav>
+  <!-- ============================================================
+       DASHBOARD CARDS
+       ============================================================ -->
+  <section class="row g-3 mb-4" aria-label="Dashboard summary">
+    <div class="col-6 col-lg-3">
+      <div class="stat-card">
+        <div class="d-flex justify-content-between align-items-start">
+          <div>
+            <div class="stat-value" id="statTotalCategories">0</div>
+            <div class="stat-label">Categories</div>
+          </div>
+          <i class="bi bi-folder2-open stat-icon"></i>
+        </div>
+      </div>
+    </div>
+    <div class="col-6 col-lg-3">
+      <div class="stat-card">
+        <div class="d-flex justify-content-between align-items-start">
+          <div>
+            <div class="stat-value" id="statTotalBookmarks">0</div>
+            <div class="stat-label">Bookmarks</div>
+          </div>
+          <i class="bi bi-bookmarks stat-icon"></i>
+        </div>
+      </div>
+    </div>
+    <div class="col-6 col-lg-3">
+      <div class="stat-card">
+        <div class="d-flex justify-content-between align-items-start">
+          <div>
+            <div class="stat-value" id="statFavorites">0</div>
+            <div class="stat-label">Favorites</div>
+          </div>
+          <i class="bi bi-star-fill stat-icon"></i>
+        </div>
+      </div>
+    </div>
+    <div class="col-6 col-lg-3">
+      <div class="stat-card">
+        <div class="d-flex justify-content-between align-items-start">
+          <div>
+            <div class="stat-value" id="statRecent">0</div>
+            <div class="stat-label">Added This Week</div>
+          </div>
+          <i class="bi bi-clock-history stat-icon"></i>
+        </div>
+      </div>
+    </div>
+  </section>
 
-    <!-- ==================== TOOLBAR: sort ==================== -->
-    <div class="toolbar">
-      <div class="toolbar__sort">
-        <label for="sort-field">Sort by</label>
-        <select id="sort-field">
-          <option value="name">Name</option>
+  <!-- ============================================================
+       QUICK LAUNCH
+       ============================================================ -->
+  <section class="mb-4" id="quickLaunchSection">
+    <div class="d-flex align-items-center gap-2 mb-2">
+      <i class="bi bi-lightning-charge-fill" style="color:var(--gold-500)"></i>
+      <h2 class="h6 fw-bold mb-0 text-uppercase" style="letter-spacing:.08em; font-family:var(--font-body);">Quick Launch</h2>
+    </div>
+    <div class="row g-2" id="quickLaunchGrid"></div>
+  </section>
+
+  <!-- ============================================================
+       SEARCH & TOOLBAR
+       ============================================================ -->
+  <section class="mb-4">
+    <div class="row g-2 align-items-center">
+      <div class="col-12 col-md-6">
+        <div class="search-wrap">
+          <i class="bi bi-search"></i>
+          <input type="text" class="form-control form-control-search" id="searchInput"
+                 placeholder="Search by name or category..." aria-label="Search bookmarks">
+        </div>
+      </div>
+      <div class="col-6 col-md-3">
+        <select class="form-select" id="sortSelect" aria-label="Sort bookmarks">
+          <option value="name-asc">Name A–Z</option>
+          <option value="name-desc">Name Z–A</option>
+          <option value="recent">Recently Added</option>
           <option value="category">Category</option>
-          <option value="createdDate">Created date</option>
-          <option value="lastModified">Last modified</option>
-        </select>
-        <button id="sort-direction-btn" type="button" class="btn btn--ghost btn--small" aria-label="Sort direction: ascending">↑ Asc</button>
-      </div>
-    </div>
-
-    <!-- ==================== CATEGORY SECTIONS ==================== -->
-    <div id="category-sections" class="sections"></div>
-
-    <!-- ==================== EMPTY STATE ==================== -->
-    <div id="empty-state" class="empty-state" hidden>
-      <p class="empty-state__icon" aria-hidden="true">🔖</p>
-      <h2>No bookmarks yet</h2>
-      <p>Add your first link, or clear your search and filters to see what you've saved.</p>
-    </div>
-  </main>
-
-  <footer class="app-footer">
-    <p>Stored only in this browser. Nothing leaves your device.</p>
-  </footer>
-
-  <!-- ==================== SLIDE-OVER EDITOR PANEL ==================== -->
-  <div id="editor-overlay" class="editor-overlay" hidden></div>
-  <aside id="editor-panel" class="editor-panel" hidden aria-labelledby="editor-title" role="dialog" aria-modal="true">
-    <div class="editor-panel__header">
-      <h2 id="editor-title">Add bookmark</h2>
-      <button id="editor-close" type="button" class="icon-btn" aria-label="Close panel">✕</button>
-    </div>
-
-    <form id="editor-form" class="editor-form" novalidate>
-      <div class="form-field">
-        <label for="field-name">Name</label>
-        <input id="field-name" name="name" type="text" maxlength="80" required autocomplete="off" />
-        <p class="form-error" id="error-name" role="alert"></p>
-      </div>
-
-      <div class="form-field">
-        <label for="field-url">URL</label>
-        <input id="field-url" name="url" type="text" placeholder="https://example.com" maxlength="2048" required autocomplete="off" inputmode="url" />
-        <p class="form-error" id="error-url" role="alert"></p>
-      </div>
-
-      <div class="form-field">
-        <label for="field-category">Category</label>
-        <select id="field-category" name="category">
-          <option value="GENERAL">🌐 General</option>
-          <option value="SPIRITUAL">🕌 Spiritual</option>
-          <option value="HEALTH">❤️ Health</option>
-          <option value="STUDY">📚 Study</option>
-          <option value="WORK">💼 Work</option>
-          <option value="OTHER">📁 Other</option>
         </select>
       </div>
-
-      <div class="form-field form-field--row">
-        <label class="switch" for="field-pinned">
-          <input id="field-pinned" name="pinned" type="checkbox" />
-          <span class="switch__track" aria-hidden="true"><span class="switch__thumb"></span></span>
-          <span>Pin to top</span>
-        </label>
+      <div class="col-6 col-md-3">
+        <button class="btn btn-ghost w-100" id="btnManageCategories">
+          <i class="bi bi-tags me-1"></i>Manage Categories
+        </button>
       </div>
+    </div>
+  </section>
 
-      <div class="editor-form__actions">
-        <button type="button" id="editor-cancel" class="btn btn--ghost">Cancel</button>
-        <button type="submit" class="btn btn--primary">Save</button>
+  <!-- ============================================================
+       CATEGORY / BOOKMARK LIST
+       ============================================================ -->
+  <section id="categoriesContainer">
+    <div class="accordion" id="categoryAccordion"></div>
+    <div class="empty-state d-none" id="emptyState">
+      <i class="bi bi-bookmark-heart d-block mb-3"></i>
+      <h3 class="h5">No Bookmarks Found</h3>
+      <p class="mb-3">Click Add Bookmark to create your first bookmark.</p>
+      <button class="btn btn-gold" id="btnEmptyAdd"><i class="bi bi-plus-lg me-1"></i>Add Bookmark</button>
+    </div>
+    <div class="empty-state d-none" id="noResultsState">
+      <i class="bi bi-search d-block mb-3"></i>
+      <h3 class="h5">No matches found</h3>
+      <p class="mb-0">Try a different search term or clear your filters.</p>
+    </div>
+  </section>
+</main>
+
+<footer class="app-footer">
+  <div>Bookmark Dashboard &middot; Version 1.0</div>
+  <div>Stored Locally &middot; HTML • CSS • JavaScript • Bootstrap</div>
+</footer>
+
+<!-- ============================================================
+     CONTEXT MENU
+     ============================================================ -->
+<div class="ctx-menu" id="ctxMenu" role="menu">
+  <button role="menuitem" id="ctxOpen"><i class="bi bi-box-arrow-up-right"></i>Open</button>
+  <button role="menuitem" id="ctxCopy"><i class="bi bi-clipboard"></i>Copy URL</button>
+  <button role="menuitem" id="ctxEdit"><i class="bi bi-pencil"></i>Edit</button>
+  <button role="menuitem" id="ctxDelete" class="text-danger"><i class="bi bi-trash"></i>Delete</button>
+</div>
+
+<!-- ============================================================
+     ADD / EDIT BOOKMARK MODAL
+     ============================================================ -->
+<div class="modal fade" id="bookmarkModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="bookmarkModalTitle">Add Bookmark</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
       </div>
-    </form>
-  </aside>
-
-  <!-- ==================== CONFIRM DIALOG ==================== -->
-  <div id="confirm-dialog" class="confirm-dialog" hidden role="alertdialog" aria-modal="true" aria-labelledby="confirm-message">
-    <div class="confirm-dialog__box">
-      <p id="confirm-message"></p>
-      <div class="confirm-dialog__actions">
-        <button id="confirm-cancel" type="button" class="btn btn--ghost">Cancel</button>
-        <button id="confirm-ok" type="button" class="btn btn--danger">Delete</button>
+      <div class="modal-body">
+        <form id="bookmarkForm">
+          <input type="hidden" id="bmId">
+          <div class="mb-3">
+            <label class="form-label" for="bmName">Bookmark Name</label>
+            <input type="text" class="form-control" id="bmName" required>
+          </div>
+          <div class="mb-3">
+            <label class="form-label" for="bmUrl">URL</label>
+            <input type="text" class="form-control" id="bmUrl" placeholder="https://... or file path" required>
+          </div>
+          <div class="mb-3">
+            <label class="form-label" for="bmCategory">Category</label>
+            <select class="form-select" id="bmCategory">
+              <option value="__new__">+ New Category...</option>
+            </select>
+          </div>
+          <div class="mb-1" id="newCategoryWrap" style="display:none;">
+            <label class="form-label" for="bmNewCategory">New Category Name</label>
+            <input type="text" class="form-control" id="bmNewCategory" placeholder="e.g. Development">
+          </div>
+          <div class="form-check mt-2">
+            <input class="form-check-input" type="checkbox" id="bmFavorite">
+            <label class="form-check-label" for="bmFavorite">Mark as Favorite</label>
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-ghost" data-bs-dismiss="modal">Cancel</button>
+        <button type="button" class="btn btn-gold" id="btnSaveBookmark">Save Bookmark</button>
       </div>
     </div>
   </div>
+</div>
 
-  <!-- ==================== TOASTS ==================== -->
-  <div id="toast-region" class="toast-region" aria-live="polite"></div>
+<!-- ============================================================
+     DELETE CONFIRMATION MODAL
+     ============================================================ -->
+<div class="modal fade" id="confirmModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title"><i class="bi bi-exclamation-triangle-fill text-warning me-2"></i>Confirm Delete</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body" id="confirmModalBody">Are you sure you want to delete this item?</div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-ghost" data-bs-dismiss="modal">Cancel</button>
+        <button type="button" class="btn btn-danger" id="btnConfirmDelete">Delete</button>
+      </div>
+    </div>
+  </div>
+</div>
 
+<!-- ============================================================
+     MANAGE CATEGORIES MODAL
+     ============================================================ -->
+<div class="modal fade" id="categoryModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Manage Categories</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <div class="input-group mb-3">
+          <input type="text" class="form-control" id="newCategoryInput" placeholder="New category name">
+          <button class="btn btn-gold" id="btnAddCategory">Add</button>
+        </div>
+        <ul class="list-group" id="categoryList"></ul>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-ghost" data-bs-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ============================================================
+     IMPORT PREVIEW MODAL
+     ============================================================ -->
+<div class="modal fade" id="importModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Confirm Import</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <p><i class="bi bi-exclamation-triangle-fill text-warning me-1"></i> Importing will merge with your existing bookmarks. Bookmarks matching the same Name + URL will be updated in place.</p>
+        <ul class="list-unstyled mb-0">
+          <li>Current bookmarks: <strong id="importCurrentCount">0</strong></li>
+          <li>Bookmarks in file: <strong id="importNewCount">0</strong></li>
+        </ul>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-ghost" data-bs-dismiss="modal">Cancel</button>
+        <button type="button" class="btn btn-gold" id="btnConfirmImport">Import</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ============================================================
+     KEYBOARD SHORTCUTS MODAL
+     ============================================================ -->
+<div class="modal fade" id="shortcutsModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Keyboard Shortcuts</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <ul class="list-unstyled d-flex flex-column gap-2 mb-0">
+          <li><kbd>Ctrl</kbd> + <kbd>N</kbd> &nbsp;Add Bookmark</li>
+          <li><kbd>Ctrl</kbd> + <kbd>F</kbd> &nbsp;Focus Search</li>
+          <li><kbd>Ctrl</kbd> + <kbd>E</kbd> &nbsp;Export</li>
+          <li><kbd>Ctrl</kbd> + <kbd>I</kbd> &nbsp;Import</li>
+          <li><kbd>Ctrl</kbd> + <kbd>D</kbd> &nbsp;Toggle Dark Mode</li>
+          <li><kbd>Esc</kbd> &nbsp;Close Modal</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ============================================================
+     EXPORT FORMAT CHOICE MODAL
+     ============================================================ -->
+<div class="modal fade" id="exportModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered modal-sm">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Export Bookmarks</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body d-flex flex-column gap-2">
+        <button class="btn btn-outline-gold" id="btnExportJson"><i class="bi bi-filetype-json me-1"></i>Export as JSON</button>
+        <button class="btn btn-outline-gold" id="btnExportCsv"><i class="bi bi-filetype-csv me-1"></i>Export as CSV</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Toast container -->
+<div class="toast-container position-fixed bottom-0 end-0 p-3" id="toastContainer" style="z-index:2500;"></div>
+
+<!-- Loading overlay -->
+<div class="spinner-overlay" id="spinnerOverlay">
+  <div class="spinner-border" style="color:var(--gold-400); width:3rem; height:3rem;" role="status">
+    <span class="visually-hidden">Loading...</span>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 <script>
-/**
- * bookmark.js
- * ------------------------------------------------------------------
- * Domain model + business rules for bookmarks. Nothing in this file
- * touches the DOM or localStorage directly — it only knows how to
- * build, validate, sort, filter, and transform bookmark records.
- * ------------------------------------------------------------------
- */
+(() => {
+'use strict';
 
-/** @typedef {'GENERAL'|'SPIRITUAL'|'HEALTH'|'STUDY'|'WORK'|'OTHER'} CategoryKey */
-
-const CATEGORIES = Object.freeze({
-  GENERAL: { key: 'GENERAL', label: 'General', icon: '🌐', color: 'var(--cat-general)' },
-  SPIRITUAL: { key: 'SPIRITUAL', label: 'Spiritual', icon: '🕌', color: 'var(--cat-spiritual)' },
-  HEALTH: { key: 'HEALTH', label: 'Health', icon: '❤️', color: 'var(--cat-health)' },
-  STUDY: { key: 'STUDY', label: 'Study', icon: '📚', color: 'var(--cat-study)' },
-  WORK: { key: 'WORK', label: 'Work', icon: '💼', color: 'var(--cat-work)' },
-  OTHER: { key: 'OTHER', label: 'Other', icon: '📁', color: 'var(--cat-other)' },
-});
-
-const CATEGORY_ORDER = ['GENERAL', 'SPIRITUAL', 'HEALTH', 'STUDY', 'WORK', 'OTHER'];
-const DEFAULT_CATEGORY = 'GENERAL';
-
-const NAME_MAX_LEN = 80;
-const URL_MAX_LEN = 2048;
-
-/** Generates a RFC4122-ish UUID with a safe fallback for older WebViews. */
-function generateId() {
-  if (typeof crypto !== 'undefined' && crypto.randomUUID) {
-    return crypto.randomUUID();
-  }
-  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {
-    const r = (Math.random() * 16) | 0;
-    const v = c === 'x' ? r : (r & 0x3) | 0x8;
-    return v.toString(16);
-  });
-}
-
-/**
- * Validates raw form input for a bookmark.
- * @returns {{valid:boolean, errors:Object<string,string>}}
- */
-function validateBookmarkInput({ name, url, category }) {
-  const errors = {};
-  const trimmedName = (name ?? '').trim();
-  const trimmedUrl = (url ?? '').trim();
-
-  if (!trimmedName) {
-    errors.name = 'Name is required.';
-  } else if (trimmedName.length > NAME_MAX_LEN) {
-    errors.name = `Name must be ${NAME_MAX_LEN} characters or fewer.`;
-  }
-
-  if (!trimmedUrl) {
-    errors.url = 'URL is required.';
-  } else if (trimmedUrl.length > URL_MAX_LEN) {
-    errors.url = `URL must be ${URL_MAX_LEN} characters or fewer.`;
-  } else if (!isValidHttpUrl(trimmedUrl)) {
-    errors.url = 'Enter a valid URL starting with http:// or https://';
-  }
-
-  if (category && !CATEGORY_ORDER.includes(category)) {
-    errors.category = 'Unknown category.';
-  }
-
-  return { valid: Object.keys(errors).length === 0, errors };
-}
-
-function isValidHttpUrl(value) {
-  try {
-    const u = new URL(value);
-    return u.protocol === 'http:' || u.protocol === 'https:';
-  } catch {
-    return false;
-  }
-}
-
-/**
- * Builds a new, fully-formed bookmark record from validated form input.
- */
-function createBookmark({ name, url, category, pinned }) {
-  const now = new Date().toISOString();
-  return {
-    id: generateId(),
-    sno: 0, // regenerated on every render/save pass
-    name: name.trim(),
-    category: category && CATEGORY_ORDER.includes(category) ? category : DEFAULT_CATEGORY,
-    url: url.trim(),
-    createdDate: now,
-    lastModified: now,
-    favorite: false,
-    pinned: Boolean(pinned),
-  };
-}
-
-/** Returns a new bookmark object with edits applied + lastModified bumped. */
-function updateBookmark(existing, { name, url, category, pinned }) {
-  return {
-    ...existing,
-    name: name.trim(),
-    url: url.trim(),
-    category: category && CATEGORY_ORDER.includes(category) ? category : existing.category,
-    pinned: typeof pinned === 'boolean' ? pinned : existing.pinned,
-    lastModified: new Date().toISOString(),
-  };
-}
-
-/** Returns a duplicate of a bookmark with a fresh id/timestamps and "(Copy)" suffix. */
-function duplicateBookmark(existing) {
-  const now = new Date().toISOString();
-  return {
-    ...existing,
-    id: generateId(),
-    name: `${existing.name} (Copy)`,
-    createdDate: now,
-    lastModified: now,
-  };
-}
-
-/** Toggles the pinned flag, returning a new object. */
-function togglePinned(existing) {
-  return { ...existing, pinned: !existing.pinned, lastModified: new Date().toISOString() };
-}
-
-/** Toggles the favorite flag, returning a new object. */
-function toggleFavorite(existing) {
-  return { ...existing, favorite: !existing.favorite, lastModified: new Date().toISOString() };
-}
-
-/**
- * Regenerates sequential sno values for a full list (call after any
- * add/edit/delete/reorder so displayed numbering stays contiguous).
- */
-function regenerateSno(bookmarks) {
-  return bookmarks.map((b, idx) => ({ ...b, sno: idx + 1 }));
-}
-
-/** Case-insensitive substring search against the bookmark name only. */
-function searchByName(bookmarks, query) {
-  const q = query.trim().toLowerCase();
-  if (!q) return bookmarks;
-  return bookmarks.filter((b) => b.name.toLowerCase().includes(q));
-}
-
-/** Filters by a single category key, or returns all when key is 'ALL'. */
-function filterByCategory(bookmarks, categoryKey) {
-  if (!categoryKey || categoryKey === 'ALL') return bookmarks;
-  return bookmarks.filter((b) => b.category === categoryKey);
-}
-
-const SORT_COMPARATORS = {
-  name: (a, b) => a.name.localeCompare(b.name, undefined, { sensitivity: 'base' }),
-  category: (a, b) => a.category.localeCompare(b.category),
-  createdDate: (a, b) => new Date(a.createdDate) - new Date(b.createdDate),
-  lastModified: (a, b) => new Date(a.lastModified) - new Date(b.lastModified),
+/* ============================================================
+   CONFIGURATION
+   ============================================================ */
+const STORAGE_KEYS = {
+  bookmarks: 'bookmarks',
+  categories: 'categories',
+  settings: 'settings',
+  theme: 'theme',
+  collapsedCategories: 'collapsedCategories'
 };
 
-/**
- * Sorts a list per user-chosen field/direction, but ALWAYS keeps pinned
- * items first (pinned sort is a fixed business rule, not user-selectable).
- */
-function sortBookmarks(bookmarks, field = 'name', direction = 'asc') {
-  const comparator = SORT_COMPARATORS[field] || SORT_COMPARATORS.name;
-  const sorted = [...bookmarks].sort((a, b) => {
-    const base = comparator(a, b);
-    return direction === 'desc' ? -base : base;
-  });
-  const pinned = sorted.filter((b) => b.pinned);
-  const rest = sorted.filter((b) => !b.pinned);
-  return [...pinned, ...rest];
-}
-
-/** Groups a list of bookmarks by category, preserving CATEGORY_ORDER. */
-function groupByCategory(bookmarks) {
-  const groups = {};
-  for (const key of CATEGORY_ORDER) groups[key] = [];
-  for (const b of bookmarks) {
-    if (!groups[b.category]) groups[b.category] = [];
-    groups[b.category].push(b);
-  }
-  return groups;
-}
-
-/** Computes dashboard statistics from the full unfiltered bookmark list. */
-function computeStats(bookmarks) {
-  const stats = {
-    total: bookmarks.length,
-    pinned: bookmarks.filter((b) => b.pinned).length,
-  };
-  for (const key of CATEGORY_ORDER) {
-    stats[key] = bookmarks.filter((b) => b.category === key).length;
-  }
-  return stats;
-}
-
-/** Best-effort favicon URL for a bookmark's URL, with graceful fallback handled by UI. */
-function faviconUrlFor(url) {
-  try {
-    const u = new URL(url);
-    return `https://www.google.com/s2/favicons?sz=64&domain=${u.hostname}`;
-  } catch {
-    return null;
-  }
-}
-
-/**
- * storage.js
- * ------------------------------------------------------------------
- * Persistence layer. This is the ONLY module allowed to talk to
- * localStorage directly. Every other module goes through
- * StorageService so the storage format can change in one place.
- *
- * Schema is versioned so future releases can migrate old data
- * instead of wiping it.
- * ------------------------------------------------------------------
- */
-
-const SCHEMA_VERSION = 1;
-const KEY_PREFIX = 'bookmark-dashboard';
-
-const KEYS = {
-  DATA: `${KEY_PREFIX}-v${SCHEMA_VERSION}`,
-  THEME: `${KEY_PREFIX}-theme`,
-  COLLAPSED: `${KEY_PREFIX}-collapsed-sections`,
-  SORT: `${KEY_PREFIX}-sort-prefs`,
-  LEGACY_PREFIX: KEY_PREFIX, // used to detect older un-versioned keys
+const DEFAULT_CATEGORY_COLORS = {
+  'SAP': 'primary',
+  'Development': 'success',
+  'AI': 'info',
+  'Learning': 'warning',
+  'Finance': 'danger',
+  'Personal': 'secondary'
 };
+const COLOR_CYCLE = ['primary','success','info','warning','danger','secondary'];
+const QUICK_LAUNCH_MAX = 10;
 
-/**
- * Default shape of the persisted document.
- * @returns {{version:number, bookmarks:Array, updatedAt:string}}
- */
-function emptyDocument() {
-  return {
-    version: SCHEMA_VERSION,
-    bookmarks: [],
-    updatedAt: new Date().toISOString(),
-  };
-}
+/* ============================================================
+   GLOBAL VARIABLES
+   ============================================================ */
+let bookmarks = [];
+let categories = [];
+let settings = { lastSort: 'name-asc' };
+let collapsedCategories = {};
+let currentTheme = 'dark';
 
-class StorageService {
-  constructor(storage = window.localStorage) {
-    this.storage = storage;
-  }
+let editingBookmarkId = null;
+let deleteContext = null;       // { type:'bookmark'|'category', id }
+let pendingImportData = null;   // { bookmarks:[...] }
+let ctxTargetBookmarkId = null;
 
-  /** Confirms localStorage is actually usable (private mode, quota, etc). */
-  isAvailable() {
-    try {
-      const testKey = `${KEY_PREFIX}-__probe__`;
-      this.storage.setItem(testKey, '1');
-      this.storage.removeItem(testKey);
-      return true;
-    } catch (err) {
-      return false;
-    }
-  }
+const bookmarkModalEl = document.getElementById('bookmarkModal');
+const bookmarkModal = new bootstrap.Modal(bookmarkModalEl);
+const confirmModal = new bootstrap.Modal(document.getElementById('confirmModal'));
+const categoryModal = new bootstrap.Modal(document.getElementById('categoryModal'));
+const importModal = new bootstrap.Modal(document.getElementById('importModal'));
+const shortcutsModal = new bootstrap.Modal(document.getElementById('shortcutsModal'));
+const exportModal = new bootstrap.Modal(document.getElementById('exportModal'));
 
-  /**
-   * Reads and migrates the bookmark document.
-   * @returns {{version:number, bookmarks:Array, updatedAt:string}}
-   */
-  loadDocument() {
-    const raw = this.storage.getItem(KEYS.DATA);
-    if (!raw) {
-      return this._migrateFromLegacyOrEmpty();
-    }
-    try {
-      const parsed = JSON.parse(raw);
-      if (!parsed || !Array.isArray(parsed.bookmarks)) {
-        throw new Error('Malformed bookmark document');
-      }
-      return this._runMigrations(parsed);
-    } catch (err) {
-      console.error('[storage] Failed to parse stored bookmarks, starting fresh.', err);
-      return emptyDocument();
-    }
-  }
-
-  /** Placeholder migration path — future schema bumps add cases here. */
-  _runMigrations(doc) {
-    if (doc.version === SCHEMA_VERSION) return doc;
-    // Example of how a future migration would look:
-    // if (doc.version === 1) { doc = migrateV1ToV2(doc); }
-    doc.version = SCHEMA_VERSION;
-    return doc;
-  }
-
-  _migrateFromLegacyOrEmpty() {
-    // No legacy version exists yet (v1 is first release), so just start empty.
-    return emptyDocument();
-  }
-
-  /**
-   * Persists the full bookmark array.
-   * @param {Array} bookmarks
-   * @returns {boolean} success
-   */
-  saveBookmarks(bookmarks) {
-    const doc = {
-      version: SCHEMA_VERSION,
-      bookmarks,
-      updatedAt: new Date().toISOString(),
-    };
-    try {
-      this.storage.setItem(KEYS.DATA, JSON.stringify(doc));
-      return true;
-    } catch (err) {
-      console.error('[storage] Failed to save bookmarks (quota exceeded?).', err);
-      return false;
-    }
-  }
-
-  getBookmarks() {
-    return this.loadDocument().bookmarks;
-  }
-
-  // ---- Theme preference -------------------------------------------------
-
-  getTheme() {
-    return this.storage.getItem(KEYS.THEME); // 'light' | 'dark' | null
-  }
-
-  setTheme(theme) {
-    this.storage.setItem(KEYS.THEME, theme);
-  }
-
-  // ---- Collapsed section state -------------------------------------------
-
-  getCollapsedSections() {
-    try {
-      const raw = this.storage.getItem(KEYS.COLLAPSED);
-      return raw ? JSON.parse(raw) : {};
-    } catch {
-      return {};
-    }
-  }
-
-  setCollapsedSections(map) {
-    this.storage.setItem(KEYS.COLLAPSED, JSON.stringify(map));
-  }
-
-  // ---- Sort preferences ---------------------------------------------------
-
-  getSortPrefs() {
-    try {
-      const raw = this.storage.getItem(KEYS.SORT);
-      return raw ? JSON.parse(raw) : { field: 'name', direction: 'asc' };
-    } catch {
-      return { field: 'name', direction: 'asc' };
-    }
-  }
-
-  setSortPrefs(prefs) {
-    this.storage.setItem(KEYS.SORT, JSON.stringify(prefs));
+/* ============================================================
+   LOCAL STORAGE
+   ============================================================ */
+function loadFromStorage(key, fallback){
+  try{
+    const raw = localStorage.getItem(key);
+    return raw ? JSON.parse(raw) : fallback;
+  }catch(e){
+    console.error('Failed to parse storage key', key, e);
+    return fallback;
   }
 }
+function saveToStorage(key, value){
+  try{
+    localStorage.setItem(key, JSON.stringify(value));
+  }catch(e){
+    console.error('Failed to save storage key', key, e);
+    showToast('Storage Error', 'Could not save data locally.', 'danger');
+  }
+}
+function persistBookmarks(){ saveToStorage(STORAGE_KEYS.bookmarks, bookmarks); }
+function persistCategories(){ saveToStorage(STORAGE_KEYS.categories, categories); }
+function persistSettings(){ saveToStorage(STORAGE_KEYS.settings, settings); }
+function persistTheme(){ saveToStorage(STORAGE_KEYS.theme, currentTheme); }
+function persistCollapsed(){ saveToStorage(STORAGE_KEYS.collapsedCategories, collapsedCategories); }
 
-/**
- * ui.js
- * ------------------------------------------------------------------
- * Rendering layer. Owns every DOM read/write in the app. Consumers
- * (app.js) pass it data and callbacks; this module never mutates
- * bookmark data itself — it only reports user intent upward via the
- * callbacks it was given.
- * ------------------------------------------------------------------
- */
-
-const $ = (sel, root = document) => root.querySelector(sel);
-const $$ = (sel, root = document) => Array.from(root.querySelectorAll(sel));
-
-/** Escapes text for safe insertion into innerHTML. */
-function escapeHtml(str) {
+/* ============================================================
+   HELPERS
+   ============================================================ */
+function uid(prefix){
+  return prefix + '_' + Date.now().toString(36) + Math.random().toString(36).slice(2,8);
+}
+function nowIso(){ return new Date().toISOString(); }
+function escapeHtml(str){
   const div = document.createElement('div');
   div.textContent = str ?? '';
   return div.innerHTML;
 }
+function isWithinDays(isoDate, days){
+  const d = new Date(isoDate).getTime();
+  return (Date.now() - d) <= days * 24 * 60 * 60 * 1000;
+}
+function getCategoryColor(name){
+  const cat = categories.find(c => c.name.toLowerCase() === name.toLowerCase());
+  if (cat) return cat.color;
+  return 'secondary';
+}
+function findOrCreateCategory(name){
+  let cat = categories.find(c => c.name.toLowerCase() === name.trim().toLowerCase());
+  if (cat) return cat;
+  const color = DEFAULT_CATEGORY_COLORS[name] || COLOR_CYCLE[categories.length % COLOR_CYCLE.length];
+  cat = { id: uid('cat'), name: name.trim(), color, createdDate: nowIso() };
+  categories.push(cat);
+  persistCategories();
+  return cat;
+}
+function debounce(fn, wait){
+  let t;
+  return (...args) => { clearTimeout(t); t = setTimeout(() => fn(...args), wait); };
+}
 
-function formatDate(iso) {
-  try {
-    return new Date(iso).toLocaleDateString(undefined, {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
+/* ============================================================
+   TOASTS
+   ============================================================ */
+function showToast(title, message, variant = 'success'){
+  const container = document.getElementById('toastContainer');
+  const iconMap = { success:'bi-check-circle-fill', danger:'bi-x-circle-fill', warning:'bi-exclamation-triangle-fill', info:'bi-info-circle-fill' };
+  const el = document.createElement('div');
+  el.className = 'toast';
+  el.setAttribute('role','status');
+  el.setAttribute('aria-live','polite');
+  el.innerHTML = `
+    <div class="toast-header">
+      <i class="bi ${iconMap[variant] || iconMap.success} me-2 text-${variant === 'danger' ? 'danger' : variant === 'warning' ? 'warning' : 'success'}"></i>
+      <strong class="me-auto">${escapeHtml(title)}</strong>
+      <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>
+    </div>
+    <div class="toast-body">${escapeHtml(message)}</div>`;
+  container.appendChild(el);
+  const t = new bootstrap.Toast(el, { delay: 3200 });
+  t.show();
+  el.addEventListener('hidden.bs.toast', () => el.remove());
+}
+
+/* ============================================================
+   THEME
+   ============================================================ */
+function initTheme(){
+  currentTheme = loadFromStorage(STORAGE_KEYS.theme, 'dark');
+  applyTheme(currentTheme, false);
+}
+function applyTheme(theme, notify = true){
+  currentTheme = theme;
+  document.documentElement.setAttribute('data-theme', theme);
+  const icon = document.getElementById('themeIcon');
+  icon.className = theme === 'dark' ? 'bi bi-moon-stars-fill' : 'bi bi-sun-fill';
+  persistTheme();
+  if (notify) showToast('Theme Changed', `Switched to ${theme === 'dark' ? 'Dark' : 'Light'} mode.`, 'info');
+}
+function toggleTheme(){
+  applyTheme(currentTheme === 'dark' ? 'light' : 'dark');
+}
+
+/* ============================================================
+   CATEGORY MANAGEMENT
+   ============================================================ */
+function renderCategoryDropdown(selectedId){
+  const sel = document.getElementById('bmCategory');
+  const sorted = [...categories].sort((a,b) => a.name.localeCompare(b.name));
+  sel.innerHTML = sorted.map(c => `<option value="${c.id}">${escapeHtml(c.name)}</option>`).join('')
+    + `<option value="__new__">+ New Category...</option>`;
+  if (selectedId) sel.value = selectedId;
+}
+
+function renderCategoryManageList(){
+  const list = document.getElementById('categoryList');
+  const sorted = [...categories].sort((a,b) => a.name.localeCompare(b.name));
+  if (!sorted.length){
+    list.innerHTML = `<li class="list-group-item bg-transparent text-muted">No categories yet.</li>`;
+    return;
+  }
+  list.innerHTML = sorted.map(c => {
+    const count = bookmarks.filter(b => b.category === c.name).length;
+    return `
+    <li class="list-group-item d-flex align-items-center gap-2" style="background:var(--surface); color:var(--text); border-color:var(--border-c);">
+      <span class="cat-dot bg-${c.color}"></span>
+      <span class="flex-grow-1 cat-name-text" data-id="${c.id}">${escapeHtml(c.name)}</span>
+      <span class="cat-count-badge">${count}</span>
+      <button class="btn btn-icon btn-sm cat-rename-btn" data-id="${c.id}" title="Rename" aria-label="Rename category"><i class="bi bi-pencil"></i></button>
+      <button class="btn btn-icon btn-sm cat-delete-btn" data-id="${c.id}" title="Delete" aria-label="Delete category"><i class="bi bi-trash"></i></button>
+    </li>`;
+  }).join('');
+
+  list.querySelectorAll('.cat-rename-btn').forEach(btn => {
+    btn.addEventListener('click', () => renameCategory(btn.dataset.id));
+  });
+  list.querySelectorAll('.cat-delete-btn').forEach(btn => {
+    btn.addEventListener('click', () => requestDeleteCategory(btn.dataset.id));
+  });
+}
+
+function addCategoryFromModal(){
+  const input = document.getElementById('newCategoryInput');
+  const name = input.value.trim();
+  if (!name) return;
+  if (categories.some(c => c.name.toLowerCase() === name.toLowerCase())){
+    showToast('Category Exists', 'That category already exists.', 'warning');
+    return;
+  }
+  findOrCreateCategory(name);
+  input.value = '';
+  renderCategoryManageList();
+  renderCategoryDropdown();
+  renderAll();
+  showToast('Category Added', `"${name}" created.`, 'success');
+}
+
+function renameCategory(id){
+  const cat = categories.find(c => c.id === id);
+  if (!cat) return;
+  const newName = prompt('Rename category:', cat.name);
+  if (!newName || !newName.trim() || newName.trim() === cat.name) return;
+  const trimmed = newName.trim();
+  if (categories.some(c => c.id !== id && c.name.toLowerCase() === trimmed.toLowerCase())){
+    showToast('Category Exists', 'Another category already has that name.', 'warning');
+    return;
+  }
+  const oldName = cat.name;
+  cat.name = trimmed;
+  bookmarks.forEach(b => { if (b.category === oldName) b.category = trimmed; });
+  persistCategories(); persistBookmarks();
+  renderCategoryManageList(); renderCategoryDropdown(); renderAll();
+  showToast('Category Renamed', `"${oldName}" is now "${trimmed}".`, 'success');
+}
+
+function requestDeleteCategory(id){
+  const cat = categories.find(c => c.id === id);
+  if (!cat) return;
+  const count = bookmarks.filter(b => b.category === cat.name).length;
+  deleteContext = { type: 'category', id };
+  document.getElementById('confirmModalBody').innerHTML =
+    `Delete category <strong>${escapeHtml(cat.name)}</strong>?` +
+    (count ? ` This will also delete <strong>${count}</strong> bookmark(s) inside it.` : '');
+  confirmModal.show();
+}
+
+/* ============================================================
+   BOOKMARK MANAGEMENT
+   ============================================================ */
+function openAddBookmarkModal(){
+  editingBookmarkId = null;
+  document.getElementById('bookmarkModalTitle').textContent = 'Add Bookmark';
+  document.getElementById('bookmarkForm').reset();
+  document.getElementById('bmId').value = '';
+  document.getElementById('newCategoryWrap').style.display = 'none';
+  renderCategoryDropdown();
+  bookmarkModal.show();
+  setTimeout(() => document.getElementById('bmName').focus(), 300);
+}
+
+function openEditBookmarkModal(id){
+  const bm = bookmarks.find(b => b.id === id);
+  if (!bm) return;
+  editingBookmarkId = id;
+  document.getElementById('bookmarkModalTitle').textContent = 'Edit Bookmark';
+  document.getElementById('bmId').value = bm.id;
+  document.getElementById('bmName').value = bm.name;
+  document.getElementById('bmUrl').value = bm.url;
+  document.getElementById('bmFavorite').checked = !!bm.favorite;
+  document.getElementById('newCategoryWrap').style.display = 'none';
+  const cat = categories.find(c => c.name === bm.category);
+  renderCategoryDropdown(cat ? cat.id : null);
+  bookmarkModal.show();
+}
+
+function saveBookmarkFromModal(){
+  const name = document.getElementById('bmName').value.trim();
+  const url = document.getElementById('bmUrl').value.trim();
+  const favorite = document.getElementById('bmFavorite').checked;
+  let categorySelect = document.getElementById('bmCategory').value;
+  let categoryName;
+
+  if (!name || !url){
+    showToast('Missing Info', 'Name and URL are required.', 'warning');
+    return;
+  }
+
+  if (categorySelect === '__new__'){
+    const newCatName = document.getElementById('bmNewCategory').value.trim();
+    if (!newCatName){
+      showToast('Missing Category', 'Please enter a new category name.', 'warning');
+      return;
+    }
+    categoryName = findOrCreateCategory(newCatName).name;
+  } else {
+    const cat = categories.find(c => c.id === categorySelect);
+    if (!cat){
+      showToast('Missing Category', 'Please select or create a category.', 'warning');
+      return;
+    }
+    categoryName = cat.name;
+  }
+
+  if (editingBookmarkId){
+    const bm = bookmarks.find(b => b.id === editingBookmarkId);
+    bm.name = name; bm.url = url; bm.category = categoryName; bm.favorite = favorite;
+    bm.modifiedDate = nowIso();
+    showToast('Bookmark Updated', `"${name}" was updated.`, 'success');
+  } else {
+    bookmarks.push({
+      id: uid('bm'), name, url, category: categoryName, favorite,
+      createdDate: nowIso(), modifiedDate: nowIso()
     });
-  } catch {
-    return '—';
+    showToast('Bookmark Added', `"${name}" was added.`, 'success');
+  }
+
+  persistBookmarks();
+  bookmarkModal.hide();
+  renderAll();
+}
+
+function requestDeleteBookmark(id){
+  const bm = bookmarks.find(b => b.id === id);
+  if (!bm) return;
+  deleteContext = { type: 'bookmark', id };
+  document.getElementById('confirmModalBody').innerHTML =
+    `Delete bookmark <strong>${escapeHtml(bm.name)}</strong>? This cannot be undone.`;
+  confirmModal.show();
+}
+
+function toggleFavorite(id){
+  const bm = bookmarks.find(b => b.id === id);
+  if (!bm) return;
+  bm.favorite = !bm.favorite;
+  bm.modifiedDate = nowIso();
+  persistBookmarks();
+  renderAll();
+}
+
+function performDelete(){
+  if (!deleteContext) return;
+  if (deleteContext.type === 'bookmark'){
+    const bm = bookmarks.find(b => b.id === deleteContext.id);
+    bookmarks = bookmarks.filter(b => b.id !== deleteContext.id);
+    persistBookmarks();
+    showToast('Bookmark Deleted', bm ? `"${bm.name}" was deleted.` : 'Bookmark deleted.', 'danger');
+  } else if (deleteContext.type === 'category'){
+    const cat = categories.find(c => c.id === deleteContext.id);
+    if (cat){
+      bookmarks = bookmarks.filter(b => b.category !== cat.name);
+      categories = categories.filter(c => c.id !== deleteContext.id);
+      persistBookmarks(); persistCategories();
+      showToast('Category Deleted', `"${cat.name}" was deleted.`, 'danger');
+    }
+  }
+  deleteContext = null;
+  confirmModal.hide();
+  renderCategoryManageList();
+  renderCategoryDropdown();
+  renderAll();
+}
+
+/* ============================================================
+   SEARCH
+   ============================================================ */
+function getSearchTerm(){
+  return document.getElementById('searchInput').value.trim().toLowerCase();
+}
+function filterBookmarks(list){
+  const term = getSearchTerm();
+  if (!term) return list;
+  return list.filter(b =>
+    b.name.toLowerCase().includes(term) ||
+    b.category.toLowerCase().includes(term)
+  );
+}
+
+/* ============================================================
+   SORTING
+   ============================================================ */
+function sortBookmarks(list){
+  const mode = document.getElementById('sortSelect').value;
+  const arr = [...list];
+  switch(mode){
+    case 'name-asc': return arr.sort((a,b) => a.name.localeCompare(b.name));
+    case 'name-desc': return arr.sort((a,b) => b.name.localeCompare(a.name));
+    case 'recent': return arr.sort((a,b) => new Date(b.createdDate) - new Date(a.createdDate));
+    case 'category': return arr.sort((a,b) => a.category.localeCompare(b.category) || a.name.localeCompare(b.name));
+    default: return arr;
   }
 }
 
-class UIRenderer {
-  /**
-   * @param {Object} callbacks - handlers the UI reports user intent to.
-   */
-  constructor(callbacks) {
-    this.callbacks = callbacks;
-    this.els = {
-      statsBar: $('#stats-bar'),
-      categoryButtons: $('#category-filters'),
-      sectionsContainer: $('#category-sections'),
-      searchInput: $('#search-input'),
-      sortField: $('#sort-field'),
-      sortDirection: $('#sort-direction-btn'),
-      themeToggle: $('#theme-toggle'),
-      addBtn: $('#add-bookmark-btn'),
-      panel: $('#editor-panel'),
-      panelOverlay: $('#editor-overlay'),
-      panelForm: $('#editor-form'),
-      panelTitle: $('#editor-title'),
-      panelClose: $('#editor-close'),
-      panelCancel: $('#editor-cancel'),
-      fieldName: $('#field-name'),
-      fieldUrl: $('#field-url'),
-      fieldCategory: $('#field-category'),
-      fieldPinned: $('#field-pinned'),
-      errorName: $('#error-name'),
-      errorUrl: $('#error-url'),
-      toastRegion: $('#toast-region'),
-      emptyState: $('#empty-state'),
-      confirmDialog: $('#confirm-dialog'),
-      confirmMessage: $('#confirm-message'),
-      confirmOk: $('#confirm-ok'),
-      confirmCancel: $('#confirm-cancel'),
-    };
-    this._bindStaticEvents();
-    this._activeCategory = 'ALL';
-  }
+/* ============================================================
+   IMPORT / EXPORT
+   ============================================================ */
+function exportAsJson(){
+  const data = { categories, bookmarks };
+  const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+  triggerDownload(blob, `bookmarks-${dateStamp()}.json`);
+  showToast('Export Complete', 'Bookmarks exported as JSON.', 'success');
+  exportModal.hide();
+}
+function exportAsCsv(){
+  const header = 'Category,Name,URL';
+  const rows = bookmarks.map(b =>
+    [b.category, b.name, b.url].map(csvEscape).join(',')
+  );
+  const csv = [header, ...rows].join('\r\n');
+  const blob = new Blob([csv], { type: 'text/csv' });
+  triggerDownload(blob, `bookmarks-${dateStamp()}.csv`);
+  showToast('Export Complete', 'Bookmarks exported as CSV.', 'success');
+  exportModal.hide();
+}
+function csvEscape(val){
+  const s = String(val ?? '');
+  if (/[",\r\n]/.test(s)) return '"' + s.replace(/"/g, '""') + '"';
+  return s;
+}
+function triggerDownload(blob, filename){
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = filename;
+  document.body.appendChild(a); a.click(); a.remove();
+  URL.revokeObjectURL(url);
+}
+function dateStamp(){
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+}
 
-  // ------------------------------------------------------------------
-  // Static event wiring (things that never need re-binding on re-render)
-  // ------------------------------------------------------------------
-
-  _bindStaticEvents() {
-    const { els, callbacks } = this;
-
-    els.searchInput.addEventListener('input', (e) => callbacks.onSearch(e.target.value));
-
-    els.sortField.addEventListener('change', (e) =>
-      callbacks.onSortChange({ field: e.target.value })
-    );
-    els.sortDirection.addEventListener('click', () => callbacks.onToggleSortDirection());
-
-    els.themeToggle.addEventListener('click', () => callbacks.onToggleTheme());
-
-    els.addBtn.addEventListener('click', () => callbacks.onRequestAdd());
-
-    els.panelClose.addEventListener('click', () => this.closePanel());
-    els.panelCancel.addEventListener('click', () => this.closePanel());
-    els.panelOverlay.addEventListener('click', () => this.closePanel());
-
-    els.panelForm.addEventListener('submit', (e) => {
-      e.preventDefault();
-      callbacks.onSubmitForm(this.getFormValues());
-    });
-
-    document.addEventListener('keydown', (e) => {
-      if (e.key === 'Escape') {
-        if (!els.panel.hasAttribute('hidden')) this.closePanel();
-        if (!els.confirmDialog.hasAttribute('hidden')) this._resolveConfirm(false);
-      }
-    });
-  }
-
-  // ------------------------------------------------------------------
-  // Category filter bar
-  // ------------------------------------------------------------------
-
-  renderCategoryFilters(activeCategory) {
-    this._activeCategory = activeCategory;
-    const all = { key: 'ALL', label: 'All', icon: '✦' };
-    const items = [all, ...CATEGORY_ORDER.map((k) => CATEGORIES[k])];
-
-    this.els.categoryButtons.innerHTML = items
-      .map((cat) => {
-        const isActive = cat.key === activeCategory;
-        return `
-        <button
-          type="button"
-          class="chip ${isActive ? 'chip--active' : ''}"
-          data-category="${cat.key}"
-          aria-pressed="${isActive}"
-        >
-          <span class="chip__icon" aria-hidden="true">${cat.icon}</span>
-          <span>${cat.label}</span>
-        </button>`;
-      })
-      .join('');
-
-    $$('.chip', this.els.categoryButtons).forEach((btn) => {
-      btn.addEventListener('click', () => this.callbacks.onCategoryFilter(btn.dataset.category));
-    });
-  }
-
-  // ------------------------------------------------------------------
-  // Stats bar
-  // ------------------------------------------------------------------
-
-  renderStats(stats) {
-    const cards = [
-      { label: 'Total Links', value: stats.total, tone: 'primary' },
-      { label: 'Pinned', value: stats.pinned, tone: 'pinned' },
-      ...CATEGORY_ORDER.map((key) => ({
-        label: CATEGORIES[key].label,
-        value: stats[key],
-        icon: CATEGORIES[key].icon,
-        tone: key.toLowerCase(),
-      })),
-    ];
-
-    this.els.statsBar.innerHTML = cards
-      .map(
-        (c) => `
-        <div class="stat-card stat-card--${c.tone}">
-          ${c.icon ? `<span class="stat-card__icon" aria-hidden="true">${c.icon}</span>` : ''}
-          <span class="stat-card__value">${c.value}</span>
-          <span class="stat-card__label">${c.label}</span>
-        </div>`
-      )
-      .join('');
-  }
-
-  // ------------------------------------------------------------------
-  // Category sections + bookmark cards
-  // ------------------------------------------------------------------
-
-  /**
-   * @param {Object<string,Array>} groups - category key -> bookmark[]
-   * @param {Object<string,boolean>} collapsedMap - category key -> collapsed?
-   * @param {string} activeCategory - 'ALL' or a category key (controls which sections show)
-   */
-  renderSections(groups, collapsedMap, activeCategory) {
-    const keysToRender =
-      activeCategory === 'ALL' ? CATEGORY_ORDER : [activeCategory];
-
-    const totalVisible = keysToRender.reduce((sum, k) => sum + (groups[k]?.length || 0), 0);
-
-    if (totalVisible === 0) {
-      this.els.sectionsContainer.innerHTML = '';
-      this.els.emptyState.removeAttribute('hidden');
-      return;
-    }
-    this.els.emptyState.setAttribute('hidden', '');
-
-    this.els.sectionsContainer.innerHTML = keysToRender
-      .filter((key) => (groups[key] || []).length > 0)
-      .map((key) => this._renderSection(key, groups[key], Boolean(collapsedMap[key])))
-      .join('');
-
-    this._bindSectionEvents();
-  }
-
-  _renderSection(categoryKey, bookmarks, collapsed) {
-    const cat = CATEGORIES[categoryKey];
-    return `
-      <section class="category-section" data-category="${categoryKey}">
-        <button
-          type="button"
-          class="category-section__header"
-          aria-expanded="${!collapsed}"
-          data-toggle-category="${categoryKey}"
-        >
-          <span class="category-section__caret" aria-hidden="true">${collapsed ? '▶' : '▼'}</span>
-          <span class="category-section__icon" aria-hidden="true">${cat.icon}</span>
-          <span class="category-section__title">${cat.label}</span>
-          <span class="category-section__count">${bookmarks.length}</span>
-        </button>
-        <div class="category-section__body" ${collapsed ? 'hidden' : ''}>
-          <div class="card-grid">
-            ${bookmarks.map((b) => this._renderCard(b)).join('')}
-          </div>
-        </div>
-      </section>`;
-  }
-
-  _renderCard(bookmark) {
-    const cat = CATEGORIES[bookmark.category] || CATEGORIES.GENERAL;
-    const favicon = faviconUrlFor(bookmark.url);
-    const iconMarkup = favicon
-      ? `<img src="${favicon}" alt="" class="card__favicon" loading="lazy"
-           onerror="this.replaceWith(Object.assign(document.createElement('span'),{className:'card__favicon card__favicon--fallback',textContent:'${cat.icon}'}))" />`
-      : `<span class="card__favicon card__favicon--fallback">${cat.icon}</span>`;
-
-    return `
-      <article class="card" data-id="${bookmark.id}" style="--card-accent:${cat.color}" tabindex="0">
-        ${bookmark.pinned ? '<span class="card__pin-badge" title="Pinned" aria-label="Pinned">📌</span>' : ''}
-        <div class="card__ribbon" aria-hidden="true"></div>
-        <div class="card__main">
-          <div class="card__head">
-            ${iconMarkup}
-            <h3 class="card__name" title="${escapeHtml(bookmark.name)}">${escapeHtml(bookmark.name)}</h3>
-          </div>
-          <p class="card__url" title="${escapeHtml(bookmark.url)}">${escapeHtml(bookmark.url)}</p>
-          <p class="card__meta">Added ${formatDate(bookmark.createdDate)}</p>
-        </div>
-        <div class="card__actions">
-          <button type="button" class="icon-btn" data-action="open" title="Open" aria-label="Open ${escapeHtml(bookmark.name)}">↗</button>
-          <button type="button" class="icon-btn" data-action="edit" title="Edit" aria-label="Edit ${escapeHtml(bookmark.name)}">✎</button>
-          <button type="button" class="icon-btn" data-action="duplicate" title="Duplicate" aria-label="Duplicate ${escapeHtml(bookmark.name)}">⧉</button>
-          <button type="button" class="icon-btn ${bookmark.pinned ? 'icon-btn--active' : ''}" data-action="pin" title="${bookmark.pinned ? 'Unpin' : 'Pin'}" aria-label="${bookmark.pinned ? 'Unpin' : 'Pin'} ${escapeHtml(bookmark.name)}">📌</button>
-          <button type="button" class="icon-btn icon-btn--danger" data-action="delete" title="Delete" aria-label="Delete ${escapeHtml(bookmark.name)}">🗑</button>
-        </div>
-      </article>`;
-  }
-
-  _bindSectionEvents() {
-    $$('[data-toggle-category]', this.els.sectionsContainer).forEach((header) => {
-      header.addEventListener('click', () =>
-        this.callbacks.onToggleSection(header.dataset.toggleCategory)
-      );
-    });
-
-    $$('.card', this.els.sectionsContainer).forEach((card) => {
-      const id = card.dataset.id;
-
-      card.addEventListener('click', (e) => {
-        const actionEl = e.target.closest('[data-action]');
-        if (!actionEl) return;
-        e.stopPropagation();
-        this.callbacks.onCardAction(actionEl.dataset.action, id);
-      });
-
-      // Enter/Space opens the link when the card itself (not a button) is focused
-      card.addEventListener('keydown', (e) => {
-        if ((e.key === 'Enter' || e.key === ' ') && e.target === card) {
-          e.preventDefault();
-          this.callbacks.onCardAction('open', id);
+function handleImportFile(file){
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    try{
+      let importedBookmarks = [];
+      if (file.name.toLowerCase().endsWith('.json')){
+        const parsed = JSON.parse(e.target.result);
+        importedBookmarks = Array.isArray(parsed) ? parsed : (parsed.bookmarks || []);
+        if (parsed.categories) {
+          parsed.categories.forEach(c => findOrCreateCategory(c.name));
         }
-      });
-    });
-  }
+      } else {
+        importedBookmarks = parseCsv(e.target.result);
+      }
+      importedBookmarks = importedBookmarks
+        .filter(b => b.Name || b.name)
+        .map(b => ({
+          name: b.name || b.Name,
+          url: b.url || b.URL || b.Url,
+          category: b.category || b.Category || 'Personal'
+        }));
 
-  // ------------------------------------------------------------------
-  // Slide-over editor panel
-  // ------------------------------------------------------------------
+      if (!importedBookmarks.length){
+        showToast('Import Error', 'No valid bookmarks found in file.', 'danger');
+        return;
+      }
 
-  openPanel({ mode, bookmark }) {
-    const { els } = this;
-    els.panelTitle.textContent = mode === 'edit' ? 'Edit bookmark' : 'Add bookmark';
-    els.panelForm.dataset.mode = mode;
-    els.panelForm.dataset.editingId = bookmark?.id || '';
-
-    els.fieldName.value = bookmark?.name || '';
-    els.fieldUrl.value = bookmark?.url || '';
-    els.fieldCategory.value = bookmark?.category || 'GENERAL';
-    els.fieldPinned.checked = Boolean(bookmark?.pinned);
-
-    this.clearFormErrors();
-
-    els.panel.removeAttribute('hidden');
-    els.panelOverlay.removeAttribute('hidden');
-    requestAnimationFrame(() => {
-      els.panel.classList.add('editor-panel--open');
-      els.panelOverlay.classList.add('editor-overlay--visible');
-    });
-    els.fieldName.focus();
-
-    document.body.classList.add('no-scroll');
-  }
-
-  closePanel() {
-    const { els } = this;
-    els.panel.classList.remove('editor-panel--open');
-    els.panelOverlay.classList.remove('editor-overlay--visible');
-    document.body.classList.remove('no-scroll');
-    setTimeout(() => {
-      els.panel.setAttribute('hidden', '');
-      els.panelOverlay.setAttribute('hidden', '');
-    }, 220);
-  }
-
-  getFormValues() {
-    return {
-      name: this.els.fieldName.value,
-      url: this.els.fieldUrl.value,
-      category: this.els.fieldCategory.value,
-      pinned: this.els.fieldPinned.checked,
-    };
-  }
-
-  showFormErrors(errors) {
-    this.clearFormErrors();
-    if (errors.name) {
-      this.els.errorName.textContent = errors.name;
-      this.els.fieldName.setAttribute('aria-invalid', 'true');
+      pendingImportData = importedBookmarks;
+      document.getElementById('importCurrentCount').textContent = bookmarks.length;
+      document.getElementById('importNewCount').textContent = importedBookmarks.length;
+      importModal.show();
+    }catch(err){
+      console.error(err);
+      showToast('Import Error', 'Could not parse the selected file.', 'danger');
     }
-    if (errors.url) {
-      this.els.errorUrl.textContent = errors.url;
-      this.els.fieldUrl.setAttribute('aria-invalid', 'true');
-    }
-  }
-
-  clearFormErrors() {
-    this.els.errorName.textContent = '';
-    this.els.errorUrl.textContent = '';
-    this.els.fieldName.removeAttribute('aria-invalid');
-    this.els.fieldUrl.removeAttribute('aria-invalid');
-  }
-
-  // ------------------------------------------------------------------
-  // Confirm dialog (used for delete confirmation)
-  // ------------------------------------------------------------------
-
-  confirm(message) {
-    const { els } = this;
-    els.confirmMessage.textContent = message;
-    els.confirmDialog.removeAttribute('hidden');
-    els.confirmOk.focus();
-
-    return new Promise((resolve) => {
-      this._resolveConfirm = (result) => {
-        els.confirmDialog.setAttribute('hidden', '');
-        okHandler.remove?.();
-        resolve(result);
-      };
-      const okHandler = () => this._resolveConfirm(true);
-      const cancelHandler = () => this._resolveConfirm(false);
-      els.confirmOk.addEventListener('click', okHandler, { once: true });
-      els.confirmCancel.addEventListener('click', cancelHandler, { once: true });
-    });
-  }
-
-  // ------------------------------------------------------------------
-  // Toasts
-  // ------------------------------------------------------------------
-
-  toast(message, tone = 'default') {
-    const el = document.createElement('div');
-    el.className = `toast toast--${tone}`;
-    el.setAttribute('role', 'status');
-    el.textContent = message;
-    this.els.toastRegion.appendChild(el);
-    requestAnimationFrame(() => el.classList.add('toast--visible'));
-    setTimeout(() => {
-      el.classList.remove('toast--visible');
-      setTimeout(() => el.remove(), 200);
-    }, 2600);
-  }
-
-  // ------------------------------------------------------------------
-  // Theme
-  // ------------------------------------------------------------------
-
-  applyTheme(theme) {
-    document.documentElement.setAttribute('data-theme', theme);
-    this.els.themeToggle.setAttribute('aria-label', `Switch to ${theme === 'dark' ? 'light' : 'dark'} theme`);
-    this.els.themeToggle.textContent = theme === 'dark' ? '☀️' : '🌙';
-  }
-
-  // ------------------------------------------------------------------
-  // Sort controls
-  // ------------------------------------------------------------------
-
-  applySortPrefs({ field, direction }) {
-    this.els.sortField.value = field;
-    this.els.sortDirection.textContent = direction === 'asc' ? '↑ Asc' : '↓ Desc';
-    this.els.sortDirection.setAttribute('aria-label', `Sort direction: ${direction === 'asc' ? 'ascending' : 'descending'}`);
-  }
+  };
+  reader.readAsText(file);
 }
 
-/**
- * app.js
- * ------------------------------------------------------------------
- * Application entry point and controller. Owns the current in-memory
- * state (bookmarks + view settings), coordinates StorageService,
- * the pure functions in bookmark.js, and UIRenderer. No direct DOM
- * access happens here — that's UIRenderer's job.
- * ------------------------------------------------------------------
- */
-
-class App {
-  constructor() {
-    this.storage = new StorageService();
-    this.ui = new UIRenderer({
-      onSearch: (q) => this.setSearch(q),
-      onCategoryFilter: (key) => this.setCategoryFilter(key),
-      onToggleSection: (key) => this.toggleSection(key),
-      onSortChange: ({ field }) => this.setSort({ field }),
-      onToggleSortDirection: () => this.toggleSortDirection(),
-      onToggleTheme: () => this.toggleTheme(),
-      onRequestAdd: () => this.openAddPanel(),
-      onSubmitForm: (values) => this.handleFormSubmit(values),
-      onCardAction: (action, id) => this.handleCardAction(action, id),
-    });
-
-    this.state = {
-      bookmarks: [],
-      searchQuery: '',
-      activeCategory: 'ALL',
-      sort: this.storage.getSortPrefs(),
-      collapsed: this.storage.getCollapsedSections(),
-    };
-
-    this._init();
-  }
-
-  _init() {
-    if (!this.storage.isAvailable()) {
-      // Local Storage is unavailable (private browsing lockdown, etc). The
-      // app still functions for the session; it just can't persist.
-      console.warn('[app] localStorage unavailable — data will not persist.');
-    }
-
-    this.state.bookmarks = this.storage.getBookmarks();
-
-    const savedTheme = this.storage.getTheme();
-    const systemPrefersDark = window.matchMedia?.('(prefers-color-scheme: dark)').matches;
-    this.currentTheme = savedTheme || (systemPrefersDark ? 'dark' : 'light');
-    this.ui.applyTheme(this.currentTheme);
-
-    // Keep in sync with OS theme changes only if user hasn't picked manually.
-    window.matchMedia?.('(prefers-color-scheme: dark)').addEventListener('change', (e) => {
-      if (!this.storage.getTheme()) {
-        this.currentTheme = e.matches ? 'dark' : 'light';
-        this.ui.applyTheme(this.currentTheme);
-      }
-    });
-
-    this.ui.applySortPrefs(this.state.sort);
-    this.ui.renderCategoryFilters(this.state.activeCategory);
-    this._persistAndRender({ persist: false });
-  }
-
-  // ------------------------------------------------------------------
-  // Derived view + rendering
-  // ------------------------------------------------------------------
-
-  _getVisibleBookmarks() {
-    let list = this.state.bookmarks;
-    list = searchByName(list, this.state.searchQuery);
-    list = filterByCategory(list, this.state.activeCategory);
-    list = sortBookmarks(list, this.state.sort.field, this.state.sort.direction);
-    return list;
-  }
-
-  _render() {
-    const stats = computeStats(this.state.bookmarks);
-    this.ui.renderStats(stats);
-
-    const visible = this._getVisibleBookmarks();
-    const groups = groupByCategory(visible);
-    this.ui.renderSections(groups, this.state.collapsed, this.state.activeCategory);
-  }
-
-  /** Regenerates sno, persists to storage, and re-renders the view. */
-  _persistAndRender({ persist = true } = {}) {
-    this.state.bookmarks = regenerateSno(
-      sortBookmarks(this.state.bookmarks, 'name', 'asc')
-    );
-    if (persist) this.storage.saveBookmarks(this.state.bookmarks);
-    this._render();
-  }
-
-  // ------------------------------------------------------------------
-  // Search / filter / sort / collapse / theme handlers
-  // ------------------------------------------------------------------
-
-  setSearch(query) {
-    this.state.searchQuery = query;
-    this._render();
-  }
-
-  setCategoryFilter(key) {
-    this.state.activeCategory = key;
-    this.ui.renderCategoryFilters(key);
-    this._render();
-  }
-
-  toggleSection(categoryKey) {
-    this.state.collapsed[categoryKey] = !this.state.collapsed[categoryKey];
-    this.storage.setCollapsedSections(this.state.collapsed);
-    this._render();
-  }
-
-  setSort({ field }) {
-    this.state.sort.field = field;
-    this.storage.setSortPrefs(this.state.sort);
-    this.ui.applySortPrefs(this.state.sort);
-    this._render();
-  }
-
-  toggleSortDirection() {
-    this.state.sort.direction = this.state.sort.direction === 'asc' ? 'desc' : 'asc';
-    this.storage.setSortPrefs(this.state.sort);
-    this.ui.applySortPrefs(this.state.sort);
-    this._render();
-  }
-
-  toggleTheme() {
-    this.currentTheme = this.currentTheme === 'dark' ? 'light' : 'dark';
-    this.storage.setTheme(this.currentTheme);
-    this.ui.applyTheme(this.currentTheme);
-  }
-
-  // ------------------------------------------------------------------
-  // CRUD flows
-  // ------------------------------------------------------------------
-
-  openAddPanel() {
-    this.ui.openPanel({ mode: 'add', bookmark: { category: DEFAULT_CATEGORY } });
-  }
-
-  openEditPanel(id) {
-    const bookmark = this.state.bookmarks.find((b) => b.id === id);
-    if (!bookmark) return;
-    this.ui.openPanel({ mode: 'edit', bookmark });
-  }
-
-  handleFormSubmit(values) {
-    const { valid, errors } = validateBookmarkInput(values);
-    if (!valid) {
-      this.ui.showFormErrors(errors);
-      return;
-    }
-
-    const mode = this.ui.els.panelForm.dataset.mode;
-    const editingId = this.ui.els.panelForm.dataset.editingId;
-
-    if (mode === 'edit' && editingId) {
-      const existing = this.state.bookmarks.find((b) => b.id === editingId);
-      if (existing) {
-        const updated = updateBookmark(existing, values);
-        this.state.bookmarks = this.state.bookmarks.map((b) =>
-          b.id === editingId ? updated : b
-        );
-        this.ui.toast('Bookmark updated.');
-      }
+function parseCsv(text){
+  const lines = text.split(/\r\n|\n/).filter(l => l.trim().length);
+  if (!lines.length) return [];
+  const headers = splitCsvLine(lines[0]).map(h => h.trim());
+  return lines.slice(1).map(line => {
+    const cells = splitCsvLine(line);
+    const obj = {};
+    headers.forEach((h, i) => obj[h] = cells[i] ?? '');
+    return obj;
+  });
+}
+function splitCsvLine(line){
+  const result = [];
+  let cur = ''; let inQuotes = false;
+  for (let i = 0; i < line.length; i++){
+    const ch = line[i];
+    if (inQuotes){
+      if (ch === '"'){
+        if (line[i+1] === '"'){ cur += '"'; i++; } else { inQuotes = false; }
+      } else cur += ch;
     } else {
-      const created = createBookmark(values);
-      this.state.bookmarks = [...this.state.bookmarks, created];
-      this.ui.toast('Bookmark added.');
-    }
-
-    this.ui.closePanel();
-    this._persistAndRender();
-  }
-
-  async handleCardAction(action, id) {
-    const bookmark = this.state.bookmarks.find((b) => b.id === id);
-    if (!bookmark) return;
-
-    switch (action) {
-      case 'open':
-        window.open(bookmark.url, '_blank', 'noopener,noreferrer');
-        break;
-
-      case 'edit':
-        this.openEditPanel(id);
-        break;
-
-      case 'duplicate': {
-        const copy = duplicateBookmark(bookmark);
-        this.state.bookmarks = [...this.state.bookmarks, copy];
-        this.ui.toast('Bookmark duplicated.');
-        this._persistAndRender();
-        break;
-      }
-
-      case 'pin': {
-        this.state.bookmarks = this.state.bookmarks.map((b) =>
-          b.id === id ? togglePinned(b) : b
-        );
-        this.ui.toast(bookmark.pinned ? 'Unpinned.' : 'Pinned to top.');
-        this._persistAndRender();
-        break;
-      }
-
-      case 'delete': {
-        const confirmed = await this.ui.confirm(
-          `Delete "${bookmark.name}"? This cannot be undone.`
-        );
-        if (!confirmed) return;
-        this.state.bookmarks = this.state.bookmarks.filter((b) => b.id !== id);
-        this.ui.toast('Bookmark deleted.');
-        this._persistAndRender();
-        break;
-      }
-
-      default:
-        break;
+      if (ch === '"') inQuotes = true;
+      else if (ch === ','){ result.push(cur); cur = ''; }
+      else cur += ch;
     }
   }
+  result.push(cur);
+  return result;
 }
 
-document.addEventListener('DOMContentLoaded', () => {
-  window.__bookmarkDashboardApp = new App();
-});
+function confirmImport(){
+  if (!pendingImportData) return;
+  showSpinner(true);
+  setTimeout(() => {
+    pendingImportData.forEach(imp => {
+      const catName = findOrCreateCategory(imp.category || 'Personal').name;
+      const existing = bookmarks.find(b =>
+        b.name.toLowerCase() === imp.name.toLowerCase() &&
+        b.url.toLowerCase() === (imp.url || '').toLowerCase()
+      );
+      if (existing){
+        existing.category = catName;
+        existing.modifiedDate = nowIso();
+      } else {
+        bookmarks.push({
+          id: uid('bm'), name: imp.name, url: imp.url || '', category: catName,
+          favorite: false, createdDate: nowIso(), modifiedDate: nowIso()
+        });
+      }
+    });
+    persistBookmarks(); persistCategories();
+    pendingImportData = null;
+    showSpinner(false);
+    importModal.hide();
+    renderAll();
+    showToast('Import Complete', 'Bookmarks were imported successfully.', 'success');
+  }, 350);
+}
 
+function showSpinner(show){
+  document.getElementById('spinnerOverlay').style.display = show ? 'flex' : 'none';
+}
+
+/* ============================================================
+   DASHBOARD
+   ============================================================ */
+function renderDashboard(){
+  document.getElementById('statTotalCategories').textContent =
+    new Set(bookmarks.map(b => b.category)).size;
+  document.getElementById('statTotalBookmarks').textContent = bookmarks.length;
+  document.getElementById('statFavorites').textContent = bookmarks.filter(b => b.favorite).length;
+  document.getElementById('statRecent').textContent =
+    bookmarks.filter(b => isWithinDays(b.createdDate, 7)).length;
+
+  document.title = `Bookmark Dashboard (${bookmarks.length} Bookmarks)`;
+  document.getElementById('pageHeading').textContent = 'Bookmark Dashboard';
+}
+
+/* ============================================================
+   QUICK LAUNCH
+   ============================================================ */
+function renderQuickLaunch(){
+  const grid = document.getElementById('quickLaunchGrid');
+  const section = document.getElementById('quickLaunchSection');
+  const favs = bookmarks.filter(b => b.favorite);
+  let list = [...favs];
+  if (list.length < QUICK_LAUNCH_MAX){
+    const rest = bookmarks
+      .filter(b => !b.favorite)
+      .sort((a,b) => new Date(b.createdDate) - new Date(a.createdDate));
+    list = list.concat(rest.slice(0, QUICK_LAUNCH_MAX - list.length));
+  }
+  list = list.slice(0, QUICK_LAUNCH_MAX);
+
+  if (!list.length){
+    section.classList.add('d-none');
+    grid.innerHTML = '';
+    return;
+  }
+  section.classList.remove('d-none');
+
+  grid.innerHTML = list.map(b => `
+    <div class="col-6 col-md-4 col-lg-3 col-xl-2">
+      <a href="${escapeHtml(b.url)}" target="_blank" rel="noopener noreferrer" class="quick-launch-btn" title="${escapeHtml(b.url)}">
+        <i class="bi ${b.favorite ? 'bi-star-fill' : 'bi-clock-history'}" style="color:var(--gold-500)"></i>
+        <div class="min-w-0">
+          <div class="ql-name text-truncate">${escapeHtml(b.name)}</div>
+          <div class="ql-url text-truncate">${escapeHtml(b.url)}</div>
+        </div>
+      </a>
+    </div>
+  `).join('');
+}
+
+/* ============================================================
+   CONTEXT MENU
+   ============================================================ */
+function showContextMenu(x, y, bookmarkId){
+  ctxTargetBookmarkId = bookmarkId;
+  const menu = document.getElementById('ctxMenu');
+  menu.style.display = 'block';
+  const menuWidth = menu.offsetWidth || 180;
+  const menuHeight = menu.offsetHeight || 160;
+  const px = Math.min(x, window.innerWidth - menuWidth - 8);
+  const py = Math.min(y, window.innerHeight - menuHeight - 8);
+  menu.style.left = px + 'px';
+  menu.style.top = py + 'px';
+}
+function hideContextMenu(){
+  document.getElementById('ctxMenu').style.display = 'none';
+  ctxTargetBookmarkId = null;
+}
+
+/* ============================================================
+   RENDER — CATEGORIES + BOOKMARKS
+   ============================================================ */
+function renderCategoriesAndBookmarks(){
+  const container = document.getElementById('categoryAccordion');
+  const emptyState = document.getElementById('emptyState');
+  const noResultsState = document.getElementById('noResultsState');
+
+  if (!bookmarks.length){
+    container.innerHTML = '';
+    emptyState.classList.remove('d-none');
+    noResultsState.classList.add('d-none');
+    return;
+  }
+  emptyState.classList.add('d-none');
+
+  const filtered = sortBookmarks(filterBookmarks(bookmarks));
+
+  if (!filtered.length){
+    container.innerHTML = '';
+    noResultsState.classList.remove('d-none');
+    return;
+  }
+  noResultsState.classList.add('d-none');
+
+  // group by category (only categories that currently have bookmarks in filtered set)
+  const grouped = {};
+  filtered.forEach(b => {
+    if (!grouped[b.category]) grouped[b.category] = [];
+    grouped[b.category].push(b);
+  });
+
+  const catNames = Object.keys(grouped).sort((a,b) => a.localeCompare(b));
+
+  container.innerHTML = catNames.map((catName, idx) => {
+    const items = grouped[catName];
+    const color = getCategoryColor(catName);
+    const collapseId = `collapse_${slugify(catName)}`;
+    const isCollapsed = !!collapsedCategories[catName];
+    const initial = catName.trim().charAt(0).toUpperCase() || '?';
+
+    return `
+    <div class="accordion-item">
+      <h2 class="accordion-header">
+        <button class="accordion-button ${isCollapsed ? 'collapsed' : ''}" type="button"
+                data-bs-toggle="collapse" data-bs-target="#${collapseId}"
+                aria-expanded="${!isCollapsed}" aria-controls="${collapseId}" data-cat="${escapeHtml(catName)}">
+          <span class="ribbon me-2">${escapeHtml(initial)}</span>
+          <span class="cat-dot bg-${color} me-2"></span>
+          <span>${escapeHtml(catName)}</span>
+          <span class="cat-count-badge">${items.length}</span>
+        </button>
+      </h2>
+      <div id="${collapseId}" class="accordion-collapse collapse ${isCollapsed ? '' : 'show'}" data-bs-parent="#categoryAccordion">
+        <div class="accordion-body">
+          ${items.map(b => renderBookmarkCard(b)).join('')}
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+
+  // wire collapse state persistence
+  container.querySelectorAll('.accordion-collapse').forEach(el => {
+    el.addEventListener('shown.bs.collapse', () => {
+      const btn = container.querySelector(`[data-bs-target="#${el.id}"]`);
+      collapsedCategories[btn.dataset.cat] = false;
+      persistCollapsed();
+    });
+    el.addEventListener('hidden.bs.collapse', () => {
+      const btn = container.querySelector(`[data-bs-target="#${el.id}"]`);
+      collapsedCategories[btn.dataset.cat] = true;
+      persistCollapsed();
+    });
+  });
+
+  // wire bookmark card actions
+  container.querySelectorAll('[data-action]').forEach(el => {
+    const action = el.dataset.action;
+    const id = el.dataset.id;
+    el.addEventListener('click', (ev) => {
+      ev.stopPropagation();
+      if (action === 'edit') openEditBookmarkModal(id);
+      if (action === 'delete') requestDeleteBookmark(id);
+      if (action === 'favorite') toggleFavorite(id);
+    });
+    el.addEventListener('contextmenu', (ev) => {
+      ev.preventDefault(); ev.stopPropagation();
+      showContextMenu(ev.clientX, ev.clientY, id);
+    });
+  });
+
+  container.querySelectorAll('.bookmark-card').forEach(card => {
+    card.addEventListener('contextmenu', (ev) => {
+      ev.preventDefault();
+      showContextMenu(ev.clientX, ev.clientY, card.dataset.id);
+    });
+  });
+}
+
+function renderBookmarkCard(b){
+  return `
+  <div class="bookmark-card" data-id="${b.id}">
+    <button class="btn-icon ${b.favorite ? 'fav-on' : ''}" data-action="favorite" data-id="${b.id}"
+            title="${b.favorite ? 'Remove favorite' : 'Mark favorite'}" aria-label="Toggle favorite">
+      <i class="bi ${b.favorite ? 'bi-star-fill' : 'bi-star'}"></i>
+    </button>
+    <div class="bm-info">
+      <div class="bm-name">${escapeHtml(b.name)}</div>
+      <span class="bm-url">${escapeHtml(b.url)}</span>
+    </div>
+    <div class="bm-actions">
+      <a href="${escapeHtml(b.url)}" target="_blank" rel="noopener noreferrer" class="btn btn-open">
+        Open <i class="bi bi-box-arrow-up-right ms-1"></i>
+      </a>
+      <button class="btn-icon" data-action="edit" data-id="${b.id}" title="Edit" aria-label="Edit bookmark">
+        <i class="bi bi-pencil"></i>
+      </button>
+      <button class="btn-icon" data-action="delete" data-id="${b.id}" title="Delete" aria-label="Delete bookmark">
+        <i class="bi bi-trash"></i>
+      </button>
+    </div>
+  </div>`;
+}
+
+function slugify(str){
+  return str.toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/(^-|-$)/g,'') || 'cat';
+}
+
+/* ============================================================
+   MASTER RENDER
+   ============================================================ */
+function renderAll(){
+  renderDashboard();
+  renderQuickLaunch();
+  renderCategoriesAndBookmarks();
+}
+
+/* ============================================================
+   EVENTS
+   ============================================================ */
+function wireEvents(){
+  document.getElementById('btnAddBookmark').addEventListener('click', openAddBookmarkModal);
+  document.getElementById('btnEmptyAdd').addEventListener('click', openAddBookmarkModal);
+  document.getElementById('btnSaveBookmark').addEventListener('click', saveBookmarkFromModal);
+  document.getElementById('bookmarkForm').addEventListener('submit', (e) => { e.preventDefault(); saveBookmarkFromModal(); });
+
+  document.getElementById('bmCategory').addEventListener('change', (e) => {
+    document.getElementById('newCategoryWrap').style.display = e.target.value === '__new__' ? 'block' : 'none';
+  });
+
+  document.getElementById('btnConfirmDelete').addEventListener('click', performDelete);
+
+  document.getElementById('btnManageCategories').addEventListener('click', () => {
+    renderCategoryManageList();
+    categoryModal.show();
+  });
+  document.getElementById('btnAddCategory').addEventListener('click', addCategoryFromModal);
+  document.getElementById('newCategoryInput').addEventListener('keydown', (e) => {
+    if (e.key === 'Enter'){ e.preventDefault(); addCategoryFromModal(); }
+  });
+
+  document.getElementById('searchInput').addEventListener('input', debounce(renderCategoriesAndBookmarks, 120));
+  document.getElementById('sortSelect').addEventListener('change', () => {
+    settings.lastSort = document.getElementById('sortSelect').value;
+    persistSettings();
+    renderCategoriesAndBookmarks();
+  });
+
+  document.getElementById('btnTheme').addEventListener('click', toggleTheme);
+  document.getElementById('btnShortcuts').addEventListener('click', () => shortcutsModal.show());
+
+  document.getElementById('btnExport').addEventListener('click', () => exportModal.show());
+  document.getElementById('btnExportJson').addEventListener('click', exportAsJson);
+  document.getElementById('btnExportCsv').addEventListener('click', exportAsCsv);
+
+  document.getElementById('btnImport').addEventListener('click', () => document.getElementById('fileImportInput').click());
+  document.getElementById('fileImportInput').addEventListener('change', (e) => {
+    const file = e.target.files[0];
+    if (file) handleImportFile(file);
+    e.target.value = '';
+  });
+  document.getElementById('btnConfirmImport').addEventListener('click', confirmImport);
+
+  // Context menu actions
+  document.getElementById('ctxOpen').addEventListener('click', () => {
+    const bm = bookmarks.find(b => b.id === ctxTargetBookmarkId);
+    if (bm) window.open(bm.url, '_blank', 'noopener,noreferrer');
+    hideContextMenu();
+  });
+  document.getElementById('ctxCopy').addEventListener('click', async () => {
+    const bm = bookmarks.find(b => b.id === ctxTargetBookmarkId);
+    if (bm){
+      try{ await navigator.clipboard.writeText(bm.url); showToast('Copied', 'URL copied to clipboard.', 'success'); }
+      catch(e){ showToast('Copy Failed', 'Could not copy URL.', 'danger'); }
+    }
+    hideContextMenu();
+  });
+  document.getElementById('ctxEdit').addEventListener('click', () => {
+    if (ctxTargetBookmarkId) openEditBookmarkModal(ctxTargetBookmarkId);
+    hideContextMenu();
+  });
+  document.getElementById('ctxDelete').addEventListener('click', () => {
+    if (ctxTargetBookmarkId) requestDeleteBookmark(ctxTargetBookmarkId);
+    hideContextMenu();
+  });
+  document.addEventListener('click', (e) => {
+    if (!e.target.closest('#ctxMenu')) hideContextMenu();
+  });
+  window.addEventListener('scroll', hideContextMenu, true);
+  window.addEventListener('resize', hideContextMenu);
+
+  // Keyboard shortcuts
+  document.addEventListener('keydown', (e) => {
+    const ctrl = e.ctrlKey || e.metaKey;
+    if (ctrl && e.key.toLowerCase() === 'n'){ e.preventDefault(); openAddBookmarkModal(); }
+    else if (ctrl && e.key.toLowerCase() === 'f'){ e.preventDefault(); document.getElementById('searchInput').focus(); }
+    else if (ctrl && e.key.toLowerCase() === 'e'){ e.preventDefault(); exportModal.show(); }
+    else if (ctrl && e.key.toLowerCase() === 'i'){ e.preventDefault(); document.getElementById('fileImportInput').click(); }
+    else if (ctrl && e.key.toLowerCase() === 'd'){ e.preventDefault(); toggleTheme(); }
+    else if (e.key === 'Escape'){ hideContextMenu(); }
+  });
+}
+
+/* ============================================================
+   SEED DATA (first run only)
+   ============================================================ */
+function seedIfEmpty(){
+  if (categories.length || bookmarks.length) return;
+  ['SAP','Development','AI','Learning','Personal'].forEach(n => findOrCreateCategory(n));
+  const seed = [
+    { name:'SAP Fiori Launchpad', url:'https://example-sap.local/fiori', category:'SAP', favorite:true },
+    { name:'GitHub', url:'https://github.com', category:'Development', favorite:true },
+    { name:'Stack Overflow', url:'https://stackoverflow.com', category:'Development', favorite:false },
+    { name:'Claude', url:'https://claude.ai', category:'AI', favorite:true },
+    { name:'MDN Web Docs', url:'https://developer.mozilla.org', category:'Learning', favorite:false }
+  ];
+  seed.forEach(s => bookmarks.push({
+    id: uid('bm'), name:s.name, url:s.url, category:s.category, favorite:s.favorite,
+    createdDate: nowIso(), modifiedDate: nowIso()
+  }));
+  persistBookmarks();
+}
+
+/* ============================================================
+   INITIALIZATION
+   ============================================================ */
+function init(){
+  initTheme();
+  bookmarks = loadFromStorage(STORAGE_KEYS.bookmarks, []);
+  categories = loadFromStorage(STORAGE_KEYS.categories, []);
+  settings = loadFromStorage(STORAGE_KEYS.settings, { lastSort:'name-asc' });
+  collapsedCategories = loadFromStorage(STORAGE_KEYS.collapsedCategories, {});
+
+  seedIfEmpty();
+
+  document.getElementById('sortSelect').value = settings.lastSort || 'name-asc';
+
+  wireEvents();
+  renderAll();
+}
+
+document.addEventListener('DOMContentLoaded', init);
+})();
 </script>
-
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-  <script src="menu-data.js"></script>
-  <script src="menu.js"></script>
 </body>
 </html>
