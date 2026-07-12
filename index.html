@@ -155,14 +155,15 @@ a:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible
 .quick-launch-btn{
   background:var(--surface); border:1px solid var(--border-c); border-radius:var(--radius-md);
   color:var(--text); text-decoration:none; padding:.85rem .9rem; display:flex; align-items:center; gap:.65rem;
-  transition:all .18s ease; height:100%;
+  transition:all .18s ease; height:100%; overflow:hidden;
 }
 .quick-launch-btn:hover{
   border-color:var(--accent-strong); background:var(--surface-2); transform:translateY(-2px);
   color:var(--text); box-shadow:var(--shadow-soft);
 }
-.quick-launch-btn .ql-name{ font-weight:600; font-size:.92rem; }
-.quick-launch-btn .ql-url{ font-family:var(--font-mono); font-size:.7rem; color:var(--text-muted); }
+.quick-launch-btn .ql-text{ min-width:0; flex:1 1 auto; overflow:hidden; }
+.quick-launch-btn .ql-name{ font-weight:600; font-size:.92rem; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.quick-launch-btn .ql-url{ font-family:var(--font-mono); font-size:.7rem; color:var(--text-muted); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; display:block; max-width:100%; }
 
 /* ============================================================
    SEARCH & TOOLBAR
@@ -187,6 +188,10 @@ a:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible
   box-shadow:0 0 0 .2rem rgba(201,162,39,.18);
 }
 .form-select option{ background:var(--surface); color:var(--text); }
+
+/* Placeholder ("watermark") text */
+::placeholder{ color:var(--text-muted); opacity:1; }
+[data-theme="dark"] ::placeholder{ color:#d7dedc; opacity:.75; }
 
 /* ============================================================
    ACCORDION / CATEGORIES
@@ -1202,9 +1207,9 @@ function renderQuickLaunch(){
     <div class="col-6 col-md-4 col-lg-3 col-xl-2">
       <a href="${escapeHtml(b.url)}" target="_blank" rel="noopener noreferrer" class="quick-launch-btn" title="${escapeHtml(b.url)}">
         <i class="bi ${b.favorite ? 'bi-star-fill' : 'bi-clock-history'}" style="color:var(--gold-500)"></i>
-        <div class="min-w-0">
-          <div class="ql-name text-truncate">${escapeHtml(b.name)}</div>
-          <div class="ql-url text-truncate">${escapeHtml(b.url)}</div>
+        <div class="ql-text">
+          <div class="ql-name" title="${escapeHtml(b.name)}">${escapeHtml(b.name)}</div>
+          <div class="ql-url" title="${escapeHtml(b.url)}">${escapeHtml(b.url)}</div>
         </div>
       </a>
     </div>
