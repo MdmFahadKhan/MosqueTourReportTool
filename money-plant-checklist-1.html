@@ -1,0 +1,490 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Simple Invoice Generator</title>
+<style>
+  :root{
+    --bg-0:#071e20; --bg-1:#0d3538; --bg-2:#124547;
+    --gold:#c9a34e; --gold-bright:#f0cf85;
+    --cream:#f3ecdd; --cream-dim:#cfc6b3;
+    --line:rgba(201,163,78,0.22); --shadow:rgba(0,0,0,0.35);
+  }
+  *{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:radial-gradient(120% 140% at 50% -10%, var(--bg-2) 0%, var(--bg-1) 45%, var(--bg-0) 100%);
+    color:var(--cream);
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",system-ui,sans-serif;
+    min-height:100vh; padding-bottom:50px;
+  }
+  header{ text-align:center; padding:30px 20px 6px; }
+  header .eyebrow{ font-size:11px; letter-spacing:.24em; text-transform:uppercase; color:var(--gold); opacity:.8; margin-bottom:6px;}
+  header h1{ font-family:Georgia,serif; font-size:24px; margin:0; font-weight:600;}
+  header .sub{ font-size:13px; color:var(--cream-dim); margin-top:6px;}
+
+  main{ max-width:640px; margin:0 auto; padding:14px 18px; }
+
+  .card{
+    background:linear-gradient(180deg, rgba(255,255,255,0.03), rgba(255,255,255,0.01));
+    border:1px solid var(--line); border-radius:16px;
+    padding:16px 18px 18px; margin-bottom:16px;
+    box-shadow:0 8px 24px var(--shadow);
+  }
+  .card h2{ font-size:13px; text-transform:uppercase; letter-spacing:.14em; color:var(--gold); margin:0 0 12px; font-weight:600;}
+
+  .grid2{ display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+  @media(max-width:480px){ .grid2{ grid-template-columns:1fr; } }
+
+  label{ font-size:11.5px; color:var(--cream-dim); display:block; margin-bottom:4px; }
+  input[type=text], input[type=number], input[type=date], textarea{
+    width:100%; background:rgba(255,255,255,0.04); border:1px solid var(--line);
+    border-radius:10px; padding:9px 11px; color:var(--cream); font-size:14px;
+    margin-bottom:10px; font-family:inherit;
+  }
+  textarea{ resize:vertical; min-height:60px; }
+  input::placeholder, textarea::placeholder{ color:var(--cream-dim); opacity:.55; }
+
+  /* line items */
+  .item-row{
+    display:grid; grid-template-columns:1fr 60px 80px 80px 28px;
+    gap:6px; align-items:center; margin-bottom:8px;
+  }
+  .item-row input{ margin-bottom:0; font-size:13px; padding:8px; }
+  .item-row .amt{ text-align:right; color:var(--gold-bright); font-size:13px; padding:0 4px; }
+  .item-row .del{ background:transparent; border:none; color:var(--cream-dim); font-size:16px; opacity:.7;}
+  .item-head{
+    display:grid; grid-template-columns:1fr 60px 80px 80px 28px; gap:6px;
+    font-size:10px; text-transform:uppercase; letter-spacing:.06em; color:var(--cream-dim);
+    margin-bottom:6px; opacity:.7;
+  }
+  .add-item-btn{
+    background:transparent; border:1px dashed var(--line); color:var(--gold);
+    border-radius:10px; padding:9px; width:100%; font-size:13px; margin-top:4px;
+  }
+
+  .totals{ margin-top:12px; border-top:1px solid var(--line); padding-top:10px; }
+  .totals .row{ display:flex; justify-content:space-between; font-size:13.5px; padding:4px 0; }
+  .totals .row.grand{ font-size:17px; font-weight:700; color:var(--gold-bright); border-top:1px solid var(--line); margin-top:4px; padding-top:8px; }
+  .tax-row input{ width:70px; display:inline-block; margin:0 0 0 6px; padding:5px 8px; font-size:13px; }
+
+  .generate-btn{
+    background:var(--gold); color:var(--bg-0); border:none; border-radius:12px;
+    padding:14px; width:100%; font-weight:700; font-size:15px; margin-top:4px;
+  }
+
+  #outputCard{ display:none; }
+  #outputText{
+    width:100%; min-height:360px; background:rgba(0,0,0,0.25); border:1px solid var(--line);
+    border-radius:10px; padding:14px; color:var(--cream); font-family:"SF Mono", Menlo, Consolas, monospace;
+    font-size:12.5px; white-space:pre; overflow-x:auto; line-height:1.5;
+  }
+  .out-actions{ display:flex; gap:10px; margin-top:10px; }
+  .out-actions button{
+    flex:1; background:transparent; border:1px solid var(--gold); color:var(--gold-bright);
+    border-radius:10px; padding:10px; font-size:13px; font-weight:600;
+  }
+  .out-actions button.primary{ background:var(--gold); color:var(--bg-0); border:none;}
+
+  .save-bar{
+    display:flex; align-items:center; justify-content:space-between;
+    max-width:640px; margin:0 auto; padding:0 18px 4px; font-size:11.5px; color:var(--cream-dim);
+  }
+  .save-bar #saveStatus{ color:var(--gold-bright); opacity:0; transition:opacity .3s ease; }
+  .save-bar #saveStatus.show{ opacity:1; }
+  .save-bar button{
+    background:transparent; border:1px solid var(--line); color:var(--cream-dim);
+    border-radius:8px; padding:5px 10px; font-size:11px;
+  }
+
+  footer{ text-align:center; color:var(--cream-dim); font-size:11px; opacity:.55; padding:16px 20px 0;}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="eyebrow">Invoicing</div>
+  <h1>Simple Invoice Generator</h1>
+  <div class="sub">Fill in the details below — data saves automatically on this device</div>
+</header>
+
+<div class="save-bar">
+  <span id="saveStatus">Saved</span>
+  <button id="clearSavedBtn">Clear saved data</button>
+</div>
+
+<main>
+
+  <div class="card">
+    <h2>Invoice details</h2>
+    <div class="grid2">
+      <div><label>Invoice number</label><input type="text" id="invNumber" placeholder="INV-1001"></div>
+      <div><label>Invoice date</label><input type="date" id="invDate"></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>Service / product provider (you)</h2>
+    <label>Name / business name</label><input type="text" id="provName" placeholder="Fahad Ahmed">
+    <label>Address</label><textarea id="provAddress" placeholder="Street, City, Country"></textarea>
+    <div class="grid2">
+      <div><label>Phone</label><input type="text" id="provPhone" placeholder="+974 xxxx xxxx"></div>
+      <div><label>Email</label><input type="text" id="provEmail" placeholder="you@example.com"></div>
+    </div>
+    <label>Tax / registration ID (optional)</label><input type="text" id="provTaxId" placeholder="e.g. VAT / CR number">
+  </div>
+
+  <div class="card">
+    <h2>Customer</h2>
+    <label>Name</label><input type="text" id="custName" placeholder="Customer name">
+    <label>Address</label><textarea id="custAddress" placeholder="Street, City, Country"></textarea>
+    <div class="grid2">
+      <div><label>Phone</label><input type="text" id="custPhone" placeholder="Phone"></div>
+      <div><label>Email</label><input type="text" id="custEmail" placeholder="Email"></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>Products / services</h2>
+    <div class="item-head">
+      <span>Description</span><span>Qty</span><span>Unit price</span><span>Amount</span><span></span>
+    </div>
+    <div id="itemsWrap"></div>
+    <button class="add-item-btn" id="addItemBtn">+ Add line item</button>
+
+    <div class="totals">
+      <div class="row"><span>Subtotal</span><span id="subtotalOut">0.00</span></div>
+      <div class="row tax-row"><span>Tax %</span><span><input type="number" id="taxPct" value="0" min="0" step="0.1"></span></div>
+      <div class="row"><span>Tax amount</span><span id="taxOut">0.00</span></div>
+      <div class="row grand"><span>Total due</span><span id="totalOut">0.00</span></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>Notes (optional)</h2>
+    <textarea id="notes" placeholder="Payment terms, bank details, thank-you note, etc."></textarea>
+  </div>
+
+  <button class="generate-btn" id="generateBtn">Generate invoice</button>
+
+  <div class="card" id="outputCard">
+    <h2>Invoice output</h2>
+    <textarea id="outputText" readonly></textarea>
+    <div class="out-actions">
+      <button class="primary" id="copyBtn">Copy text</button>
+      <button id="downloadBtn">Download as image</button>
+    </div>
+  </div>
+
+  <canvas id="renderCanvas" style="display:none;"></canvas>
+
+</main>
+
+<footer>All data stays in your browser. Nothing is uploaded anywhere.</footer>
+
+<script>
+(function(){
+  const STORAGE_KEY = 'simple_invoice_gen_v1';
+  const itemsWrap = document.getElementById('itemsWrap');
+  let itemCount = 0;
+  let suppressSave = false;
+
+  function addItemRow(desc, qty, price){
+    itemCount++;
+    const row = document.createElement('div');
+    row.className = 'item-row';
+    row.dataset.id = itemCount;
+    row.innerHTML =
+      '<input type="text" class="i-desc" placeholder="e.g. Web development service" value="'+(desc||'')+'">' +
+      '<input type="number" class="i-qty" min="0" step="1" value="'+(qty!=null?qty:1)+'">' +
+      '<input type="number" class="i-price" min="0" step="0.01" value="'+(price!=null?price:0)+'">' +
+      '<span class="amt">0.00</span>' +
+      '<button class="del">✕</button>';
+    itemsWrap.appendChild(row);
+    bindRow(row);
+    recalc();
+  }
+
+  function bindRow(row){
+    row.querySelectorAll('input').forEach(inp=>{
+      inp.addEventListener('input', ()=>{ recalc(); saveState(); });
+    });
+    row.querySelector('.del').addEventListener('click', ()=>{
+      row.remove();
+      recalc();
+      saveState();
+    });
+  }
+
+  function recalc(){
+    let subtotal = 0;
+    itemsWrap.querySelectorAll('.item-row').forEach(row=>{
+      const qty = parseFloat(row.querySelector('.i-qty').value) || 0;
+      const price = parseFloat(row.querySelector('.i-price').value) || 0;
+      const amt = qty*price;
+      row.querySelector('.amt').textContent = amt.toFixed(2);
+      subtotal += amt;
+    });
+    const taxPct = parseFloat(document.getElementById('taxPct').value) || 0;
+    const taxAmt = subtotal * (taxPct/100);
+    const total = subtotal + taxAmt;
+    document.getElementById('subtotalOut').textContent = subtotal.toFixed(2);
+    document.getElementById('taxOut').textContent = taxAmt.toFixed(2);
+    document.getElementById('totalOut').textContent = total.toFixed(2);
+  }
+
+  document.getElementById('addItemBtn').addEventListener('click', ()=>{ addItemRow(); saveState(); });
+  document.getElementById('taxPct').addEventListener('input', ()=>{ recalc(); saveState(); });
+
+  function val(id){ return document.getElementById(id).value.trim(); }
+
+  const FIELD_IDS = ['invNumber','invDate','provName','provAddress','provPhone','provEmail','provTaxId',
+                      'custName','custAddress','custPhone','custEmail','notes','taxPct'];
+
+  let saveTimer = null;
+  function saveState(){
+    if(suppressSave) return;
+    clearTimeout(saveTimer);
+    saveTimer = setTimeout(()=>{
+      const state = { fields:{}, items:[] };
+      FIELD_IDS.forEach(id=> state.fields[id] = document.getElementById(id).value);
+      itemsWrap.querySelectorAll('.item-row').forEach(row=>{
+        state.items.push({
+          desc: row.querySelector('.i-desc').value,
+          qty: row.querySelector('.i-qty').value,
+          price: row.querySelector('.i-price').value
+        });
+      });
+      try{
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+        flashSaved();
+      }catch(e){ console.error('save failed', e); }
+    }, 300);
+  }
+
+  function flashSaved(){
+    const el = document.getElementById('saveStatus');
+    el.textContent = 'Saved';
+    el.classList.add('show');
+    clearTimeout(flashSaved._t);
+    flashSaved._t = setTimeout(()=> el.classList.remove('show'), 1400);
+  }
+
+  function loadState(){
+    let raw;
+    try{ raw = localStorage.getItem(STORAGE_KEY); }catch(e){ raw = null; }
+    if(!raw) return false;
+    let state;
+    try{ state = JSON.parse(raw); }catch(e){ return false; }
+
+    suppressSave = true;
+    FIELD_IDS.forEach(id=>{
+      if(state.fields && state.fields[id] !== undefined){
+        document.getElementById(id).value = state.fields[id];
+      }
+    });
+    if(state.items && state.items.length){
+      itemsWrap.innerHTML = '';
+      state.items.forEach(it=> addItemRow(it.desc, it.qty, it.price));
+    }
+    suppressSave = false;
+    recalc();
+    return true;
+  }
+
+  document.getElementById('clearSavedBtn').addEventListener('click', ()=>{
+    if(!confirm('Clear all saved invoice data from this device?')) return;
+    try{ localStorage.removeItem(STORAGE_KEY); }catch(e){}
+    location.reload();
+  });
+
+  FIELD_IDS.forEach(id=>{
+    document.getElementById(id).addEventListener('input', saveState);
+  });
+
+  // load saved data, or seed with defaults if nothing saved yet
+  const restored = loadState();
+  if(!restored){
+    addItemRow(); addItemRow();
+    document.getElementById('invDate').value = new Date().toISOString().slice(0,10);
+  }
+  if(!val('invDate')){
+    document.getElementById('invDate').value = new Date().toISOString().slice(0,10);
+  }
+
+  function generateText(){
+    const invNumber = val('invNumber') || '(not set)';
+    const invDate = val('invDate') || '(not set)';
+
+    const provName = val('provName') || '(not set)';
+    const provAddress = val('provAddress');
+    const provPhone = val('provPhone');
+    const provEmail = val('provEmail');
+    const provTaxId = val('provTaxId');
+
+    const custName = val('custName') || '(not set)';
+    const custAddress = val('custAddress');
+    const custPhone = val('custPhone');
+    const custEmail = val('custEmail');
+
+    const notes = val('notes');
+    const taxPct = parseFloat(document.getElementById('taxPct').value) || 0;
+
+    let items = [];
+    itemsWrap.querySelectorAll('.item-row').forEach(row=>{
+      const desc = row.querySelector('.i-desc').value.trim();
+      const qty = parseFloat(row.querySelector('.i-qty').value) || 0;
+      const price = parseFloat(row.querySelector('.i-price').value) || 0;
+      if(desc || qty || price){
+        items.push({desc: desc || '(unnamed item)', qty, price, amt: qty*price});
+      }
+    });
+
+    let subtotal = items.reduce((s,i)=>s+i.amt,0);
+    let taxAmt = subtotal*(taxPct/100);
+    let total = subtotal+taxAmt;
+
+    const line = '─'.repeat(46);
+    let out = '';
+    out += line + '\n';
+    out += 'INVOICE\n';
+    out += line + '\n';
+    out += 'Invoice #: ' + invNumber + '\n';
+    out += 'Date: ' + invDate + '\n\n';
+
+    out += 'FROM (Service / Product Provider)\n';
+    out += provName + '\n';
+    if(provAddress) out += provAddress.replace(/\n+/g,'\n') + '\n';
+    if(provPhone) out += 'Phone: ' + provPhone + '\n';
+    if(provEmail) out += 'Email: ' + provEmail + '\n';
+    if(provTaxId) out += 'Tax/Reg ID: ' + provTaxId + '\n';
+    out += '\n';
+
+    out += 'BILL TO (Customer)\n';
+    out += custName + '\n';
+    if(custAddress) out += custAddress.replace(/\n+/g,'\n') + '\n';
+    if(custPhone) out += 'Phone: ' + custPhone + '\n';
+    if(custEmail) out += 'Email: ' + custEmail + '\n';
+    out += '\n';
+
+    out += line + '\n';
+    out += 'DESCRIPTION'.padEnd(22) + 'QTY'.padStart(6) + 'PRICE'.padStart(10) + 'AMOUNT'.padStart(10) + '\n';
+    out += line + '\n';
+    if(items.length === 0){
+      out += '(no items added)\n';
+    } else {
+      items.forEach(i=>{
+        let desc = i.desc.length > 20 ? i.desc.slice(0,19)+'…' : i.desc;
+        out += desc.padEnd(22) + String(i.qty).padStart(6) + i.price.toFixed(2).padStart(10) + i.amt.toFixed(2).padStart(10) + '\n';
+      });
+    }
+    out += line + '\n';
+    out += 'Subtotal'.padEnd(38) + subtotal.toFixed(2).padStart(8) + '\n';
+    out += ('Tax (' + taxPct + '%)').padEnd(38) + taxAmt.toFixed(2).padStart(8) + '\n';
+    out += 'TOTAL DUE'.padEnd(38) + total.toFixed(2).padStart(8) + '\n';
+    out += line + '\n';
+
+    if(notes){
+      out += '\nNotes:\n' + notes + '\n';
+    }
+
+    return out;
+  }
+
+  document.getElementById('generateBtn').addEventListener('click', ()=>{
+    const text = generateText();
+    document.getElementById('outputText').value = text;
+    document.getElementById('outputCard').style.display = 'block';
+    document.getElementById('outputCard').scrollIntoView({behavior:'smooth', block:'start'});
+  });
+
+  document.getElementById('copyBtn').addEventListener('click', ()=>{
+    const ta = document.getElementById('outputText');
+    ta.select();
+    document.execCommand('copy');
+    const btn = document.getElementById('copyBtn');
+    const original = btn.textContent;
+    btn.textContent = 'Copied!';
+    setTimeout(()=> btn.textContent = original, 1200);
+  });
+
+  document.getElementById('downloadBtn').addEventListener('click', ()=>{
+    const text = document.getElementById('outputText').value;
+    if(!text){ return; }
+    const invNumber = val('invNumber') || 'invoice';
+
+    const lines = text.split('\n');
+    const fontSize = 15;
+    const lineHeight = fontSize * 1.55;
+    const paddingX = 30;
+    const paddingY = 30;
+
+    const canvas = document.getElementById('renderCanvas');
+    const ctx = canvas.getContext('2d');
+    ctx.font = fontSize + 'px "SF Mono", Menlo, Consolas, monospace';
+
+    let maxWidth = 0;
+    lines.forEach(l=>{
+      const w = ctx.measureText(l).width;
+      if(w > maxWidth) maxWidth = w;
+    });
+
+    const width = Math.ceil(maxWidth + paddingX*2);
+    const height = Math.ceil(lines.length*lineHeight + paddingY*2);
+
+    // scale up for crisper image
+    const scale = 2;
+    canvas.width = width*scale;
+    canvas.height = height*scale;
+    ctx.scale(scale, scale);
+
+    // background
+    ctx.fillStyle = '#071e20';
+    ctx.fillRect(0,0,width,height);
+
+    // subtle border
+    ctx.strokeStyle = 'rgba(201,163,78,0.35)';
+    ctx.lineWidth = 1;
+    ctx.strokeRect(0.5,0.5, width-1, height-1);
+
+    ctx.font = fontSize + 'px "SF Mono", Menlo, Consolas, monospace';
+    ctx.textBaseline = 'top';
+
+    lines.forEach((line, i)=>{
+      const y = paddingY + i*lineHeight;
+      if(/^INVOICE$/.test(line.trim())){
+        ctx.fillStyle = '#f0cf85';
+        ctx.font = 'bold ' + (fontSize+2) + 'px "SF Mono", Menlo, Consolas, monospace';
+      } else if(/^(FROM|BILL TO|Notes:)/.test(line.trim())){
+        ctx.fillStyle = '#c9a34e';
+        ctx.font = 'bold ' + fontSize + 'px "SF Mono", Menlo, Consolas, monospace';
+      } else if(/^TOTAL DUE/.test(line)){
+        ctx.fillStyle = '#f0cf85';
+        ctx.font = 'bold ' + fontSize + 'px "SF Mono", Menlo, Consolas, monospace';
+      } else if(/^─+$/.test(line.trim())){
+        ctx.fillStyle = 'rgba(201,163,78,0.4)';
+        ctx.font = fontSize + 'px "SF Mono", Menlo, Consolas, monospace';
+      } else {
+        ctx.fillStyle = '#f3ecdd';
+        ctx.font = fontSize + 'px "SF Mono", Menlo, Consolas, monospace';
+      }
+      ctx.fillText(line, paddingX, y);
+    });
+
+    canvas.toBlob(blob=>{
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = invNumber.replace(/[^a-z0-9\-_]/gi,'_') + '.png';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    }, 'image/png');
+  });
+})();
+</script>
+
+</body>
+</html>
