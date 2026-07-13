@@ -1,0 +1,639 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Recall — Flashcard Learning</title>
+<style>
+  :root{
+    --bg: #0b2426;
+    --bg-alt: #0e2c2e;
+    --surface: #123638;
+    --surface-hi: #17403f;
+    --edge: #1f4d4a;
+    --gold: #c9a24b;
+    --gold-bright: #e8c873;
+    --text: #eef1ea;
+    --muted: #9db3ae;
+    --good: #7fae7a;
+    --bad: #c07361;
+    --radius: 10px;
+  }
+  *{ box-sizing: border-box; }
+  html,body{ height:100%; }
+  body{
+    margin:0;
+    background:
+      radial-gradient(1200px 600px at 10% -10%, #103534 0%, transparent 60%),
+      radial-gradient(1000px 700px at 110% 10%, #0f2f2f 0%, transparent 55%),
+      var(--bg);
+    color: var(--text);
+    font-family: Georgia, 'Times New Roman', serif;
+    min-height:100vh;
+  }
+  .ui{ font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif; }
+  h1,h2,h3{ font-family: Georgia, 'Times New Roman', serif; font-weight: 400; letter-spacing: .3px; margin:0; }
+  a{ color: var(--gold-bright); }
+  button{ font-family: inherit; cursor:pointer; }
+  ::selection{ background: var(--gold); color:#0b2426; }
+
+  .app{ max-width: 920px; margin: 0 auto; padding: 28px 20px 80px; }
+
+  /* Header */
+  .topbar{ display:flex; align-items:baseline; justify-content:space-between; margin-bottom: 30px; border-bottom: 1px solid var(--edge); padding-bottom: 18px; }
+  .brand{ display:flex; align-items:baseline; gap:10px; }
+  .brand .mark{ color: var(--gold-bright); font-size: 26px; }
+  .brand h1{ font-size: 24px; letter-spacing: .5px; }
+  .brand small{ color: var(--muted); font-size: 12px; font-family: -apple-system, sans-serif; letter-spacing: 1px; text-transform: uppercase; }
+  .top-actions{ display:flex; gap:10px; }
+  .top-actions button{ font-size: 12.5px; }
+
+  /* Buttons */
+  .btn{ ui-font: 1; padding: 9px 16px; border-radius: 999px; border: 1px solid var(--edge); background: var(--surface); color: var(--text); font-family: -apple-system, sans-serif; font-size: 13px; transition: .15s ease; }
+  .btn:hover{ border-color: var(--gold); color: var(--gold-bright); }
+  .btn-gold{ background: linear-gradient(180deg, var(--gold-bright), var(--gold)); color: #0b2426; border: none; font-weight: 600; }
+  .btn-gold:hover{ filter: brightness(1.08); color:#0b2426; }
+  .btn-ghost{ background: transparent; }
+  .btn-danger:hover{ border-color: var(--bad); color: var(--bad); }
+  .btn:disabled{ opacity:.4; cursor:not-allowed; }
+
+  /* Deck grid */
+  .deck-grid{ display:grid; grid-template-columns: repeat(auto-fill, minmax(230px,1fr)); gap: 16px; margin-top: 10px; }
+  .deck-card{ background: var(--surface); border: 1px solid var(--edge); border-radius: var(--radius); padding: 18px 18px 16px; position: relative; overflow:hidden; transition: .15s ease; }
+  .deck-card::before{ content:""; position:absolute; top:0; left:0; right:0; height:3px; background: linear-gradient(90deg, var(--gold), transparent); opacity:.7; }
+  .deck-card:hover{ border-color: var(--gold); transform: translateY(-2px); }
+  .deck-card h3{ font-size: 18px; margin-bottom: 6px; }
+  .deck-card .count{ color: var(--muted); font-size: 12.5px; font-family: -apple-system, sans-serif; margin-bottom: 14px; }
+  .deck-card .stats{ display:flex; gap:14px; font-size: 12px; color: var(--muted); font-family: -apple-system, sans-serif; margin-bottom: 14px; }
+  .deck-card .stats b{ color: var(--gold-bright); font-weight:600; }
+  .deck-actions{ display:flex; gap:8px; flex-wrap: wrap; }
+  .deck-actions .btn{ padding: 7px 12px; font-size: 12px; }
+
+  .empty{ text-align:center; padding: 60px 20px; color: var(--muted); font-family: -apple-system, sans-serif; }
+  .empty .mark{ font-size: 34px; display:block; margin-bottom: 10px; color: var(--gold); }
+
+  /* Deck editor */
+  .panel{ background: var(--bg-alt); border: 1px solid var(--edge); border-radius: var(--radius); padding: 22px; margin-top: 18px; }
+  .field{ margin-bottom: 14px; }
+  .field label{ display:block; font-size: 11.5px; text-transform: uppercase; letter-spacing: 1px; color: var(--muted); font-family: -apple-system, sans-serif; margin-bottom: 6px; }
+  .field input[type=text], .field textarea{
+    width:100%; background: var(--surface); border: 1px solid var(--edge); color: var(--text);
+    border-radius: 6px; padding: 10px 12px; font-family: -apple-system, sans-serif; font-size: 14px; resize: vertical;
+  }
+  .field input:focus, .field textarea:focus{ outline: none; border-color: var(--gold); }
+  .row2{ display:grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  @media (max-width: 600px){ .row2{ grid-template-columns: 1fr; } }
+
+  .card-list{ margin-top: 16px; border-top: 1px solid var(--edge); padding-top: 14px; }
+  .card-row{ display:grid; grid-template-columns: 1fr 1fr auto; gap: 10px; align-items:start; padding: 10px 0; border-bottom: 1px dashed var(--edge); }
+  .card-row .txt{ font-family: -apple-system, sans-serif; font-size: 13.5px; color: var(--text); white-space: pre-wrap; }
+  .card-row .txt.q{ color: var(--gold-bright); }
+  .card-row .del{ background:none; border:none; color: var(--muted); font-size: 18px; line-height:1; }
+  .card-row .del:hover{ color: var(--bad); }
+  @media (max-width: 600px){ .card-row{ grid-template-columns: 1fr; } }
+
+  .panel-actions{ display:flex; justify-content: space-between; margin-top: 18px; flex-wrap: wrap; gap: 10px; }
+
+  /* Study mode */
+  .study-head{ display:flex; justify-content: space-between; align-items:center; margin-bottom: 18px; }
+  .study-head .progress-txt{ font-family: -apple-system, sans-serif; font-size: 12.5px; color: var(--muted); }
+  .progress-track{ height: 4px; background: var(--edge); border-radius: 4px; overflow:hidden; margin-bottom: 26px; }
+  .progress-fill{ height:100%; background: linear-gradient(90deg, var(--gold), var(--gold-bright)); transition: width .3s ease; }
+
+  .stage{ display:flex; justify-content:center; padding: 10px 0 30px; perspective: 1400px; }
+  .card3d{ width: 100%; max-width: 560px; height: 300px; position:relative; cursor:pointer; }
+  .card3d .inner{ position:absolute; inset:0; transition: transform .5s cubic-bezier(.4,.2,.2,1); transform-style: preserve-3d; }
+  .card3d.flipped .inner{ transform: rotateY(180deg); }
+  .face{
+    position:absolute; inset:0; backface-visibility:hidden; border-radius: 14px;
+    display:flex; align-items:center; justify-content:center; text-align:center; padding: 36px;
+    border: 1px solid var(--edge); background: var(--surface);
+    box-shadow: 0 12px 30px rgba(0,0,0,.35);
+  }
+  .face::before{ content:""; position:absolute; top:10px; left:24px; right:24px; height:1px; background: repeating-linear-gradient(90deg, var(--edge) 0 8px, transparent 8px 16px); opacity:.6; }
+  .face .label{ position:absolute; top:14px; left:20px; font-family: -apple-system, sans-serif; font-size: 10.5px; letter-spacing: 1.5px; text-transform: uppercase; color: var(--gold); }
+  .face .txt{ font-size: 22px; line-height: 1.5; max-height: 100%; overflow:auto; }
+  .face.back{ transform: rotateY(180deg); background: var(--surface-hi); }
+  .card3d .hint{ position:absolute; bottom:12px; left:0; right:0; text-align:center; font-family:-apple-system, sans-serif; font-size:11px; color: var(--muted); }
+
+  .mark-row{ display:flex; justify-content:center; gap: 14px; margin-top: 8px; }
+  .mark-row button{ font-family: -apple-system, sans-serif; font-size: 14px; padding: 11px 22px; border-radius: 999px; border: 1px solid var(--edge); background: var(--surface); color: var(--text); }
+  .mark-row .btn-good:hover{ border-color: var(--good); color: var(--good); }
+  .mark-row .btn-bad:hover{ border-color: var(--bad); color: var(--bad); }
+
+  .mode-tabs{ display:flex; gap: 8px; margin-bottom: 4px; }
+  .mode-tabs button{ font-family:-apple-system, sans-serif; font-size: 12.5px; padding: 8px 14px; border-radius: 999px; border: 1px solid var(--edge); background: transparent; color: var(--muted); }
+  .mode-tabs button.active{ background: var(--surface); color: var(--gold-bright); border-color: var(--gold); }
+
+  /* Results */
+  .result-ring{ width: 160px; height: 160px; margin: 10px auto 20px; position:relative; }
+  .result-ring svg{ transform: rotate(-90deg); }
+  .result-ring .pct{ position:absolute; inset:0; display:flex; align-items:center; justify-content:center; font-size: 32px; color: var(--gold-bright); font-family: Georgia, serif; }
+  .result-summary{ text-align:center; font-family:-apple-system, sans-serif; color: var(--muted); margin-bottom: 22px; }
+  .miss-list{ max-width: 520px; margin: 0 auto; }
+  .miss-item{ background: var(--surface); border:1px solid var(--edge); border-radius: 8px; padding: 12px 14px; margin-bottom: 8px; font-family: -apple-system, sans-serif; font-size: 13.5px; }
+  .miss-item .q{ color: var(--gold-bright); margin-bottom: 4px; }
+  .miss-item .a{ color: var(--muted); }
+
+  .center-actions{ display:flex; justify-content:center; gap: 12px; margin-top: 22px; }
+
+  .toast{ position: fixed; bottom: 22px; left: 50%; transform: translateX(-50%); background: var(--surface-hi); border: 1px solid var(--gold); color: var(--gold-bright); padding: 10px 18px; border-radius: 999px; font-family: -apple-system, sans-serif; font-size: 13px; opacity:0; pointer-events:none; transition: opacity .25s ease, transform .25s ease; z-index: 50; }
+  .toast.show{ opacity: 1; transform: translateX(-50%) translateY(-6px); }
+
+  .hidden{ display:none !important; }
+  .muted{ color: var(--muted); font-family: -apple-system, sans-serif; font-size: 13px; }
+  .backlink{ background:none; border:none; color: var(--muted); font-family: -apple-system, sans-serif; font-size: 13px; margin-bottom: 14px; padding:0; }
+  .backlink:hover{ color: var(--gold-bright); }
+  input[type=file]{ display:none; }
+</style>
+</head>
+<body>
+<div class="app">
+
+  <div class="topbar">
+    <div class="brand">
+      <span class="mark">◆</span>
+      <div>
+        <h1>Recall</h1><br>
+        <small>Flashcard study &amp; self-test</small>
+      </div>
+    </div>
+    <div class="top-actions ui">
+      <button class="btn" id="btnImportAll">Import decks</button>
+      <button class="btn btn-gold" id="btnNewDeck">+ New deck</button>
+    </div>
+    <input type="file" id="fileImportAll" accept="application/json">
+  </div>
+
+  <!-- VIEW: Deck list -->
+  <div id="view-home">
+    <div id="deckGrid" class="deck-grid"></div>
+    <div id="emptyState" class="empty hidden">
+      <span class="mark">◆</span>
+      No decks yet. Create your first deck to start building flashcards.
+    </div>
+  </div>
+
+  <!-- VIEW: Deck editor -->
+  <div id="view-editor" class="hidden ui">
+    <button class="backlink" id="editorBack">← All decks</button>
+    <div class="panel">
+      <div class="field">
+        <label>Deck name</label>
+        <input type="text" id="deckNameInput" placeholder="e.g. Anatomy — Chapter 3">
+      </div>
+      <div class="row2">
+        <div class="field">
+          <label>Question</label>
+          <textarea id="newQ" rows="2" placeholder="Front of card"></textarea>
+        </div>
+        <div class="field">
+          <label>Answer</label>
+          <textarea id="newA" rows="2" placeholder="Back of card"></textarea>
+        </div>
+      </div>
+      <button class="btn btn-gold" id="btnAddCard">+ Add card</button>
+
+      <div class="card-list" id="cardList"></div>
+
+      <div class="panel-actions">
+        <div style="display:flex; gap:10px;">
+          <button class="btn" id="btnExportDeck">Export deck (.json)</button>
+          <button class="btn" id="btnImportDeck">Import into this deck</button>
+          <input type="file" id="fileImportDeck" accept="application/json">
+        </div>
+        <button class="btn btn-danger" id="btnDeleteDeck">Delete deck</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- VIEW: Study hub (choose mode) -->
+  <div id="view-hub" class="hidden ui">
+    <button class="backlink" id="hubBack">← All decks</button>
+    <h2 id="hubTitle" style="font-family: Georgia, serif; margin-bottom: 4px;"></h2>
+    <p class="muted" id="hubMeta" style="margin-bottom:20px;"></p>
+    <div class="deck-grid">
+      <div class="deck-card">
+        <h3>Learn</h3>
+        <div class="count">Flip freely, mark what you know</div>
+        <button class="btn btn-gold" id="startLearn">Start</button>
+      </div>
+      <div class="deck-card">
+        <h3>Revise</h3>
+        <div class="count">Shuffled, focuses on weak cards</div>
+        <button class="btn btn-gold" id="startRevise">Start</button>
+      </div>
+      <div class="deck-card">
+        <h3>Test</h3>
+        <div class="count">Self-graded, auto-scored at the end</div>
+        <button class="btn btn-gold" id="startTest">Start</button>
+      </div>
+    </div>
+    <div class="panel" id="scoreHistoryPanel">
+      <h3 style="font-size:15px; margin-bottom:10px;">Score history</h3>
+      <div id="scoreHistory" class="muted">No test attempts yet.</div>
+    </div>
+  </div>
+
+  <!-- VIEW: Study session -->
+  <div id="view-study" class="hidden ui">
+    <div class="study-head">
+      <button class="backlink" id="studyExit" style="margin-bottom:0;">← Exit</button>
+      <span class="progress-txt" id="progressTxt"></span>
+    </div>
+    <div class="progress-track"><div class="progress-fill" id="progressFill" style="width:0%"></div></div>
+
+    <div class="stage">
+      <div class="card3d" id="card3d">
+        <div class="inner">
+          <div class="face front">
+            <span class="label" id="faceLabelFront">Question</span>
+            <div class="txt" id="faceFront"></div>
+          </div>
+          <div class="face back">
+            <span class="label">Answer</span>
+            <div class="txt" id="faceBack"></div>
+          </div>
+        </div>
+        <div class="hint">Click card to flip</div>
+      </div>
+    </div>
+
+    <div class="mark-row" id="markRow">
+      <button class="btn-bad" id="markBad">Still learning</button>
+      <button class="btn-good" id="markGood">Got it</button>
+    </div>
+  </div>
+
+  <!-- VIEW: Results -->
+  <div id="view-results" class="hidden ui" style="text-align:center;">
+    <h2 style="margin-bottom: 4px;">Session complete</h2>
+    <div class="result-ring">
+      <svg width="160" height="160">
+        <circle cx="80" cy="80" r="70" stroke="#1f4d4a" stroke-width="10" fill="none"/>
+        <circle id="resultCircle" cx="80" cy="80" r="70" stroke="#e8c873" stroke-width="10" fill="none" stroke-linecap="round"/>
+      </svg>
+      <div class="pct" id="resultPct">0%</div>
+    </div>
+    <div class="result-summary" id="resultSummary"></div>
+    <div id="missSection" class="hidden">
+      <h3 style="font-size:14px; color: var(--muted); text-transform:uppercase; letter-spacing:1px; margin-bottom:12px;">Review missed cards</h3>
+      <div class="miss-list" id="missList"></div>
+    </div>
+    <div class="center-actions">
+      <button class="btn" id="resultBackHub">Back to deck</button>
+      <button class="btn btn-gold" id="resultRetry">Retry same mode</button>
+    </div>
+  </div>
+
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+(function(){
+  const STORAGE_KEY = 'recall_decks_v1';
+  let decks = load();
+  let currentDeckId = null;
+  let session = null; // active study session state
+
+  function load(){
+    try{ return JSON.parse(localStorage.getItem(STORAGE_KEY)) || []; }
+    catch(e){ return []; }
+  }
+  function save(){ localStorage.setItem(STORAGE_KEY, JSON.stringify(decks)); }
+  function uid(){ return Date.now().toString(36) + Math.random().toString(36).slice(2,7); }
+  function toast(msg){
+    const t = document.getElementById('toast');
+    t.textContent = msg; t.classList.add('show');
+    clearTimeout(t._h); t._h = setTimeout(()=>t.classList.remove('show'), 1800);
+  }
+  function esc(s){ return (s||'').replace(/[&<>]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;'}[c])); }
+
+  function getDeck(id){ return decks.find(d=>d.id===id); }
+
+  // ---------- VIEW SWITCHING ----------
+  const views = ['home','editor','hub','study','results'];
+  function show(view){
+    views.forEach(v => document.getElementById('view-'+v).classList.toggle('hidden', v!==view));
+  }
+
+  // ---------- HOME ----------
+  function renderHome(){
+    const grid = document.getElementById('deckGrid');
+    const empty = document.getElementById('emptyState');
+    grid.innerHTML = '';
+    if(decks.length===0){ empty.classList.remove('hidden'); return; }
+    empty.classList.add('hidden');
+    decks.forEach(d=>{
+      const attempts = d.history || [];
+      const best = attempts.length ? Math.max(...attempts.map(h=>h.pct)) : null;
+      const last = attempts.length ? attempts[attempts.length-1].pct : null;
+      const card = document.createElement('div');
+      card.className = 'deck-card';
+      card.innerHTML = `
+        <h3>${esc(d.name)}</h3>
+        <div class="count">${d.cards.length} card${d.cards.length===1?'':'s'}</div>
+        <div class="stats">
+          <span>Best: <b>${best!==null? best+'%':'—'}</b></span>
+          <span>Last: <b>${last!==null? last+'%':'—'}</b></span>
+        </div>
+        <div class="deck-actions">
+          <button class="btn btn-gold" data-act="study">Study</button>
+          <button class="btn" data-act="edit">Edit</button>
+        </div>`;
+      card.querySelector('[data-act="study"]').onclick = ()=>openHub(d.id);
+      card.querySelector('[data-act="edit"]').onclick = ()=>openEditor(d.id);
+      grid.appendChild(card);
+    });
+  }
+
+  document.getElementById('btnNewDeck').onclick = ()=>{
+    const d = { id: uid(), name: 'Untitled deck', cards: [], history: [] };
+    decks.push(d); save();
+    openEditor(d.id);
+  };
+
+  // ---------- EDITOR ----------
+  function openEditor(id){
+    currentDeckId = id;
+    const d = getDeck(id);
+    document.getElementById('deckNameInput').value = d.name;
+    renderCardList();
+    show('editor');
+  }
+  document.getElementById('editorBack').onclick = ()=>{ save(); renderHome(); show('home'); };
+  document.getElementById('deckNameInput').addEventListener('input', e=>{
+    const d = getDeck(currentDeckId); if(!d) return;
+    d.name = e.target.value || 'Untitled deck'; save();
+  });
+
+  function renderCardList(){
+    const d = getDeck(currentDeckId);
+    const list = document.getElementById('cardList');
+    list.innerHTML = '';
+    if(d.cards.length===0){
+      list.innerHTML = '<p class="muted">No cards yet — add your first one above.</p>';
+      return;
+    }
+    d.cards.forEach((c,i)=>{
+      const row = document.createElement('div');
+      row.className = 'card-row';
+      row.innerHTML = `
+        <div class="txt q">${esc(c.q)}</div>
+        <div class="txt">${esc(c.a)}</div>
+        <button class="del" title="Delete card">×</button>`;
+      row.querySelector('.del').onclick = ()=>{ d.cards.splice(i,1); save(); renderCardList(); };
+      list.appendChild(row);
+    });
+  }
+
+  document.getElementById('btnAddCard').onclick = ()=>{
+    const q = document.getElementById('newQ').value.trim();
+    const a = document.getElementById('newA').value.trim();
+    if(!q || !a){ toast('Add both a question and an answer'); return; }
+    const d = getDeck(currentDeckId);
+    d.cards.push({ q, a });
+    save();
+    document.getElementById('newQ').value='';
+    document.getElementById('newA').value='';
+    document.getElementById('newQ').focus();
+    renderCardList();
+  };
+
+  document.getElementById('btnDeleteDeck').onclick = ()=>{
+    if(!confirm('Delete this deck? This cannot be undone.')) return;
+    decks = decks.filter(d=>d.id!==currentDeckId);
+    save(); renderHome(); show('home');
+  };
+
+  document.getElementById('btnExportDeck').onclick = ()=>{
+    const d = getDeck(currentDeckId);
+    const blob = new Blob([JSON.stringify(d,null,2)], {type:'application/json'});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = (d.name||'deck').replace(/[^\w\-]+/g,'_') + '.json';
+    a.click(); URL.revokeObjectURL(url);
+  };
+
+  document.getElementById('btnImportDeck').onclick = ()=> document.getElementById('fileImportDeck').click();
+  document.getElementById('fileImportDeck').onchange = (e)=>{
+    const file = e.target.files[0]; if(!file) return;
+    const reader = new FileReader();
+    reader.onload = ()=>{
+      try{
+        const data = JSON.parse(reader.result);
+        const d = getDeck(currentDeckId);
+        const incoming = Array.isArray(data.cards) ? data.cards : [];
+        incoming.forEach(c=>{ if(c.q && c.a) d.cards.push({q:c.q,a:c.a}); });
+        save(); renderCardList(); toast('Cards imported');
+      }catch(err){ toast('Could not read that file'); }
+      e.target.value = '';
+    };
+    reader.readAsText(file);
+  };
+
+  document.getElementById('btnImportAll').onclick = ()=> document.getElementById('fileImportAll').click();
+  document.getElementById('fileImportAll').onchange = (e)=>{
+    const file = e.target.files[0]; if(!file) return;
+    const reader = new FileReader();
+    reader.onload = ()=>{
+      try{
+        const data = JSON.parse(reader.result);
+        const incoming = Array.isArray(data) ? data : [data];
+        incoming.forEach(d=>{
+          if(d && d.name && Array.isArray(d.cards)){
+            decks.push({ id: uid(), name: d.name, cards: d.cards.map(c=>({q:c.q,a:c.a})), history: [] });
+          }
+        });
+        save(); renderHome(); toast('Deck(s) imported');
+      }catch(err){ toast('Could not read that file'); }
+      e.target.value = '';
+    };
+    reader.readAsText(file);
+  };
+
+  // ---------- HUB ----------
+  function openHub(id){
+    currentDeckId = id;
+    const d = getDeck(id);
+    document.getElementById('hubTitle').textContent = d.name;
+    document.getElementById('hubMeta').textContent = `${d.cards.length} card${d.cards.length===1?'':'s'}`;
+    const disable = d.cards.length===0;
+    ['startLearn','startRevise','startTest'].forEach(id2=>{
+      document.getElementById(id2).disabled = disable;
+    });
+    renderScoreHistory(d);
+    show('hub');
+  }
+  document.getElementById('hubBack').onclick = ()=>{ renderHome(); show('home'); };
+
+  function renderScoreHistory(d){
+    const el = document.getElementById('scoreHistory');
+    if(!d.history || d.history.length===0){ el.textContent = 'No test attempts yet.'; return; }
+    const rows = d.history.slice(-8).reverse().map(h=>
+      `<div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px dashed var(--edge);">
+        <span>${h.date}</span><span style="color:var(--gold-bright);">${h.score}/${h.total} · ${h.pct}%</span>
+      </div>`).join('');
+    el.innerHTML = rows;
+  }
+
+  document.getElementById('startLearn').onclick = ()=> startSession('learn');
+  document.getElementById('startRevise').onclick = ()=> startSession('revise');
+  document.getElementById('startTest').onclick = ()=> startSession('test');
+
+  // ---------- STUDY SESSION ----------
+  function shuffle(arr){
+    const a = arr.slice();
+    for(let i=a.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [a[i],a[j]]=[a[j],a[i]]; }
+    return a;
+  }
+
+  function startSession(mode){
+    const d = getDeck(currentDeckId);
+    let order = d.cards.map((c,i)=>i);
+    if(mode==='revise'){
+      // prioritize cards previously marked "still learning" (weak), then shuffle within groups
+      const weak = order.filter(i => d.cards[i]._weak);
+      const strong = order.filter(i => !d.cards[i]._weak);
+      order = [...shuffle(weak), ...shuffle(strong)];
+    } else {
+      order = shuffle(order);
+    }
+    session = {
+      mode, order, pos: 0,
+      correct: 0, wrong: 0,
+      missed: []
+    };
+    show('study');
+    document.getElementById('markRow').classList.toggle('hidden', false);
+    renderCardFace();
+  }
+
+  document.getElementById('studyExit').onclick = ()=>{ openHub(currentDeckId); };
+
+  function currentCard(){
+    const d = getDeck(currentDeckId);
+    return d.cards[session.order[session.pos]];
+  }
+
+  function renderCardFace(){
+    const d = getDeck(currentDeckId);
+    const total = session.order.length;
+    document.getElementById('progressTxt').textContent = `${session.pos+1} / ${total}`;
+    document.getElementById('progressFill').style.width = Math.round((session.pos/total)*100) + '%';
+
+    const c = currentCard();
+    document.getElementById('faceFront').textContent = c.q;
+    document.getElementById('faceBack').textContent = c.a;
+    document.getElementById('faceLabelFront').textContent = session.mode==='test' ? 'Question' : 'Question';
+    const card3d = document.getElementById('card3d');
+    card3d.classList.remove('flipped');
+
+    const markRow = document.getElementById('markRow');
+    if(session.mode==='learn' || session.mode==='revise'){
+      markRow.classList.remove('hidden');
+      document.getElementById('markGood').textContent = 'Got it';
+      document.getElementById('markBad').textContent = 'Still learning';
+    } else {
+      // test mode: buttons only appear after flip, and mean "correct/incorrect"
+      markRow.classList.add('hidden');
+      document.getElementById('markGood').textContent = 'I was right';
+      document.getElementById('markBad').textContent = 'I was wrong';
+    }
+  }
+
+  document.getElementById('card3d').onclick = ()=>{
+    const el = document.getElementById('card3d');
+    el.classList.toggle('flipped');
+    if(session.mode==='test' && el.classList.contains('flipped')){
+      document.getElementById('markRow').classList.remove('hidden');
+    }
+  };
+
+  function advance(){
+    session.pos++;
+    if(session.pos >= session.order.length){
+      finishSession();
+    } else {
+      renderCardFace();
+    }
+  }
+
+  document.getElementById('markGood').onclick = ()=>{
+    const d = getDeck(currentDeckId);
+    const c = currentCard();
+    if(session.mode==='learn' || session.mode==='revise'){
+      c._weak = false;
+    } else { // test
+      session.correct++;
+    }
+    save();
+    advance();
+  };
+  document.getElementById('markBad').onclick = ()=>{
+    const d = getDeck(currentDeckId);
+    const c = currentCard();
+    if(session.mode==='learn' || session.mode==='revise'){
+      c._weak = true;
+    } else { // test
+      session.wrong++;
+      session.missed.push({ q: c.q, a: c.a });
+    }
+    save();
+    advance();
+  };
+
+  function finishSession(){
+    const d = getDeck(currentDeckId);
+    if(session.mode==='test'){
+      const total = session.correct + session.wrong;
+      const pct = total ? Math.round((session.correct/total)*100) : 0;
+      d.history = d.history || [];
+      d.history.push({
+        date: new Date().toLocaleDateString(undefined, {month:'short', day:'numeric', year:'numeric'}),
+        score: session.correct, total, pct
+      });
+      save();
+      showResults(session.correct, total, pct, session.missed);
+    } else {
+      // learn / revise: no score, just return to hub with a friendly toast
+      openHub(currentDeckId);
+      toast(session.mode==='learn' ? 'Learn session complete' : 'Revise session complete');
+    }
+  }
+
+  function showResults(score, total, pct, missed){
+    show('results');
+    document.getElementById('resultPct').textContent = pct + '%';
+    document.getElementById('resultSummary').textContent = `${score} out of ${total} correct`;
+    const circumference = 2*Math.PI*70;
+    const circle = document.getElementById('resultCircle');
+    circle.style.strokeDasharray = circumference;
+    circle.style.strokeDashoffset = circumference - (pct/100)*circumference;
+
+    const missSection = document.getElementById('missSection');
+    const missList = document.getElementById('missList');
+    missList.innerHTML = '';
+    if(missed.length){
+      missSection.classList.remove('hidden');
+      missed.forEach(m=>{
+        const div = document.createElement('div');
+        div.className = 'miss-item';
+        div.innerHTML = `<div class="q">${esc(m.q)}</div><div class="a">${esc(m.a)}</div>`;
+        missList.appendChild(div);
+      });
+    } else {
+      missSection.classList.add('hidden');
+    }
+  }
+
+  document.getElementById('resultBackHub').onclick = ()=> openHub(currentDeckId);
+  document.getElementById('resultRetry').onclick = ()=> startSession(session.mode);
+
+  // ---------- INIT ----------
+  renderHome();
+  show('home');
+})();
+</script>
+</body>
+</html>
