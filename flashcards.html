@@ -159,10 +159,22 @@
       </div>
     </div>
     <div class="top-actions ui">
-      <button class="btn" id="btnImportAll">Import decks</button>
+      <button class="btn" id="btnImportCode">Paste a code</button>
+      <button class="btn" id="btnImportAll">Import file</button>
       <button class="btn btn-gold" id="btnNewDeck">+ New deck</button>
     </div>
     <input type="file" id="fileImportAll" accept="application/json">
+  </div>
+
+  <div id="homeImportCodeBox" class="panel hidden ui">
+    <div class="field">
+      <label>Paste a deck code someone sent you</label>
+      <textarea id="homeImportCodeInput" rows="3" placeholder="Paste the code here"></textarea>
+    </div>
+    <div class="panel-actions">
+      <button class="btn btn-gold" id="homeImportCodeGo">Add deck</button>
+      <button class="btn btn-ghost" id="homeImportCodeCancel">Cancel</button>
+    </div>
   </div>
 
   <!-- VIEW: Deck list -->
@@ -197,12 +209,37 @@
       <div class="card-list" id="cardList"></div>
 
       <div class="panel-actions">
-        <div style="display:flex; gap:10px;">
-          <button class="btn" id="btnExportDeck">Export deck (.json)</button>
-          <button class="btn" id="btnImportDeck">Import into this deck</button>
+        <div style="display:flex; gap:10px; flex-wrap:wrap;">
+          <button class="btn btn-gold" id="btnShareCode">Share code</button>
+          <button class="btn" id="btnPasteCode">Paste code into deck</button>
+          <button class="btn" id="btnExportDeck">Export file (.json)</button>
+          <button class="btn" id="btnImportDeck">Import file</button>
           <input type="file" id="fileImportDeck" accept="application/json">
         </div>
         <button class="btn btn-danger" id="btnDeleteDeck">Delete deck</button>
+      </div>
+
+      <div id="shareCodeBox" class="hidden" style="margin-top:16px; border-top:1px solid var(--edge); padding-top:16px;">
+        <div class="field">
+          <label>Deck code — copy this and send it any way you like (chat, email, WhatsApp)</label>
+          <textarea id="shareCodeOutput" rows="4" readonly></textarea>
+        </div>
+        <div style="display:flex; gap:10px; flex-wrap:wrap;">
+          <button class="btn btn-gold" id="btnCopyCode">Copy code</button>
+          <button class="btn hidden" id="btnNativeShare">Share via apps…</button>
+          <button class="btn btn-ghost" id="btnCloseShare">Close</button>
+        </div>
+      </div>
+
+      <div id="pasteCodeBox" class="hidden" style="margin-top:16px; border-top:1px solid var(--edge); padding-top:16px;">
+        <div class="field">
+          <label>Paste a deck code — cards will be added to this deck</label>
+          <textarea id="pasteCodeInput" rows="4" placeholder="Paste the code here"></textarea>
+        </div>
+        <div style="display:flex; gap:10px;">
+          <button class="btn btn-gold" id="btnPasteCodeGo">Add cards</button>
+          <button class="btn btn-ghost" id="btnClosePaste">Cancel</button>
+        </div>
       </div>
     </div>
   </div>
@@ -311,6 +348,31 @@
 
   function getDeck(id){ return decks.find(d=>d.id===id); }
 
+  // ---------- SHARE CODE (mobile-friendly, no file dialogs) ----------
+  function encodeDeckToCode(deck){
+    const payload = { n: deck.name, c: deck.cards.map(c=>[c.q, c.a]) };
+    return btoa(unescape(encodeURIComponent(JSON.stringify(payload))));
+  }
+  function decodeCodeToDeck(code){
+    const payload = JSON.parse(decodeURIComponent(escape(atob(code.trim()))));
+    return { name: payload.n || 'Shared deck', cards: (payload.c||[]).map(([q,a])=>({q,a})) };
+  }
+  function copyText(text){
+    if(navigator.clipboard && window.isSecureContext){
+      navigator.clipboard.writeText(text).then(()=>toast('Copied — now paste it anywhere')).catch(()=>fallbackCopy(text));
+    } else {
+      fallbackCopy(text);
+    }
+  }
+  function fallbackCopy(text){
+    const ta = document.createElement('textarea');
+    ta.value = text; ta.style.position='fixed'; ta.style.opacity='0';
+    document.body.appendChild(ta); ta.focus(); ta.select();
+    try{ document.execCommand('copy'); toast('Copied — now paste it anywhere'); }
+    catch(e){ toast('Tap the code box, then select all and copy'); }
+    document.body.removeChild(ta);
+  }
+
   // ---------- VIEW SWITCHING ----------
   const views = ['home','editor','hub','study','results'];
   function show(view){
@@ -415,6 +477,46 @@
     a.click(); URL.revokeObjectURL(url);
   };
 
+  document.getElementById('btnShareCode').onclick = ()=>{
+    const d = getDeck(currentDeckId);
+    if(d.cards.length===0){ toast('Add some cards first'); return; }
+    const code = encodeDeckToCode(d);
+    document.getElementById('shareCodeOutput').value = code;
+    document.getElementById('shareCodeBox').classList.remove('hidden');
+    document.getElementById('pasteCodeBox').classList.add('hidden');
+    const nativeBtn = document.getElementById('btnNativeShare');
+    nativeBtn.classList.toggle('hidden', !navigator.share);
+    document.getElementById('shareCodeOutput').focus();
+    document.getElementById('shareCodeOutput').select();
+  };
+  document.getElementById('btnCloseShare').onclick = ()=> document.getElementById('shareCodeBox').classList.add('hidden');
+  document.getElementById('btnCopyCode').onclick = ()=> copyText(document.getElementById('shareCodeOutput').value);
+  document.getElementById('btnNativeShare').onclick = ()=>{
+    const code = document.getElementById('shareCodeOutput').value;
+    const d = getDeck(currentDeckId);
+    navigator.share({ title: 'Recall deck: ' + d.name, text: code }).catch(()=>{});
+  };
+
+  document.getElementById('btnPasteCode').onclick = ()=>{
+    document.getElementById('pasteCodeBox').classList.remove('hidden');
+    document.getElementById('shareCodeBox').classList.add('hidden');
+    document.getElementById('pasteCodeInput').value = '';
+    document.getElementById('pasteCodeInput').focus();
+  };
+  document.getElementById('btnClosePaste').onclick = ()=> document.getElementById('pasteCodeBox').classList.add('hidden');
+  document.getElementById('btnPasteCodeGo').onclick = ()=>{
+    const raw = document.getElementById('pasteCodeInput').value.trim();
+    if(!raw){ toast('Paste a code first'); return; }
+    try{
+      const incoming = decodeCodeToDeck(raw);
+      const d = getDeck(currentDeckId);
+      incoming.cards.forEach(c=>{ if(c.q && c.a) d.cards.push(c); });
+      save(); renderCardList();
+      document.getElementById('pasteCodeBox').classList.add('hidden');
+      toast('Cards added');
+    }catch(e){ toast('That code looks invalid'); }
+  };
+
   document.getElementById('btnImportDeck').onclick = ()=> document.getElementById('fileImportDeck').click();
   document.getElementById('fileImportDeck').onchange = (e)=>{
     const file = e.target.files[0]; if(!file) return;
@@ -430,6 +532,25 @@
       e.target.value = '';
     };
     reader.readAsText(file);
+  };
+
+  document.getElementById('btnImportCode').onclick = ()=>{
+    const box = document.getElementById('homeImportCodeBox');
+    box.classList.toggle('hidden');
+    document.getElementById('homeImportCodeInput').value = '';
+    if(!box.classList.contains('hidden')) document.getElementById('homeImportCodeInput').focus();
+  };
+  document.getElementById('homeImportCodeCancel').onclick = ()=> document.getElementById('homeImportCodeBox').classList.add('hidden');
+  document.getElementById('homeImportCodeGo').onclick = ()=>{
+    const raw = document.getElementById('homeImportCodeInput').value.trim();
+    if(!raw){ toast('Paste a code first'); return; }
+    try{
+      const incoming = decodeCodeToDeck(raw);
+      decks.push({ id: uid(), name: incoming.name, cards: incoming.cards, history: [] });
+      save(); renderHome();
+      document.getElementById('homeImportCodeBox').classList.add('hidden');
+      toast('Deck added');
+    }catch(e){ toast('That code looks invalid'); }
   };
 
   document.getElementById('btnImportAll').onclick = ()=> document.getElementById('fileImportAll').click();

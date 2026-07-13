@@ -1,0 +1,517 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Daily Task Tracker — Standup Log</title>
+<style>
+  :root{
+    --bg:#0d1b1e;
+    --bg-alt:#122a2e;
+    --panel:#153338;
+    --teal:#1f6f6b;
+    --teal-light:#2f9d92;
+    --gold:#d4af37;
+    --gold-dim:#a98a2a;
+    --text:#e8f0ef;
+    --text-dim:#9db3b0;
+    --danger:#c0524a;
+    --good:#3c9d6c;
+    --warn:#b57a2f;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    font-family:'Segoe UI',Tahoma,sans-serif;
+    background:linear-gradient(160deg,var(--bg),var(--bg-alt));
+    color:var(--text);
+    min-height:100vh;
+  }
+  header{
+    padding:20px 24px 10px;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    border-bottom:1px solid rgba(212,175,55,0.25);
+    flex-wrap:wrap;
+    gap:10px;
+  }
+  h1{font-size:1.4rem;margin:0;color:var(--gold);letter-spacing:0.5px;}
+  .subtitle{color:var(--text-dim);font-size:0.85rem;margin-top:4px;}
+  .date-badge{
+    background:var(--panel);
+    border:1px solid rgba(212,175,55,0.25);
+    padding:8px 14px;
+    border-radius:8px;
+    font-size:0.85rem;
+    color:var(--gold);
+  }
+  nav{display:flex;gap:8px;padding:14px 24px;flex-wrap:wrap;}
+  .tab{
+    background:var(--panel);color:var(--text-dim);
+    border:1px solid rgba(212,175,55,0.15);
+    padding:8px 16px;border-radius:8px;cursor:pointer;font-size:0.9rem;transition:0.15s;
+  }
+  .tab:hover{border-color:var(--gold-dim);color:var(--text);}
+  .tab.active{background:var(--teal);color:#fff;border-color:var(--teal-light);}
+  main{padding:0 24px 60px;max-width:900px;margin:0 auto;}
+  .view{display:none;}
+  .view.active{display:block;}
+
+  .card-panel{
+    background:var(--panel);
+    border:1px solid rgba(212,175,55,0.15);
+    border-radius:12px;
+    padding:20px;
+    margin-bottom:16px;
+  }
+
+  input,textarea,select{
+    width:100%;
+    background:var(--bg-alt);
+    border:1px solid rgba(212,175,55,0.25);
+    color:var(--text);
+    padding:10px 12px;
+    border-radius:8px;
+    font-size:0.95rem;
+    font-family:inherit;
+    margin-bottom:10px;
+  }
+  input:focus,textarea:focus,select:focus{outline:none;border-color:var(--gold);}
+  label{font-size:0.8rem;color:var(--text-dim);display:block;margin-bottom:4px;}
+
+  .form-row{display:grid;grid-template-columns:2fr 1fr 1fr;gap:10px;}
+  @media(max-width:640px){.form-row{grid-template-columns:1fr;}}
+
+  .btn{
+    background:var(--teal);color:#fff;border:none;
+    padding:10px 18px;border-radius:8px;cursor:pointer;
+    font-size:0.9rem;font-weight:500;transition:0.15s;
+  }
+  .btn:hover{background:var(--teal-light);}
+  .btn.gold{background:var(--gold);color:#1a1a1a;}
+  .btn.gold:hover{background:#e6c34d;}
+  .btn.ghost{background:none;border:1px solid rgba(212,175,55,0.3);color:var(--text-dim);}
+  .btn.ghost:hover{color:var(--text);border-color:var(--gold);}
+  .btn.small{padding:5px 11px;font-size:0.78rem;}
+  .btn-row{display:flex;gap:10px;flex-wrap:wrap;margin-top:8px;}
+
+  .task-group{margin-bottom:22px;}
+  .task-group h3{
+    font-size:0.9rem;text-transform:uppercase;letter-spacing:0.8px;
+    color:var(--text-dim);margin-bottom:10px;display:flex;align-items:center;gap:8px;
+  }
+  .count-badge{
+    background:rgba(255,255,255,0.08);color:var(--text);
+    font-size:0.72rem;padding:2px 8px;border-radius:12px;
+  }
+  .task-item{
+    display:flex;align-items:flex-start;gap:12px;
+    background:var(--bg-alt);border:1px solid rgba(212,175,55,0.1);
+    border-radius:10px;padding:12px 14px;margin-bottom:8px;
+  }
+  .task-item.status-blocked{border-left:3px solid var(--danger);}
+  .task-item.status-inprogress{border-left:3px solid var(--warn);}
+  .task-item.status-done{border-left:3px solid var(--good);opacity:0.75;}
+  .task-item.status-todo{border-left:3px solid var(--teal-light);}
+  .task-main{flex:1;}
+  .task-title{font-size:0.95rem;color:var(--text);}
+  .task-title.done{text-decoration:line-through;color:var(--text-dim);}
+  .task-tags{display:flex;gap:6px;margin-top:6px;flex-wrap:wrap;}
+  .tag-pill{
+    font-size:0.7rem;background:rgba(31,111,107,0.35);color:var(--teal-light);
+    padding:2px 9px;border-radius:20px;
+  }
+  .tag-pill.project{background:rgba(212,175,55,0.15);color:var(--gold);}
+  .blocker-note{
+    font-size:0.8rem;color:var(--danger);margin-top:6px;
+    background:rgba(192,82,74,0.1);padding:6px 10px;border-radius:6px;
+  }
+  .task-actions{display:flex;gap:4px;flex-shrink:0;}
+  .icon-btn{
+    background:none;border:none;color:var(--text-dim);cursor:pointer;font-size:0.95rem;padding:2px 4px;
+  }
+  .icon-btn:hover{color:var(--gold);}
+  select.status-select{
+    width:auto;margin-bottom:0;padding:6px 10px;font-size:0.78rem;
+  }
+
+  .empty-state{text-align:center;padding:50px 20px;color:var(--text-dim);}
+  .empty-state h3{color:var(--gold);margin-bottom:8px;}
+
+  .stats-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px;margin-bottom:20px;}
+  .stat-box{background:var(--panel);border:1px solid rgba(212,175,55,0.15);border-radius:10px;padding:16px;text-align:center;}
+  .stat-num{font-size:1.6rem;color:var(--gold);font-weight:700;}
+  .stat-label{font-size:0.75rem;color:var(--text-dim);margin-top:4px;}
+
+  .standup-box{
+    background:var(--bg-alt);border:1px solid rgba(212,175,55,0.2);
+    border-radius:10px;padding:16px;white-space:pre-wrap;font-size:0.88rem;
+    line-height:1.6;font-family:'Consolas',monospace;color:var(--text);
+  }
+  .history-day{margin-bottom:24px;}
+  .history-date{
+    color:var(--gold);font-size:0.95rem;font-weight:600;margin-bottom:8px;
+    border-bottom:1px solid rgba(212,175,55,0.15);padding-bottom:6px;
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div>
+    <h1>✅ Task Tracker</h1>
+    <div class="subtitle">Daily standup log — offline, local-only</div>
+  </div>
+  <div class="date-badge" id="today-badge"></div>
+</header>
+
+<nav>
+  <div class="tab active" data-tab="today">Today</div>
+  <div class="tab" data-tab="standup">Standup Summary</div>
+  <div class="tab" data-tab="history">History</div>
+  <div class="tab" data-tab="stats">Stats</div>
+</nav>
+
+<main>
+
+  <!-- TODAY VIEW -->
+  <div class="view active" id="view-today">
+    <div class="card-panel">
+      <label>New task</label>
+      <div class="form-row">
+        <input id="new-task-title" placeholder="e.g. Fix ORA-06550 in migration script">
+        <input id="new-task-project" placeholder="Project tag (e.g. HERS)">
+        <select id="new-task-status">
+          <option value="todo">To Do</option>
+          <option value="inprogress">In Progress</option>
+          <option value="blocked">Blocked</option>
+        </select>
+      </div>
+      <button class="btn gold" onclick="addTask()">Add Task</button>
+    </div>
+
+    <div id="today-groups"></div>
+  </div>
+
+  <!-- STANDUP SUMMARY VIEW -->
+  <div class="view" id="view-standup">
+    <div class="card-panel">
+      <h3 style="color:var(--gold);margin-top:0;">Standup Summary</h3>
+      <p style="color:var(--text-dim);font-size:0.85rem;">Auto-generated from yesterday's and today's tasks. Copy and paste into your standup chat.</p>
+      <div class="standup-box" id="standup-text"></div>
+      <div class="btn-row">
+        <button class="btn gold" onclick="copyStandup()">📋 Copy to Clipboard</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- HISTORY VIEW -->
+  <div class="view" id="view-history">
+    <div class="card-panel" id="history-list"></div>
+  </div>
+
+  <!-- STATS VIEW -->
+  <div class="view" id="view-stats">
+    <div class="stats-grid" id="stats-grid"></div>
+    <div class="card-panel">
+      <h3 style="color:var(--gold);margin-top:0;">By Project</h3>
+      <div id="stats-projects"></div>
+    </div>
+  </div>
+
+</main>
+
+<script>
+/* ---------- Data layer ---------- */
+const STORAGE_KEY = 'task_tracker_app_data_v1';
+
+function loadData(){
+  const raw = localStorage.getItem(STORAGE_KEY);
+  if(raw){
+    try { return JSON.parse(raw); } catch(e){}
+  }
+  return { tasks: [], lastOpenDate: todayISO() };
+}
+function saveData(){ localStorage.setItem(STORAGE_KEY, JSON.stringify(data)); }
+
+let data = loadData();
+
+/* ---------- Utility ---------- */
+function uid(){ return Date.now().toString(36) + Math.random().toString(36).slice(2,7); }
+function todayISO(){ return new Date().toISOString().slice(0,10); }
+function yesterdayISO(){
+  const d = new Date();
+  d.setDate(d.getDate()-1);
+  return d.toISOString().slice(0,10);
+}
+function formatDate(iso){
+  const d = new Date(iso + 'T00:00:00');
+  return d.toLocaleDateString(undefined, { weekday:'long', month:'short', day:'numeric' });
+}
+function escapeHtml(str){
+  const div = document.createElement('div');
+  div.textContent = str;
+  return div.innerHTML;
+}
+
+/* ---------- Carry-over logic ---------- */
+// Any task not done, dated before today, gets its "activeDate" bumped to today
+// so it shows up in Today view. We track original createdDate for history.
+function runCarryOver(){
+  const today = todayISO();
+  data.tasks.forEach(t=>{
+    if(t.status !== 'done' && t.activeDate < today){
+      t.activeDate = today;
+      t.carried = true;
+    }
+  });
+  data.lastOpenDate = today;
+  saveData();
+}
+runCarryOver();
+
+/* ---------- Navigation ---------- */
+function showTab(tab){
+  document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  document.getElementById('view-'+tab).classList.add('active');
+  document.querySelector('.tab[data-tab="'+tab+'"]').classList.add('active');
+  if(tab==='today') renderToday();
+  if(tab==='standup') renderStandup();
+  if(tab==='history') renderHistory();
+  if(tab==='stats') renderStats();
+}
+document.querySelectorAll('.tab').forEach(t=>{
+  t.addEventListener('click', ()=>showTab(t.dataset.tab));
+});
+
+/* ---------- Tasks ---------- */
+function addTask(){
+  const titleInput = document.getElementById('new-task-title');
+  const projectInput = document.getElementById('new-task-project');
+  const statusInput = document.getElementById('new-task-status');
+  const title = titleInput.value.trim();
+  if(!title) return;
+  data.tasks.push({
+    id: uid(),
+    title,
+    project: projectInput.value.trim(),
+    status: statusInput.value,
+    blockerNote: '',
+    createdDate: todayISO(),
+    activeDate: todayISO(),
+    completedDate: null,
+    carried: false
+  });
+  titleInput.value = '';
+  projectInput.value = '';
+  statusInput.value = 'todo';
+  saveData();
+  renderToday();
+}
+
+function updateStatus(id, newStatus){
+  const task = data.tasks.find(t=>t.id===id);
+  task.status = newStatus;
+  if(newStatus === 'blocked' && !task.blockerNote){
+    const note = prompt('What is blocking this task?');
+    task.blockerNote = note || '';
+  }
+  if(newStatus === 'done'){
+    task.completedDate = todayISO();
+  } else {
+    task.completedDate = null;
+  }
+  saveData();
+  renderToday();
+}
+
+function deleteTask(id){
+  if(!confirm('Delete this task?')) return;
+  data.tasks = data.tasks.filter(t=>t.id!==id);
+  saveData();
+  renderToday();
+}
+
+function renderToday(){
+  document.getElementById('today-badge').textContent = formatDate(todayISO());
+  const today = todayISO();
+  const todaysTasks = data.tasks.filter(t=>t.activeDate === today);
+
+  const groups = {
+    blocked: todaysTasks.filter(t=>t.status==='blocked'),
+    inprogress: todaysTasks.filter(t=>t.status==='inprogress'),
+    todo: todaysTasks.filter(t=>t.status==='todo'),
+    done: todaysTasks.filter(t=>t.status==='done')
+  };
+
+  const labels = {
+    blocked: '🔴 Blocked',
+    inprogress: '🟡 In Progress',
+    todo: '🔵 To Do',
+    done: '🟢 Done'
+  };
+
+  const container = document.getElementById('today-groups');
+  if(todaysTasks.length===0){
+    container.innerHTML = `<div class="empty-state"><h3>No tasks yet today</h3><p>Add one above to get started.</p></div>`;
+    return;
+  }
+
+  let html = '';
+  ['blocked','inprogress','todo','done'].forEach(key=>{
+    const items = groups[key];
+    if(items.length===0) return;
+    html += `<div class="task-group">
+      <h3>${labels[key]} <span class="count-badge">${items.length}</span></h3>`;
+    items.forEach(t=>{
+      html += `
+      <div class="task-item status-${key}">
+        <div class="task-main">
+          <div class="task-title ${key==='done'?'done':''}">${escapeHtml(t.title)}</div>
+          <div class="task-tags">
+            ${t.project ? `<span class="tag-pill project">${escapeHtml(t.project)}</span>` : ''}
+            ${t.carried ? `<span class="tag-pill">carried over</span>` : ''}
+          </div>
+          ${t.status==='blocked' && t.blockerNote ? `<div class="blocker-note">⛔ ${escapeHtml(t.blockerNote)}</div>` : ''}
+        </div>
+        <div class="task-actions">
+          <select class="status-select" onchange="updateStatus('${t.id}', this.value)">
+            <option value="todo" ${t.status==='todo'?'selected':''}>To Do</option>
+            <option value="inprogress" ${t.status==='inprogress'?'selected':''}>In Progress</option>
+            <option value="blocked" ${t.status==='blocked'?'selected':''}>Blocked</option>
+            <option value="done" ${t.status==='done'?'selected':''}>Done</option>
+          </select>
+          <button class="icon-btn" onclick="deleteTask('${t.id}')" title="Delete">🗑</button>
+        </div>
+      </div>`;
+    });
+    html += `</div>`;
+  });
+  container.innerHTML = html;
+}
+
+/* ---------- Standup summary ---------- */
+function renderStandup(){
+  const today = todayISO();
+  const yesterday = yesterdayISO();
+
+  const doneYesterday = data.tasks.filter(t=>t.completedDate === yesterday);
+  const doneEarlierStillRelevant = data.tasks.filter(t=>t.status==='done' && t.completedDate===today);
+  const workingToday = data.tasks.filter(t=>t.activeDate===today && (t.status==='todo' || t.status==='inprogress'));
+  const blockers = data.tasks.filter(t=>t.activeDate===today && t.status==='blocked');
+
+  let text = `YESTERDAY:\n`;
+  if(doneYesterday.length===0){
+    text += `  (no tasks marked done yesterday)\n`;
+  } else {
+    doneYesterday.forEach(t=> text += `  - ${t.title}${t.project ? ' ['+t.project+']' : ''}\n`);
+  }
+
+  text += `\nTODAY:\n`;
+  const allTodayItems = [...doneEarlierStillRelevant, ...workingToday];
+  if(allTodayItems.length===0){
+    text += `  (no tasks planned for today yet)\n`;
+  } else {
+    allTodayItems.forEach(t=> text += `  - ${t.title}${t.project ? ' ['+t.project+']' : ''}\n`);
+  }
+
+  text += `\nBLOCKERS:\n`;
+  if(blockers.length===0){
+    text += `  (none)\n`;
+  } else {
+    blockers.forEach(t=> text += `  - ${t.title}${t.project ? ' ['+t.project+']' : ''}: ${t.blockerNote || 'no detail given'}\n`);
+  }
+
+  document.getElementById('standup-text').textContent = text;
+}
+function copyStandup(){
+  const text = document.getElementById('standup-text').textContent;
+  navigator.clipboard.writeText(text).then(()=>{
+    alert('Standup summary copied to clipboard!');
+  }).catch(()=>{
+    alert('Could not copy automatically — please select and copy the text manually.');
+  });
+}
+
+/* ---------- History ---------- */
+function renderHistory(){
+  const byDate = {};
+  data.tasks.forEach(t=>{
+    const d = t.createdDate;
+    if(!byDate[d]) byDate[d] = [];
+    byDate[d].push(t);
+  });
+  const dates = Object.keys(byDate).sort().reverse();
+  const container = document.getElementById('history-list');
+  if(dates.length===0){
+    container.innerHTML = `<div class="empty-state"><h3>No history yet</h3></div>`;
+    return;
+  }
+  let html = '';
+  dates.forEach(date=>{
+    html += `<div class="history-day">
+      <div class="history-date">${formatDate(date)}</div>`;
+    byDate[date].forEach(t=>{
+      const statusIcon = { todo:'🔵', inprogress:'🟡', blocked:'🔴', done:'🟢' }[t.status];
+      html += `<div class="task-item status-${t.status}" style="margin-bottom:6px;">
+        <div class="task-main">
+          <div class="task-title ${t.status==='done'?'done':''}">${statusIcon} ${escapeHtml(t.title)}</div>
+          <div class="task-tags">
+            ${t.project ? `<span class="tag-pill project">${escapeHtml(t.project)}</span>` : ''}
+          </div>
+        </div>
+      </div>`;
+    });
+    html += `</div>`;
+  });
+  container.innerHTML = html;
+}
+
+/* ---------- Stats ---------- */
+function renderStats(){
+  const totalTasks = data.tasks.length;
+  const doneTasks = data.tasks.filter(t=>t.status==='done').length;
+  const blockedTasks = data.tasks.filter(t=>t.status==='blocked').length;
+  const weekAgo = new Date(); weekAgo.setDate(weekAgo.getDate()-7);
+  const weekAgoISO = weekAgo.toISOString().slice(0,10);
+  const doneThisWeek = data.tasks.filter(t=>t.completedDate && t.completedDate >= weekAgoISO).length;
+
+  document.getElementById('stats-grid').innerHTML = `
+    <div class="stat-box"><div class="stat-num">${totalTasks}</div><div class="stat-label">Total Tasks</div></div>
+    <div class="stat-box"><div class="stat-num">${doneTasks}</div><div class="stat-label">Completed</div></div>
+    <div class="stat-box"><div class="stat-num">${blockedTasks}</div><div class="stat-label">Currently Blocked</div></div>
+    <div class="stat-box"><div class="stat-num">${doneThisWeek}</div><div class="stat-label">Done This Week</div></div>
+  `;
+
+  const projectMap = {};
+  data.tasks.forEach(t=>{
+    const p = t.project || '(no project)';
+    if(!projectMap[p]) projectMap[p] = { total:0, done:0 };
+    projectMap[p].total++;
+    if(t.status==='done') projectMap[p].done++;
+  });
+  const projectsEl = document.getElementById('stats-projects');
+  const projectKeys = Object.keys(projectMap);
+  if(projectKeys.length===0){
+    projectsEl.innerHTML = '<p style="color:var(--text-dim);">No tasks yet.</p>';
+  } else {
+    projectsEl.innerHTML = projectKeys.map(p=>{
+      const info = projectMap[p];
+      return `<div class="task-item status-todo" style="border-left-color:var(--gold-dim);">
+        <div class="task-main">
+          <div class="task-title">${escapeHtml(p)}</div>
+        </div>
+        <div class="task-tags"><span class="tag-pill">${info.done}/${info.total} done</span></div>
+      </div>`;
+    }).join('');
+  }
+}
+
+/* ---------- Init ---------- */
+renderToday();
+</script>
+
+</body>
+</html>
