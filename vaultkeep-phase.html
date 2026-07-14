@@ -268,6 +268,28 @@
   }
   .file-upload-row label{margin-top:0;}
 
+  .settings-row{display:flex;gap:20px;flex-wrap:wrap;}
+  .settings-row > div{flex:1;min-width:200px;}
+  .settings-row select{width:100%;}
+
+  @media (max-width: 560px){
+    body{padding:16px 10px;}
+    .card{padding:16px;}
+    .brand-text h1{font-size:19px;}
+    .modal-overlay{padding:16px 8px;}
+    .entries-header{flex-direction:column;align-items:stretch;}
+    .entries-header .btn{width:100%;}
+    .search-bar{flex-direction:column;}
+    .search-bar input, .search-bar select{width:100%;}
+    .field-row{flex-direction:column;gap:0;}
+    .entry-row{flex-wrap:wrap;}
+    .entry-actions{width:100%;justify-content:flex-end;margin-top:6px;}
+    .btn-row{flex-direction:column;align-items:stretch;}
+    .btn-row .btn{width:100%;}
+    .settings-row{flex-direction:column;gap:14px;}
+    .qr-nav{flex-wrap:wrap;justify-content:center;}
+  }
+
   footer.note{
     text-align:center;font-size:11.5px;color:var(--cream-dim);
     margin-top:20px;line-height:1.6;
@@ -375,8 +397,57 @@
     </div>
   </div>
 
+  <!-- PIN QUICK-UNLOCK SCREEN (shown after auto-lock, if a session PIN is set) -->
+  <div class="card hidden" id="pinLockScreen">
+    <h2>Enter your PIN</h2>
+    <p class="sub">Your vault auto-locked from inactivity. Enter your quick-unlock PIN to continue, or use your master password instead.</p>
+    <label for="pinInput">Quick-unlock PIN</label>
+    <input type="password" id="pinInput" inputmode="numeric" autocomplete="off" placeholder="Enter PIN" maxlength="8">
+    <div id="pinError" class="error-msg hidden"></div>
+    <div class="btn-row">
+      <button class="btn btn-primary btn-full" id="pinSubmit">Unlock</button>
+    </div>
+    <div class="btn-row">
+      <button class="link-btn" id="usePasswordInsteadBtn">Use master password instead</button>
+    </div>
+  </div>
+
   <!-- MAIN VAULT SCREEN -->
   <div class="hidden" id="vaultScreen">
+
+    <div class="card hidden" id="backupBanner">
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap;">
+        <p class="sub" style="margin:0;flex:1;min-width:200px;">📦 It's been a while since you backed up this vault. Everything lives only in this browser — a stray "clear browsing data" click would erase it for good.</p>
+        <div style="display:flex;gap:8px;flex-shrink:0;">
+          <button class="btn btn-primary" id="backupNowBtn">Back up now</button>
+          <button class="btn btn-ghost" id="dismissBackupBtn">Not now</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>Settings</h2>
+      <div class="settings-row">
+        <div>
+          <label for="autoLockSelect" style="margin-top:0;">Auto-lock after inactivity</label>
+          <select id="autoLockSelect">
+            <option value="1">1 minute</option>
+            <option value="5" selected>5 minutes</option>
+            <option value="15">15 minutes</option>
+            <option value="30">30 minutes</option>
+            <option value="0">Never</option>
+          </select>
+        </div>
+        <div>
+          <label for="pinSetupInput" style="margin-top:0;">Quick-unlock PIN <span style="text-transform:none;color:var(--cream-dim);">(this session only, optional)</span></label>
+          <div class="pw-input-group">
+            <input type="password" id="pinSetupInput" inputmode="numeric" autocomplete="off" placeholder="4–8 digits" maxlength="8">
+            <button type="button" class="btn btn-ghost" id="setPinBtn" style="flex-shrink:0;">Set</button>
+          </div>
+        </div>
+      </div>
+      <p class="sub" id="pinStatusText" style="margin:8px 0 0;">No quick-unlock PIN set — auto-lock will require your full master password.</p>
+    </div>
 
     <div class="card">
       <div class="entries-header">
@@ -501,8 +572,8 @@
   </div>
 
   <footer class="note">
-    Phase 3 of 4 — QR code and JSON file transfer between devices.<br>
-    Auto-lock timer and final polish arrive in Phase 4.
+    All 4 phases complete — encryption core, password tools, device transfer, and auto-lock/polish.<br>
+    Your master password is never stored anywhere. Back up regularly — everything lives only in this browser.
   </footer>
 </div>
 
@@ -2819,10 +2890,54 @@ var __Html5QrcodeLibrary__;(()=>{var t={449:function(t,e,r){!function(t){"use st
   "use strict";
 
   const STORAGE_KEY = "vaultkeep_store_v1";
+  const AUTO_LOCK_PREF_KEY = "vaultkeep_autolock_minutes";
+  const LAST_EXPORT_KEY = "vaultkeep_last_export_ts";
+  const BACKUP_REMINDER_DAYS = 14;
+
   let sessionKey = null;      // CryptoKey, held only in memory — never persisted
   let vaultData = null;       // decrypted {entries:[...], customCategories:[...]}
   let editingId = null;
   const revealedIds = new Set(); // entry ids currently showing plaintext password in the list
+
+  let sessionPin = null;              // quick-unlock PIN, in-memory only, cleared on full lock
+  let autoLockMinutes = parseInt(localStorage.getItem(AUTO_LOCK_PREF_KEY) || "5", 10);
+  let inactivityTimer = null;
+  let backupBannerDismissedThisSession = false;
+
+  const ACTIVITY_EVENTS = ["mousemove", "keydown", "click", "scroll", "touchstart"];
+
+  function resetInactivityTimer(){
+    clearTimeout(inactivityTimer);
+    if(autoLockMinutes > 0){
+      inactivityTimer = setTimeout(handleAutoLock, autoLockMinutes * 60 * 1000);
+    }
+  }
+
+  function startAutoLockWatch(){
+    ACTIVITY_EVENTS.forEach(evt => document.addEventListener(evt, resetInactivityTimer));
+    resetInactivityTimer();
+  }
+
+  function stopAutoLockWatch(){
+    ACTIVITY_EVENTS.forEach(evt => document.removeEventListener(evt, resetInactivityTimer));
+    clearTimeout(inactivityTimer);
+  }
+
+  function handleAutoLock(){
+    stopAutoLockWatch();
+    revealedIds.clear();
+    document.getElementById("entryModalOverlay").classList.add("hidden");
+    if(sessionPin){
+      showScreen("pinlock");
+    } else {
+      sessionKey = null;
+      vaultData = null;
+      editingId = null;
+      resetForm();
+      showScreen("unlock");
+    }
+    showToast("Vault locked due to inactivity");
+  }
 
   // ---------- toast ----------
   const toastEl = document.getElementById("toast");
@@ -2923,6 +3038,7 @@ var __Html5QrcodeLibrary__;(()=>{var t={449:function(t,e,r){!function(t){"use st
   // ---------- UI: screen switching ----------
   const setupScreen = document.getElementById("setupScreen");
   const unlockScreen = document.getElementById("unlockScreen");
+  const pinLockScreen = document.getElementById("pinLockScreen");
   const vaultScreen = document.getElementById("vaultScreen");
   const statusPill = document.getElementById("statusPill");
   const statusText = document.getElementById("statusText");
@@ -2930,18 +3046,32 @@ var __Html5QrcodeLibrary__;(()=>{var t={449:function(t,e,r){!function(t){"use st
   function showScreen(which){
     setupScreen.classList.add("hidden");
     unlockScreen.classList.add("hidden");
+    pinLockScreen.classList.add("hidden");
     vaultScreen.classList.add("hidden");
     if(which === "setup") setupScreen.classList.remove("hidden");
     if(which === "unlock") unlockScreen.classList.remove("hidden");
+    if(which === "pinlock") pinLockScreen.classList.remove("hidden");
     if(which === "vault") vaultScreen.classList.remove("hidden");
 
     if(which === "vault"){
       statusPill.classList.add("unlocked");
       statusText.textContent = "Unlocked";
+    } else if(which === "pinlock"){
+      statusPill.classList.remove("unlocked");
+      statusText.textContent = "PIN-locked";
     } else {
       statusPill.classList.remove("unlocked");
       statusText.textContent = "Locked";
     }
+  }
+
+  function enterVaultScreen(){
+    showScreen("vault");
+    renderEntries();
+    startAutoLockWatch();
+    checkBackupReminder();
+    const autoLockSelect = document.getElementById("autoLockSelect");
+    if(autoLockSelect) autoLockSelect.value = String(autoLockMinutes);
   }
 
   function init(){
@@ -3019,8 +3149,7 @@ var __Html5QrcodeLibrary__;(()=>{var t={449:function(t,e,r){!function(t){"use st
     sessionKey = key;
     vaultData = initialVault;
     setupPw.value = ""; setupPwConfirm.value = "";
-    showScreen("vault");
-    renderEntries();
+    enterVaultScreen();
   });
 
   // ---------- unlock flow ----------
@@ -3038,8 +3167,7 @@ var __Html5QrcodeLibrary__;(()=>{var t={449:function(t,e,r){!function(t){"use st
       sessionKey = key;
       vaultData = decrypted;
       unlockPw.value = "";
-      showScreen("vault");
-      renderEntries();
+      enterVaultScreen();
     } catch(e){
       unlockError.textContent = "Incorrect master password. Please try again.";
       unlockError.classList.remove("hidden");
@@ -3050,13 +3178,91 @@ var __Html5QrcodeLibrary__;(()=>{var t={449:function(t,e,r){!function(t){"use st
 
   // ---------- lock ----------
   document.getElementById("lockNowBtn").addEventListener("click", ()=>{
+    stopAutoLockWatch();
     sessionKey = null;
     vaultData = null;
+    sessionPin = null;
     editingId = null;
     revealedIds.clear();
     document.getElementById("entryModalOverlay").classList.add("hidden");
     resetForm();
     showScreen("unlock");
+  });
+
+  // ---------- PIN quick-unlock ----------
+  const pinInput = document.getElementById("pinInput");
+  const pinError = document.getElementById("pinError");
+  const pinSetupInput = document.getElementById("pinSetupInput");
+  const pinStatusText = document.getElementById("pinStatusText");
+  const autoLockSelect = document.getElementById("autoLockSelect");
+
+  autoLockSelect.value = String(autoLockMinutes);
+  autoLockSelect.addEventListener("change", ()=>{
+    autoLockMinutes = parseInt(autoLockSelect.value, 10);
+    localStorage.setItem(AUTO_LOCK_PREF_KEY, String(autoLockMinutes));
+    if(vaultData) resetInactivityTimer(); // apply new interval immediately if unlocked
+  });
+
+  document.getElementById("setPinBtn").addEventListener("click", ()=>{
+    const val = pinSetupInput.value.trim();
+    if(!/^\d{4,8}$/.test(val)){
+      showToast("PIN must be 4–8 digits");
+      return;
+    }
+    sessionPin = val;
+    pinSetupInput.value = "";
+    pinStatusText.textContent = "Quick-unlock PIN is set for this session. It won't be asked for again until you lock the vault from inactivity.";
+    showToast("Quick-unlock PIN set for this session");
+  });
+
+  function attemptPinUnlock(){
+    pinError.classList.add("hidden");
+    if(pinInput.value === sessionPin){
+      pinInput.value = "";
+      enterVaultScreen();
+    } else {
+      pinError.textContent = "Incorrect PIN.";
+      pinError.classList.remove("hidden");
+    }
+  }
+  document.getElementById("pinSubmit").addEventListener("click", attemptPinUnlock);
+  pinInput.addEventListener("keydown", (e)=>{ if(e.key==="Enter") attemptPinUnlock(); });
+
+  document.getElementById("usePasswordInsteadBtn").addEventListener("click", ()=>{
+    pinInput.value = "";
+    pinError.classList.add("hidden");
+    sessionKey = null;
+    vaultData = null;
+    editingId = null;
+    resetForm();
+    showScreen("unlock");
+  });
+
+  // ---------- backup reminder ----------
+  const backupBanner = document.getElementById("backupBanner");
+
+  function checkBackupReminder(){
+    if(backupBannerDismissedThisSession || !vaultData || !vaultData.entries.length){
+      backupBanner.classList.add("hidden");
+      return;
+    }
+    const lastTs = parseInt(localStorage.getItem(LAST_EXPORT_KEY) || "0", 10);
+    const daysSince = (Date.now() - lastTs) / (1000*60*60*24);
+    if(!lastTs || daysSince > BACKUP_REMINDER_DAYS){
+      backupBanner.classList.remove("hidden");
+    } else {
+      backupBanner.classList.add("hidden");
+    }
+  }
+
+  document.getElementById("backupNowBtn").addEventListener("click", ()=>{
+    backupBanner.classList.add("hidden");
+    backupBannerDismissedThisSession = true;
+    document.getElementById("exportQrBtn").scrollIntoView({behavior:"smooth", block:"center"});
+  });
+  document.getElementById("dismissBackupBtn").addEventListener("click", ()=>{
+    backupBanner.classList.add("hidden");
+    backupBannerDismissedThisSession = true;
   });
 
   // ---------- category custom toggle ----------
@@ -3602,8 +3808,7 @@ var __Html5QrcodeLibrary__;(()=>{var t={449:function(t,e,r){!function(t){"use st
     editingId = null;
     resetForm();
     finishImport();
-    showScreen("vault");
-    renderEntries();
+    enterVaultScreen();
     showToast("Vault replaced from import");
   });
 
@@ -3633,6 +3838,7 @@ var __Html5QrcodeLibrary__;(()=>{var t={449:function(t,e,r){!function(t){"use st
     await persistVault();
     finishImport();
     renderEntries();
+    checkBackupReminder();
     showToast(`Merged ${incoming.entries.length} entr${incoming.entries.length===1?"y":"ies"} into your vault`);
   });
 
@@ -3698,6 +3904,8 @@ var __Html5QrcodeLibrary__;(()=>{var t={449:function(t,e,r){!function(t){"use st
     currentQrIndex = 0;
     qrExportWrap.classList.remove("hidden");
     renderQrPage();
+    localStorage.setItem(LAST_EXPORT_KEY, Date.now().toString());
+    checkBackupReminder();
   });
 
   qrPrevBtn.addEventListener("click", ()=>{
@@ -3722,6 +3930,8 @@ var __Html5QrcodeLibrary__;(()=>{var t={449:function(t,e,r){!function(t){"use st
     a.click();
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
+    localStorage.setItem(LAST_EXPORT_KEY, Date.now().toString());
+    checkBackupReminder();
     showToast("Backup file downloaded");
   });
 
