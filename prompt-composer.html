@@ -1,0 +1,913 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Personal Task Tracker</title>
+<style>
+/* =========================================================================
+   CSS STYLING
+   ========================================================================= */
+
+/* ---------- Design tokens ---------- */
+:root{
+  --bg:#F4F6FB;
+  --surface:#FFFFFF;
+  --surface-soft:#EEF1F8;
+  --ink:#1C2333;
+  --ink-soft:#5B6478;
+  --ink-faint:#94A0B8;
+  --primary:#3F37C9;
+  --primary-dark:#2E2A99;
+  --primary-soft:#EDEBFC;
+  --success:#0F9D78;
+  --success-soft:#E3F7F0;
+  --warning:#E8920A;
+  --warning-soft:#FDF1DE;
+  --danger:#E1483D;
+  --danger-soft:#FBE7E5;
+  --border:#E4E8F1;
+  --shadow-sm:0 1px 2px rgba(28,35,51,0.06);
+  --shadow-md:0 6px 20px rgba(28,35,51,0.08);
+  --shadow-lg:0 16px 40px rgba(28,35,51,0.16);
+  --radius-sm:8px;
+  --radius-md:12px;
+  --radius-lg:20px;
+  --font:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+}
+
+/* ---------- Reset & base ---------- */
+*,*::before,*::after{box-sizing:border-box;}
+html,body{margin:0;padding:0;}
+body{
+  font-family:var(--font);
+  background:var(--bg);
+  color:var(--ink);
+  -webkit-font-smoothing:antialiased;
+  line-height:1.5;
+}
+button,input,select,textarea{font-family:inherit;font-size:inherit;color:inherit;}
+button{cursor:pointer;}
+:focus-visible{outline:2px solid var(--primary);outline-offset:2px;}
+@media (prefers-reduced-motion:reduce){
+  *{animation-duration:0.01ms !important;animation-iteration-count:1 !important;transition-duration:0.01ms !important;}
+}
+
+.wrap{max-width:1180px;margin:0 auto;padding:28px 20px 80px;}
+
+/* ---------- Header ---------- */
+.app-header{display:flex;align-items:flex-end;justify-content:space-between;gap:16px;margin-bottom:28px;flex-wrap:wrap;}
+.eyebrow{
+  font-size:0.72rem;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;
+  color:var(--primary);margin:0 0 6px;
+}
+.app-header h1{
+  font-size:2rem;font-weight:800;letter-spacing:-0.02em;margin:0;color:var(--ink);
+}
+.app-header p{margin:6px 0 0;color:var(--ink-soft);font-size:0.95rem;}
+
+/* ---------- Stats dashboard ---------- */
+.dashboard{
+  display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:24px;
+}
+.stat-card{
+  background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);
+  padding:18px 20px;box-shadow:var(--shadow-sm);
+  display:flex;flex-direction:column;justify-content:center;
+  transition:transform 0.18s ease,box-shadow 0.18s ease;
+}
+.stat-card:hover{transform:translateY(-2px);box-shadow:var(--shadow-md);}
+.stat-card .stat-label{font-size:0.72rem;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:var(--ink-faint);}
+.stat-card .stat-value{font-size:2.1rem;font-weight:800;letter-spacing:-0.02em;margin-top:4px;}
+.stat-card.total .stat-value{color:var(--ink);}
+.stat-card.completed .stat-value{color:var(--success);}
+.stat-card.pending .stat-value{color:var(--warning);}
+
+/* Completion ring — signature element */
+.stat-card.ring-card{flex-direction:row;align-items:center;gap:14px;}
+.ring-wrap{position:relative;width:64px;height:64px;flex:none;}
+.ring-wrap svg{transform:rotate(-90deg);width:64px;height:64px;}
+.ring-track{fill:none;stroke:var(--surface-soft);stroke-width:7;}
+.ring-progress{fill:none;stroke:var(--primary);stroke-width:7;stroke-linecap:round;transition:stroke-dashoffset 0.5s ease;}
+.ring-text{
+  position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
+  font-size:0.85rem;font-weight:800;color:var(--primary);
+}
+
+/* ---------- Toolbar ---------- */
+.toolbar{
+  display:flex;flex-wrap:wrap;gap:12px;align-items:center;justify-content:space-between;
+  margin-bottom:18px;background:var(--surface);border:1px solid var(--border);
+  border-radius:var(--radius-lg);padding:14px 16px;box-shadow:var(--shadow-sm);
+}
+.toolbar-left,.toolbar-right{display:flex;flex-wrap:wrap;gap:10px;align-items:center;}
+
+.search-box{position:relative;}
+.search-box input{
+  width:230px;max-width:60vw;padding:9px 12px 9px 34px;border:1px solid var(--border);
+  border-radius:var(--radius-sm);background:var(--surface-soft);transition:border-color 0.15s ease,background 0.15s ease;
+}
+.search-box input:focus{border-color:var(--primary);background:var(--surface);}
+.search-box::before{
+  content:"";position:absolute;left:11px;top:50%;width:14px;height:14px;
+  transform:translateY(-50%);
+  background:var(--ink-faint);
+  -webkit-mask:url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7" stroke="black" stroke-width="2" fill="none"/><line x1="21" y1="21" x2="16.65" y2="16.65" stroke="black" stroke-width="2"/></svg>') center/contain no-repeat;
+  mask:url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7" stroke="black" stroke-width="2" fill="none"/><line x1="21" y1="21" x2="16.65" y2="16.65" stroke="black" stroke-width="2"/></svg>') center/contain no-repeat;
+}
+
+select.control{
+  padding:9px 10px;border:1px solid var(--border);border-radius:var(--radius-sm);background:var(--surface-soft);
+}
+
+.pill-group{display:flex;gap:6px;background:var(--surface-soft);padding:4px;border-radius:999px;}
+.pill-group button{
+  border:none;background:transparent;padding:7px 14px;border-radius:999px;font-size:0.82rem;font-weight:600;
+  color:var(--ink-soft);transition:background 0.15s ease,color 0.15s ease;
+}
+.pill-group button.active{background:var(--surface);color:var(--primary);box-shadow:var(--shadow-sm);}
+
+.btn{
+  border:1px solid transparent;border-radius:var(--radius-sm);padding:9px 16px;font-weight:700;font-size:0.85rem;
+  display:inline-flex;align-items:center;gap:6px;transition:transform 0.12s ease,box-shadow 0.12s ease,background 0.15s ease;
+}
+.btn:active{transform:translateY(1px);}
+.btn-primary{background:var(--primary);color:#fff;}
+.btn-primary:hover{background:var(--primary-dark);box-shadow:var(--shadow-md);}
+.btn-ghost{background:var(--surface-soft);color:var(--ink);}
+.btn-ghost:hover{background:var(--border);}
+.btn-danger-ghost{background:var(--danger-soft);color:var(--danger);}
+.btn-danger-ghost:hover{background:var(--danger);color:#fff;}
+.btn-sm{padding:6px 10px;font-size:0.78rem;border-radius:7px;}
+
+.file-label{position:relative;overflow:hidden;}
+.file-label input[type="file"]{
+  position:absolute;inset:0;opacity:0;cursor:pointer;
+}
+
+/* ---------- Tabs ---------- */
+.tabs{display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap;}
+.tab-btn{
+  background:var(--surface);border:1px solid var(--border);padding:10px 18px;border-radius:999px;
+  font-weight:700;font-size:0.85rem;color:var(--ink-soft);display:flex;align-items:center;gap:8px;
+  transition:all 0.15s ease;
+}
+.tab-btn .count{
+  background:var(--surface-soft);color:var(--ink-faint);font-size:0.72rem;font-weight:800;
+  padding:1px 8px;border-radius:999px;
+}
+.tab-btn.active{background:var(--primary);border-color:var(--primary);color:#fff;box-shadow:var(--shadow-md);}
+.tab-btn.active .count{background:rgba(255,255,255,0.22);color:#fff;}
+.tab-btn:hover:not(.active){border-color:var(--primary);color:var(--primary);}
+
+/* ---------- Task list ---------- */
+.task-list{display:flex;flex-direction:column;gap:10px;}
+
+.task-card{
+  background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-md);
+  padding:14px 16px;display:flex;align-items:flex-start;gap:14px;
+  box-shadow:var(--shadow-sm);animation:cardIn 0.25s ease both;
+  transition:box-shadow 0.18s ease,transform 0.18s ease,border-color 0.18s ease;
+}
+.task-card:hover{box-shadow:var(--shadow-md);transform:translateY(-1px);}
+@keyframes cardIn{from{opacity:0;transform:translateY(6px);}to{opacity:1;transform:translateY(0);}}
+
+.task-check{
+  width:22px;height:22px;border-radius:7px;border:2px solid var(--border);flex:none;margin-top:2px;
+  display:flex;align-items:center;justify-content:center;background:var(--surface);transition:all 0.15s ease;
+}
+.task-check:hover{border-color:var(--primary);}
+.task-card.completed .task-check{background:var(--success);border-color:var(--success);}
+.task-check svg{width:13px;height:13px;opacity:0;transform:scale(0.6);transition:all 0.15s ease;}
+.task-card.completed .task-check svg{opacity:1;transform:scale(1);}
+
+.task-body{flex:1;min-width:0;}
+.task-top-row{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:3px;}
+.task-category{
+  font-size:0.7rem;font-weight:800;letter-spacing:0.06em;text-transform:uppercase;
+  color:var(--primary);background:var(--primary-soft);padding:2px 8px;border-radius:6px;
+}
+.task-sno{font-size:0.72rem;color:var(--ink-faint);font-weight:600;}
+.task-title{font-size:0.98rem;font-weight:600;color:var(--ink);word-break:break-word;}
+.task-card.completed .task-title{text-decoration:line-through;color:var(--ink-faint);}
+.task-remarks{font-size:0.84rem;color:var(--ink-soft);margin-top:3px;word-break:break-word;}
+
+.badge{
+  font-size:0.7rem;font-weight:800;letter-spacing:0.03em;text-transform:uppercase;
+  padding:4px 10px;border-radius:999px;flex:none;
+}
+.badge.completed{background:var(--success-soft);color:var(--success);}
+.badge.pending{background:var(--warning-soft);color:var(--warning);}
+
+.task-actions{display:flex;align-items:center;gap:6px;flex:none;}
+.icon-btn{
+  width:32px;height:32px;border-radius:8px;border:1px solid var(--border);background:var(--surface);
+  display:flex;align-items:center;justify-content:center;color:var(--ink-soft);transition:all 0.15s ease;
+}
+.icon-btn:hover{border-color:var(--primary);color:var(--primary);background:var(--primary-soft);}
+.icon-btn.danger:hover{border-color:var(--danger);color:var(--danger);background:var(--danger-soft);}
+.icon-btn svg{width:15px;height:15px;}
+
+/* ---------- Empty state ---------- */
+.empty-state{
+  text-align:center;padding:50px 20px;background:var(--surface);border:1px dashed var(--border);
+  border-radius:var(--radius-lg);color:var(--ink-soft);
+}
+.empty-state .empty-icon{font-size:2rem;margin-bottom:8px;}
+.empty-state h3{margin:0 0 4px;color:var(--ink);font-size:1.05rem;}
+.empty-state p{margin:0;font-size:0.88rem;}
+
+/* ---------- Modal ---------- */
+.modal-overlay{
+  position:fixed;inset:0;background:rgba(20,24,38,0.45);display:none;
+  align-items:center;justify-content:center;padding:20px;z-index:100;
+  animation:fadeIn 0.18s ease;
+}
+.modal-overlay.show{display:flex;}
+@keyframes fadeIn{from{opacity:0;}to{opacity:1;}}
+.modal{
+  background:var(--surface);border-radius:var(--radius-lg);box-shadow:var(--shadow-lg);
+  width:100%;max-width:440px;padding:24px;animation:modalIn 0.2s ease;
+}
+@keyframes modalIn{from{opacity:0;transform:translateY(10px) scale(0.98);}to{opacity:1;transform:translateY(0) scale(1);}}
+.modal h2{margin:0 0 16px;font-size:1.2rem;font-weight:800;letter-spacing:-0.01em;}
+.modal.confirm-modal{max-width:380px;}
+.modal.confirm-modal p{color:var(--ink-soft);margin:0 0 20px;font-size:0.92rem;}
+
+.field{margin-bottom:14px;}
+.field label{display:block;font-size:0.78rem;font-weight:700;color:var(--ink-soft);margin-bottom:6px;}
+.field input[type="text"],.field select,.field textarea{
+  width:100%;padding:10px 12px;border:1px solid var(--border);border-radius:var(--radius-sm);
+  background:var(--surface-soft);transition:border-color 0.15s ease,background 0.15s ease;
+}
+.field input:focus,.field select:focus,.field textarea:focus{border-color:var(--primary);background:var(--surface);}
+.field textarea{resize:vertical;min-height:60px;}
+.field.error input,.field.error select{border-color:var(--danger);background:var(--danger-soft);}
+.field-error-msg{font-size:0.74rem;color:var(--danger);margin-top:4px;display:none;}
+.field.error .field-error-msg{display:block;}
+.checkbox-field{display:flex;align-items:center;gap:8px;}
+.checkbox-field input{width:16px;height:16px;}
+.checkbox-field label{margin:0;}
+
+.modal-actions{display:flex;justify-content:flex-end;gap:10px;margin-top:18px;}
+
+/* ---------- Toast ---------- */
+.toast-stack{position:fixed;bottom:20px;right:20px;display:flex;flex-direction:column;gap:8px;z-index:200;}
+.toast{
+  background:var(--ink);color:#fff;padding:11px 18px;border-radius:var(--radius-sm);font-size:0.85rem;
+  font-weight:600;box-shadow:var(--shadow-lg);animation:toastIn 0.22s ease, toastOut 0.25s ease 2.5s forwards;
+}
+.toast.success{background:var(--success);}
+.toast.danger{background:var(--danger);}
+@keyframes toastIn{from{opacity:0;transform:translateX(20px);}to{opacity:1;transform:translateX(0);}}
+@keyframes toastOut{to{opacity:0;transform:translateX(20px);}}
+
+/* ---------- Footer ---------- */
+.app-footer{text-align:center;color:var(--ink-faint);font-size:0.78rem;margin-top:36px;}
+
+/* ---------- Responsive ---------- */
+@media (max-width:860px){
+  .dashboard{grid-template-columns:repeat(2,1fr);}
+}
+@media (max-width:600px){
+  .dashboard{grid-template-columns:1fr 1fr;}
+  .stat-card .stat-value{font-size:1.6rem;}
+  .toolbar{flex-direction:column;align-items:stretch;}
+  .toolbar-left,.toolbar-right{justify-content:space-between;}
+  .search-box input{width:100%;max-width:none;}
+  .task-card{flex-wrap:wrap;}
+  .task-actions{margin-left:auto;}
+}
+@media (max-width:420px){
+  .dashboard{grid-template-columns:1fr 1fr;}
+  .app-header h1{font-size:1.6rem;}
+}
+</style>
+</head>
+<body>
+
+<!-- =========================================================================
+     HTML STRUCTURE
+     ========================================================================= -->
+<div class="wrap">
+
+  <!-- Header -->
+  <header class="app-header">
+    <div>
+      <p class="eyebrow">Personal Productivity</p>
+      <h1>Task Tracker</h1>
+      <p>Plan it, do it, check it off.</p>
+    </div>
+  </header>
+
+  <!-- Stats dashboard -->
+  <section class="dashboard" aria-label="Task statistics">
+    <div class="stat-card total">
+      <span class="stat-label">Total Tasks</span>
+      <span class="stat-value" id="statTotal">0</span>
+    </div>
+    <div class="stat-card completed">
+      <span class="stat-label">Completed</span>
+      <span class="stat-value" id="statCompleted">0</span>
+    </div>
+    <div class="stat-card pending">
+      <span class="stat-label">Pending</span>
+      <span class="stat-value" id="statPending">0</span>
+    </div>
+    <div class="stat-card ring-card">
+      <div class="ring-wrap">
+        <svg viewBox="0 0 64 64">
+          <circle class="ring-track" cx="32" cy="32" r="26"></circle>
+          <circle class="ring-progress" id="ringProgress" cx="32" cy="32" r="26" stroke-dasharray="163.4" stroke-dashoffset="163.4"></circle>
+        </svg>
+        <div class="ring-text" id="ringText">0%</div>
+      </div>
+      <div>
+        <span class="stat-label">Completion</span>
+        <div style="font-size:0.78rem;color:var(--ink-soft);margin-top:2px;">of all tasks</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Toolbar -->
+  <section class="toolbar">
+    <div class="toolbar-left">
+      <div class="search-box">
+        <input type="text" id="searchInput" placeholder="Search category, task, remarks…" aria-label="Search tasks">
+      </div>
+      <select class="control" id="sortSelect" aria-label="Sort tasks">
+        <option value="order">Sort: Creation order</option>
+        <option value="category">Sort: Category</option>
+        <option value="status">Sort: Status</option>
+      </select>
+      <div class="pill-group" id="filterGroup">
+        <button type="button" class="active" data-filter="all">All</button>
+        <button type="button" data-filter="completed">Completed</button>
+        <button type="button" data-filter="pending">Pending</button>
+      </div>
+    </div>
+    <div class="toolbar-right">
+      <button type="button" class="btn btn-primary" id="addTaskBtn">+ Add Task</button>
+      <button type="button" class="btn btn-ghost" id="exportBtn">Export</button>
+      <label class="btn btn-ghost file-label">
+        Import
+        <input type="file" id="importInput" accept="application/json,.json">
+      </label>
+      <button type="button" class="btn btn-danger-ghost" id="resetBtn">Reset Data</button>
+    </div>
+  </section>
+
+  <!-- Tabs -->
+  <nav class="tabs" id="tabNav" aria-label="Task type tabs">
+    <button type="button" class="tab-btn active" data-type="DAILY">Daily <span class="count" id="countDaily">0</span></button>
+    <button type="button" class="tab-btn" data-type="WEEKLY">Weekly <span class="count" id="countWeekly">0</span></button>
+    <button type="button" class="tab-btn" data-type="MONTHLY">Monthly <span class="count" id="countMonthly">0</span></button>
+  </nav>
+
+  <!-- Task list -->
+  <main>
+    <div class="task-list" id="taskList"></div>
+  </main>
+
+  <footer class="app-footer">Data is stored locally in your browser. Nothing leaves your device.</footer>
+</div>
+
+<!-- Add / Edit Task Modal -->
+<div class="modal-overlay" id="taskModalOverlay">
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="taskModalTitle">
+    <h2 id="taskModalTitle">Add Task</h2>
+    <form id="taskForm" novalidate>
+      <input type="hidden" id="taskSno">
+      <div class="field" id="fieldCategory">
+        <label for="inputCategory">Category</label>
+        <input type="text" id="inputCategory" maxlength="60" placeholder="e.g. Health, Work, Study">
+        <div class="field-error-msg">Category is required.</div>
+      </div>
+      <div class="field" id="fieldTask">
+        <label for="inputTask">Task</label>
+        <input type="text" id="inputTask" maxlength="140" placeholder="What needs to be done?">
+        <div class="field-error-msg">Task is required.</div>
+      </div>
+      <div class="field">
+        <label for="inputType">Type</label>
+        <select id="inputType">
+          <option value="DAILY">Daily</option>
+          <option value="WEEKLY">Weekly</option>
+          <option value="MONTHLY">Monthly</option>
+        </select>
+      </div>
+      <div class="field">
+        <label for="inputRemarks">Remarks</label>
+        <textarea id="inputRemarks" maxlength="200" placeholder="Optional notes…"></textarea>
+      </div>
+      <div class="field checkbox-field" id="fieldStatus" style="display:none;">
+        <input type="checkbox" id="inputStatus">
+        <label for="inputStatus">Mark as completed</label>
+      </div>
+      <div class="modal-actions">
+        <button type="button" class="btn btn-ghost" id="taskCancelBtn">Cancel</button>
+        <button type="submit" class="btn btn-primary" id="taskSaveBtn">Save Task</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Confirm Modal (delete / reset) -->
+<div class="modal-overlay" id="confirmModalOverlay">
+  <div class="modal confirm-modal" role="alertdialog" aria-modal="true" aria-labelledby="confirmTitle">
+    <h2 id="confirmTitle">Are you sure?</h2>
+    <p id="confirmMessage">This action cannot be undone.</p>
+    <div class="modal-actions">
+      <button type="button" class="btn btn-ghost" id="confirmCancelBtn">Cancel</button>
+      <button type="button" class="btn btn-danger-ghost" id="confirmOkBtn">Confirm</button>
+    </div>
+  </div>
+</div>
+
+<!-- Toast notifications -->
+<div class="toast-stack" id="toastStack"></div>
+
+<script>
+/* =========================================================================
+   JAVASCRIPT LOGIC
+   ========================================================================= */
+
+(function(){
+  "use strict";
+
+  /* ---------------------------------------------------------------------
+     1. STATE
+     --------------------------------------------------------------------- */
+  const STORAGE_KEY = "personalTaskTracker.tasks";
+  const VALID_TYPES = ["DAILY","WEEKLY","MONTHLY"];
+
+  let tasks = [];              // array of task objects
+  let currentTab = "DAILY";    // active tab/type
+  let currentFilter = "all";   // all | completed | pending
+  let currentSort = "order";   // order | category | status
+  let searchQuery = "";
+  let pendingDeleteSno = null; // sno awaiting delete confirmation
+  let pendingResetAction = false;
+
+  /* ---------------------------------------------------------------------
+     2. LOCAL STORAGE PERSISTENCE
+     --------------------------------------------------------------------- */
+  function loadTasks(){
+    try{
+      const raw = localStorage.getItem(STORAGE_KEY);
+      tasks = raw ? JSON.parse(raw) : [];
+      if(!Array.isArray(tasks)) tasks = [];
+    }catch(e){
+      console.error("Failed to load tasks from Local Storage:", e);
+      tasks = [];
+    }
+  }
+
+  function saveTasks(){
+    try{
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(tasks));
+    }catch(e){
+      console.error("Failed to save tasks to Local Storage:", e);
+      showToast("Could not save data to Local Storage.", "danger");
+    }
+  }
+
+  function getNextSno(){
+    if(tasks.length === 0) return 1;
+    return Math.max.apply(null, tasks.map(function(t){ return t.sno; })) + 1;
+  }
+
+  /* ---------------------------------------------------------------------
+     3. UTILITIES
+     --------------------------------------------------------------------- */
+  function escapeHtml(str){
+    const div = document.createElement("div");
+    div.textContent = str == null ? "" : String(str);
+    return div.innerHTML;
+  }
+
+  function showToast(message, type){
+    const stack = document.getElementById("toastStack");
+    const toast = document.createElement("div");
+    toast.className = "toast" + (type ? " " + type : "");
+    toast.textContent = message;
+    stack.appendChild(toast);
+    setTimeout(function(){ toast.remove(); }, 2900);
+  }
+
+  function findTaskBySno(sno){
+    return tasks.find(function(t){ return t.sno === sno; });
+  }
+
+  /* ---------------------------------------------------------------------
+     4. RENDERING — STATS DASHBOARD
+     --------------------------------------------------------------------- */
+  function renderDashboard(){
+    const total = tasks.length;
+    const completed = tasks.filter(function(t){ return t.status === true; }).length;
+    const pending = total - completed;
+    const pct = total === 0 ? 0 : Math.round((completed / total) * 100);
+
+    document.getElementById("statTotal").textContent = total;
+    document.getElementById("statCompleted").textContent = completed;
+    document.getElementById("statPending").textContent = pending;
+    document.getElementById("ringText").textContent = pct + "%";
+
+    const ring = document.getElementById("ringProgress");
+    const circumference = 163.4; // 2 * PI * r(26)
+    const offset = circumference - (pct / 100) * circumference;
+    ring.style.strokeDashoffset = offset;
+
+    // Tab counts
+    document.getElementById("countDaily").textContent = tasks.filter(function(t){ return t.type === "DAILY"; }).length;
+    document.getElementById("countWeekly").textContent = tasks.filter(function(t){ return t.type === "WEEKLY"; }).length;
+    document.getElementById("countMonthly").textContent = tasks.filter(function(t){ return t.type === "MONTHLY"; }).length;
+  }
+
+  /* ---------------------------------------------------------------------
+     5. RENDERING — TASK LIST
+     --------------------------------------------------------------------- */
+  function getVisibleTasks(){
+    let list = tasks.filter(function(t){ return t.type === currentTab; });
+
+    // Filter by status
+    if(currentFilter === "completed"){
+      list = list.filter(function(t){ return t.status === true; });
+    }else if(currentFilter === "pending"){
+      list = list.filter(function(t){ return t.status === false; });
+    }
+
+    // Search across category, task, remarks
+    if(searchQuery.trim() !== ""){
+      const q = searchQuery.trim().toLowerCase();
+      list = list.filter(function(t){
+        return (t.category && t.category.toLowerCase().indexOf(q) !== -1) ||
+               (t.task && t.task.toLowerCase().indexOf(q) !== -1) ||
+               (t.remarks && t.remarks.toLowerCase().indexOf(q) !== -1);
+      });
+    }
+
+    // Sort
+    if(currentSort === "category"){
+      list = list.slice().sort(function(a,b){ return a.category.localeCompare(b.category); });
+    }else if(currentSort === "status"){
+      list = list.slice().sort(function(a,b){ return (a.status === b.status) ? 0 : (a.status ? 1 : -1); });
+    }else{
+      list = list.slice().sort(function(a,b){ return a.sno - b.sno; });
+    }
+
+    return list;
+  }
+
+  function renderTaskList(){
+    const container = document.getElementById("taskList");
+    const visible = getVisibleTasks();
+
+    if(visible.length === 0){
+      const tabLabel = currentTab.charAt(0) + currentTab.slice(1).toLowerCase();
+      container.innerHTML =
+        '<div class="empty-state">' +
+          '<div class="empty-icon">📋</div>' +
+          '<h3>No ' + tabLabel.toLowerCase() + ' tasks here yet</h3>' +
+          '<p>Add a task or adjust your search and filters to see results.</p>' +
+        '</div>';
+      return;
+    }
+
+    container.innerHTML = visible.map(function(t){
+      const statusClass = t.status ? "completed" : "pending";
+      const statusLabel = t.status ? "Completed" : "Pending";
+      return (
+        '<div class="task-card ' + statusClass + '" data-sno="' + t.sno + '">' +
+          '<button type="button" class="task-check" data-action="toggle" data-sno="' + t.sno + '" aria-label="Toggle completed">' +
+            '<svg viewBox="0 0 24 24" fill="none"><path d="M5 13l4 4L19 7" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg>' +
+          '</button>' +
+          '<div class="task-body">' +
+            '<div class="task-top-row">' +
+              '<span class="task-category">' + escapeHtml(t.category) + '</span>' +
+              '<span class="task-sno">#' + t.sno + '</span>' +
+            '</div>' +
+            '<div class="task-title">' + escapeHtml(t.task) + '</div>' +
+            (t.remarks ? '<div class="task-remarks">' + escapeHtml(t.remarks) + '</div>' : '') +
+          '</div>' +
+          '<span class="badge ' + statusClass + '">' + statusLabel + '</span>' +
+          '<div class="task-actions">' +
+            '<button type="button" class="icon-btn" data-action="edit" data-sno="' + t.sno + '" aria-label="Edit task">' +
+              '<svg viewBox="0 0 24 24" fill="none"><path d="M12 20h9" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>' +
+            '</button>' +
+            '<button type="button" class="icon-btn danger" data-action="delete" data-sno="' + t.sno + '" aria-label="Delete task">' +
+              '<svg viewBox="0 0 24 24" fill="none"><path d="M3 6h18" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2m3 0-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>' +
+            '</button>' +
+          '</div>' +
+        '</div>'
+      );
+    }).join("");
+  }
+
+  function renderAll(){
+    renderDashboard();
+    renderTaskList();
+  }
+
+  /* ---------------------------------------------------------------------
+     6. TASK ACTIONS — ADD / EDIT
+     --------------------------------------------------------------------- */
+  function openTaskModal(sno){
+    const overlay = document.getElementById("taskModalOverlay");
+    const form = document.getElementById("taskForm");
+    form.reset();
+    clearFieldErrors();
+
+    if(sno){
+      const t = findTaskBySno(sno);
+      if(!t) return;
+      document.getElementById("taskModalTitle").textContent = "Edit Task";
+      document.getElementById("taskSno").value = t.sno;
+      document.getElementById("inputCategory").value = t.category;
+      document.getElementById("inputTask").value = t.task;
+      document.getElementById("inputType").value = t.type;
+      document.getElementById("inputRemarks").value = t.remarks || "";
+      document.getElementById("inputStatus").checked = !!t.status;
+      document.getElementById("fieldStatus").style.display = "flex";
+    }else{
+      document.getElementById("taskModalTitle").textContent = "Add Task";
+      document.getElementById("taskSno").value = "";
+      document.getElementById("inputType").value = currentTab;
+      document.getElementById("fieldStatus").style.display = "none";
+    }
+
+    overlay.classList.add("show");
+    document.getElementById("inputCategory").focus();
+  }
+
+  function closeTaskModal(){
+    document.getElementById("taskModalOverlay").classList.remove("show");
+  }
+
+  function clearFieldErrors(){
+    document.getElementById("fieldCategory").classList.remove("error");
+    document.getElementById("fieldTask").classList.remove("error");
+  }
+
+  function validateTaskForm(category, task){
+    let valid = true;
+    clearFieldErrors();
+    if(category.trim() === ""){
+      document.getElementById("fieldCategory").classList.add("error");
+      valid = false;
+    }
+    if(task.trim() === ""){
+      document.getElementById("fieldTask").classList.add("error");
+      valid = false;
+    }
+    return valid;
+  }
+
+  function handleTaskFormSubmit(e){
+    e.preventDefault();
+    const snoVal = document.getElementById("taskSno").value;
+    const category = document.getElementById("inputCategory").value;
+    const task = document.getElementById("inputTask").value;
+    const type = document.getElementById("inputType").value;
+    const remarks = document.getElementById("inputRemarks").value;
+
+    if(!validateTaskForm(category, task)) return;
+
+    const safeType = VALID_TYPES.indexOf(type) !== -1 ? type : "DAILY";
+
+    if(snoVal){
+      // Edit existing task
+      const sno = parseInt(snoVal, 10);
+      const t = findTaskBySno(sno);
+      if(t){
+        t.category = category.trim();
+        t.task = task.trim();
+        t.type = safeType;
+        t.remarks = remarks.trim();
+        t.status = document.getElementById("inputStatus").checked;
+        showToast("Task updated.", "success");
+      }
+    }else{
+      // Add new task
+      tasks.push({
+        sno: getNextSno(),
+        category: category.trim(),
+        task: task.trim(),
+        type: safeType,
+        status: false,
+        remarks: remarks.trim()
+      });
+      showToast("Task added.", "success");
+    }
+
+    saveTasks();
+    closeTaskModal();
+    if(safeType !== currentTab) switchTab(safeType); else renderAll();
+  }
+
+  function toggleTaskStatus(sno){
+    const t = findTaskBySno(sno);
+    if(!t) return;
+    t.status = !t.status;
+    saveTasks();
+    renderAll();
+  }
+
+  /* ---------------------------------------------------------------------
+     7. TASK ACTIONS — DELETE / RESET (via confirm modal)
+     --------------------------------------------------------------------- */
+  function openConfirmModal(message, onConfirm){
+    document.getElementById("confirmMessage").textContent = message;
+    document.getElementById("confirmModalOverlay").classList.add("show");
+    document.getElementById("confirmOkBtn").onclick = function(){
+      onConfirm();
+      closeConfirmModal();
+    };
+  }
+
+  function closeConfirmModal(){
+    document.getElementById("confirmModalOverlay").classList.remove("show");
+  }
+
+  function requestDeleteTask(sno){
+    openConfirmModal("Delete this task? This action cannot be undone.", function(){
+      tasks = tasks.filter(function(t){ return t.sno !== sno; });
+      saveTasks();
+      renderAll();
+      showToast("Task deleted.", "danger");
+    });
+  }
+
+  function requestResetAllData(){
+    openConfirmModal("Clear ALL tasks and reset Local Storage? This action cannot be undone.", function(){
+      tasks = [];
+      saveTasks();
+      renderAll();
+      showToast("All data cleared.", "danger");
+    });
+  }
+
+  /* ---------------------------------------------------------------------
+     8. EXPORT / IMPORT
+     --------------------------------------------------------------------- */
+  function exportTasks(){
+    const dataStr = JSON.stringify(tasks, null, 2);
+    const blob = new Blob([dataStr], {type:"application/json"});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    const date = new Date().toISOString().slice(0,10);
+    a.href = url;
+    a.download = "personal-tasks-" + date + ".json";
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    showToast("Tasks exported.", "success");
+  }
+
+  function importTasksFromFile(file){
+    const reader = new FileReader();
+    reader.onload = function(e){
+      try{
+        const imported = JSON.parse(e.target.result);
+        if(!Array.isArray(imported)) throw new Error("File does not contain a task list.");
+
+        let nextSno = getNextSno();
+        let importedCount = 0;
+
+        imported.forEach(function(item){
+          if(!item || typeof item !== "object") return;
+          const category = typeof item.category === "string" ? item.category.trim() : "";
+          const task = typeof item.task === "string" ? item.task.trim() : "";
+          if(category === "" || task === "") return; // skip invalid entries
+
+          const type = VALID_TYPES.indexOf(item.type) !== -1 ? item.type : "DAILY";
+          const status = item.status === true;
+          const remarks = typeof item.remarks === "string" ? item.remarks.trim() : "";
+
+          tasks.push({
+            sno: nextSno++,
+            category: category,
+            task: task,
+            type: type,
+            status: status,
+            remarks: remarks
+          });
+          importedCount++;
+        });
+
+        saveTasks();
+        renderAll();
+        showToast(importedCount + " task(s) imported.", "success");
+      }catch(err){
+        console.error("Import failed:", err);
+        showToast("Import failed: invalid JSON file.", "danger");
+      }
+    };
+    reader.readAsText(file);
+  }
+
+  /* ---------------------------------------------------------------------
+     9. TABS / FILTERS / SORT / SEARCH — EVENT WIRING
+     --------------------------------------------------------------------- */
+  function switchTab(type){
+    currentTab = type;
+    document.querySelectorAll(".tab-btn").forEach(function(btn){
+      btn.classList.toggle("active", btn.dataset.type === type);
+    });
+    renderTaskList();
+  }
+
+  function setFilter(filter){
+    currentFilter = filter;
+    document.querySelectorAll("#filterGroup button").forEach(function(btn){
+      btn.classList.toggle("active", btn.dataset.filter === filter);
+    });
+    renderTaskList();
+  }
+
+  function wireEvents(){
+    // Tabs
+    document.getElementById("tabNav").addEventListener("click", function(e){
+      const btn = e.target.closest(".tab-btn");
+      if(btn) switchTab(btn.dataset.type);
+    });
+
+    // Filters
+    document.getElementById("filterGroup").addEventListener("click", function(e){
+      const btn = e.target.closest("button");
+      if(btn) setFilter(btn.dataset.filter);
+    });
+
+    // Sort
+    document.getElementById("sortSelect").addEventListener("change", function(e){
+      currentSort = e.target.value;
+      renderTaskList();
+    });
+
+    // Search
+    document.getElementById("searchInput").addEventListener("input", function(e){
+      searchQuery = e.target.value;
+      renderTaskList();
+    });
+
+    // Task list — delegated clicks for toggle / edit / delete
+    document.getElementById("taskList").addEventListener("click", function(e){
+      const actionEl = e.target.closest("[data-action]");
+      if(!actionEl) return;
+      const sno = parseInt(actionEl.dataset.sno, 10);
+      const action = actionEl.dataset.action;
+      if(action === "toggle") toggleTaskStatus(sno);
+      else if(action === "edit") openTaskModal(sno);
+      else if(action === "delete") requestDeleteTask(sno);
+    });
+
+    // Add task button
+    document.getElementById("addTaskBtn").addEventListener("click", function(){ openTaskModal(null); });
+
+    // Task modal form
+    document.getElementById("taskForm").addEventListener("submit", handleTaskFormSubmit);
+    document.getElementById("taskCancelBtn").addEventListener("click", closeTaskModal);
+    document.getElementById("taskModalOverlay").addEventListener("click", function(e){
+      if(e.target === this) closeTaskModal();
+    });
+
+    // Confirm modal
+    document.getElementById("confirmCancelBtn").addEventListener("click", closeConfirmModal);
+    document.getElementById("confirmModalOverlay").addEventListener("click", function(e){
+      if(e.target === this) closeConfirmModal();
+    });
+
+    // Escape key closes any open modal
+    document.addEventListener("keydown", function(e){
+      if(e.key === "Escape"){
+        closeTaskModal();
+        closeConfirmModal();
+      }
+    });
+
+    // Export / Import / Reset
+    document.getElementById("exportBtn").addEventListener("click", exportTasks);
+    document.getElementById("importInput").addEventListener("change", function(e){
+      const file = e.target.files[0];
+      if(file) importTasksFromFile(file);
+      e.target.value = ""; // allow re-importing the same file later
+    });
+    document.getElementById("resetBtn").addEventListener("click", requestResetAllData);
+  }
+
+  /* ---------------------------------------------------------------------
+     10. INIT
+     --------------------------------------------------------------------- */
+  function init(){
+    loadTasks();
+    wireEvents();
+    switchTab("DAILY");
+    renderAll();
+  }
+
+  document.addEventListener("DOMContentLoaded", init);
+})();
+</script>
+</body>
+</html>
