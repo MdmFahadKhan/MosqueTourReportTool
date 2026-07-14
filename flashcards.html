@@ -3,502 +3,758 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Prompt Composer — AIM Builder</title>
+<title>Recall — Flashcard Learning</title>
 <style>
   :root{
-    --bg:#0c2426;
-    --panel:#123b3d;
-    --panel-2:#0f3234;
-    --border:#1e5254;
-    --gold:#d4af37;
-    --gold-dim:#a98a2c;
-    --text:#eaf2f1;
-    --text-dim:#9fc0bd;
-    --danger:#c0524a;
-    --success:#4a9e7a;
+    --bg: #0b2426;
+    --bg-alt: #0e2c2e;
+    --surface: #123638;
+    --surface-hi: #17403f;
+    --edge: #1f4d4a;
+    --gold: #c9a24b;
+    --gold-bright: #e8c873;
+    --text: #eef1ea;
+    --muted: #9db3ae;
+    --good: #7fae7a;
+    --bad: #c07361;
+    --radius: 10px;
   }
-  *{box-sizing:border-box;}
+  *{ box-sizing: border-box; }
+  html,body{ height:100%; }
   body{
     margin:0;
-    font-family:'Segoe UI', system-ui, -apple-system, sans-serif;
-    background:linear-gradient(160deg, var(--bg), #081a1b);
-    color:var(--text);
+    background:
+      radial-gradient(1200px 600px at 10% -10%, #103534 0%, transparent 60%),
+      radial-gradient(1000px 700px at 110% 10%, #0f2f2f 0%, transparent 55%),
+      var(--bg);
+    color: var(--text);
+    font-family: Georgia, 'Times New Roman', serif;
     min-height:100vh;
-    padding:24px 16px 60px;
   }
-  .wrap{max-width:1100px;margin:0 auto;}
-  header{text-align:center;margin-bottom:28px;}
-  header h1{
-    font-size:1.8rem;margin:0 0 4px;color:var(--gold);
-    letter-spacing:0.5px;
-  }
-  header p{color:var(--text-dim);margin:0;font-size:0.95rem;}
+  .ui{ font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif; }
+  h1,h2,h3{ font-family: Georgia, 'Times New Roman', serif; font-weight: 400; letter-spacing: .3px; margin:0; }
+  a{ color: var(--gold-bright); }
+  button{ font-family: inherit; cursor:pointer; }
+  ::selection{ background: var(--gold); color:#0b2426; }
 
-  .grid{display:grid;grid-template-columns:1.3fr 1fr;gap:20px;}
-  @media (max-width:860px){.grid{grid-template-columns:1fr;}}
+  .app{ max-width: 920px; margin: 0 auto; padding: 28px 20px 80px; }
 
-  .card{
-    background:var(--panel);
-    border:1px solid var(--border);
-    border-radius:12px;
-    padding:20px;
-    margin-bottom:20px;
-  }
-  .card h2{
-    margin:0 0 16px;font-size:1.05rem;color:var(--gold);
-    border-bottom:1px solid var(--border);padding-bottom:10px;
-  }
-  label{display:block;font-size:0.85rem;color:var(--text-dim);margin-bottom:6px;margin-top:14px;}
-  label:first-of-type{margin-top:0;}
-  input[type=text], textarea{
-    width:100%;padding:10px 12px;background:var(--panel-2);
-    border:1px solid var(--border);border-radius:8px;color:var(--text);
-    font-family:inherit;font-size:0.92rem;resize:vertical;
-  }
-  input[type=text]:focus, textarea:focus{
-    outline:none;border-color:var(--gold-dim);
-  }
-  textarea{min-height:70px;line-height:1.4;}
+  /* Header */
+  .topbar{ display:flex; align-items:baseline; justify-content:space-between; margin-bottom: 30px; border-bottom: 1px solid var(--edge); padding-bottom: 18px; }
+  .brand{ display:flex; align-items:baseline; gap:10px; }
+  .brand .mark{ color: var(--gold-bright); font-size: 26px; }
+  .brand h1{ font-size: 24px; letter-spacing: .5px; }
+  .brand small{ color: var(--muted); font-size: 12px; font-family: -apple-system, sans-serif; letter-spacing: 1px; text-transform: uppercase; }
+  .top-actions{ display:flex; gap:10px; }
+  .top-actions button{ font-size: 12.5px; }
 
-  .role-wrap{position:relative;}
-  .autocomplete-list{
-    position:absolute;top:100%;left:0;right:0;
-    background:var(--panel-2);border:1px solid var(--border);
-    border-top:none;border-radius:0 0 8px 8px;
-    max-height:180px;overflow-y:auto;z-index:20;display:none;
-  }
-  .autocomplete-list div{
-    padding:8px 12px;cursor:pointer;font-size:0.88rem;color:var(--text);
-  }
-  .autocomplete-list div:hover, .autocomplete-list div.active{
-    background:var(--border);
-  }
+  /* Buttons */
+  .btn{ ui-font: 1; padding: 9px 16px; border-radius: 999px; border: 1px solid var(--edge); background: var(--surface); color: var(--text); font-family: -apple-system, sans-serif; font-size: 13px; transition: .15s ease; }
+  .btn:hover{ border-color: var(--gold); color: var(--gold-bright); }
+  .btn-gold{ background: linear-gradient(180deg, var(--gold-bright), var(--gold)); color: #0b2426; border: none; font-weight: 600; }
+  .btn-gold:hover{ filter: brightness(1.08); color:#0b2426; }
+  .btn-ghost{ background: transparent; }
+  .btn-danger:hover{ border-color: var(--bad); color: var(--bad); }
+  .btn:disabled{ opacity:.4; cursor:not-allowed; }
 
-  .btn-row{display:flex;gap:10px;margin-top:18px;flex-wrap:wrap;}
-  button{
-    border:none;border-radius:8px;padding:10px 16px;font-size:0.88rem;
-    cursor:pointer;font-weight:600;transition:transform .12s, opacity .12s;
-  }
-  button:active{transform:scale(0.97);}
-  .btn-primary{background:var(--gold);color:#0c2426;}
-  .btn-primary:hover{opacity:0.9;}
-  .btn-secondary{background:transparent;border:1px solid var(--border);color:var(--text);}
-  .btn-secondary:hover{border-color:var(--gold-dim);color:var(--gold);}
-  .btn-danger{background:transparent;border:1px solid var(--danger);color:var(--danger);}
-  .btn-danger:hover{background:var(--danger);color:var(--text);}
+  /* Deck grid */
+  .deck-grid{ display:grid; grid-template-columns: repeat(auto-fill, minmax(230px,1fr)); gap: 16px; margin-top: 10px; }
+  .deck-card{ background: var(--surface); border: 1px solid var(--edge); border-radius: var(--radius); padding: 18px 18px 16px; position: relative; overflow:hidden; transition: .15s ease; }
+  .deck-card::before{ content:""; position:absolute; top:0; left:0; right:0; height:3px; background: linear-gradient(90deg, var(--gold), transparent); opacity:.7; }
+  .deck-card:hover{ border-color: var(--gold); transform: translateY(-2px); }
+  .deck-card h3{ font-size: 18px; margin-bottom: 6px; }
+  .deck-card .count{ color: var(--muted); font-size: 12.5px; font-family: -apple-system, sans-serif; margin-bottom: 14px; }
+  .deck-card .stats{ display:flex; gap:14px; font-size: 12px; color: var(--muted); font-family: -apple-system, sans-serif; margin-bottom: 14px; }
+  .deck-card .stats b{ color: var(--gold-bright); font-weight:600; }
+  .deck-actions{ display:flex; gap:8px; flex-wrap: wrap; }
+  .deck-actions .btn{ padding: 7px 12px; font-size: 12px; }
 
-  .list-item{
-    background:var(--panel-2);border:1px solid var(--border);
-    border-radius:8px;padding:10px 12px;margin-bottom:8px;
-    cursor:pointer;display:flex;justify-content:space-between;align-items:center;
-    gap:8px;transition:border-color .15s;
-  }
-  .list-item:hover{border-color:var(--gold-dim);}
-  .list-item .meta{flex:1;min-width:0;}
-  .list-item .name{font-weight:600;font-size:0.9rem;color:var(--text);}
-  .list-item .preview{
-    font-size:0.78rem;color:var(--text-dim);white-space:nowrap;
-    overflow:hidden;text-overflow:ellipsis;margin-top:2px;
-  }
-  .list-item .del{
-    background:none;border:none;color:var(--text-dim);font-size:1rem;
-    padding:2px 6px;line-height:1;
-  }
-  .list-item .del:hover{color:var(--danger);}
-  .empty-note{color:var(--text-dim);font-size:0.85rem;font-style:italic;}
+  .empty{ text-align:center; padding: 60px 20px; color: var(--muted); font-family: -apple-system, sans-serif; }
+  .empty .mark{ font-size: 34px; display:block; margin-bottom: 10px; color: var(--gold); }
 
-  .toast{
-    position:fixed;bottom:24px;left:50%;transform:translateX(-50%);
-    background:var(--gold);color:#0c2426;padding:10px 20px;border-radius:8px;
-    font-size:0.88rem;font-weight:600;opacity:0;pointer-events:none;
-    transition:opacity .25s, transform .25s;z-index:100;
+  /* Deck editor */
+  .panel{ background: var(--bg-alt); border: 1px solid var(--edge); border-radius: var(--radius); padding: 22px; margin-top: 18px; }
+  .field{ margin-bottom: 14px; }
+  .field label{ display:block; font-size: 11.5px; text-transform: uppercase; letter-spacing: 1px; color: var(--muted); font-family: -apple-system, sans-serif; margin-bottom: 6px; }
+  .field input[type=text], .field textarea{
+    width:100%; background: var(--surface); border: 1px solid var(--edge); color: var(--text);
+    border-radius: 6px; padding: 10px 12px; font-family: -apple-system, sans-serif; font-size: 14px; resize: vertical;
   }
-  .toast.show{opacity:1;transform:translateX(-50%) translateY(-6px);}
+  .field input:focus, .field textarea:focus{ outline: none; border-color: var(--gold); }
+  .row2{ display:grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  @media (max-width: 600px){ .row2{ grid-template-columns: 1fr; } }
 
-  .badge{
-    font-size:0.72rem;background:var(--gold);color:#0c2426;
-    padding:2px 8px;border-radius:20px;font-weight:700;margin-left:8px;
+  .card-list{ margin-top: 16px; border-top: 1px solid var(--edge); padding-top: 14px; }
+  .card-row{ display:grid; grid-template-columns: 1fr 1fr auto; gap: 10px; align-items:start; padding: 10px 0; border-bottom: 1px dashed var(--edge); }
+  .card-row .txt{ font-family: -apple-system, sans-serif; font-size: 13.5px; color: var(--text); white-space: pre-wrap; }
+  .card-row .txt.q{ color: var(--gold-bright); }
+  .card-row .del{ background:none; border:none; color: var(--muted); font-size: 18px; line-height:1; }
+  .card-row .del:hover{ color: var(--bad); }
+  @media (max-width: 600px){ .card-row{ grid-template-columns: 1fr; } }
+
+  .panel-actions{ display:flex; justify-content: space-between; margin-top: 18px; flex-wrap: wrap; gap: 10px; }
+
+  /* Study mode */
+  .study-head{ display:flex; justify-content: space-between; align-items:center; margin-bottom: 18px; }
+  .study-head .progress-txt{ font-family: -apple-system, sans-serif; font-size: 12.5px; color: var(--muted); }
+  .progress-track{ height: 4px; background: var(--edge); border-radius: 4px; overflow:hidden; margin-bottom: 26px; }
+  .progress-fill{ height:100%; background: linear-gradient(90deg, var(--gold), var(--gold-bright)); transition: width .3s ease; }
+
+  .stage{ display:flex; justify-content:center; padding: 10px 0 30px; perspective: 1400px; }
+  .card3d{ width: 100%; max-width: 560px; height: 300px; position:relative; cursor:pointer; }
+  .card3d .inner{ position:absolute; inset:0; transition: transform .5s cubic-bezier(.4,.2,.2,1); transform-style: preserve-3d; }
+  .card3d.flipped .inner{ transform: rotateY(180deg); }
+  .face{
+    position:absolute; inset:0; backface-visibility:hidden; border-radius: 14px;
+    display:flex; align-items:center; justify-content:center; text-align:center; padding: 36px;
+    border: 1px solid var(--edge); background: var(--surface);
+    box-shadow: 0 12px 30px rgba(0,0,0,.35);
   }
+  .face::before{ content:""; position:absolute; top:10px; left:24px; right:24px; height:1px; background: repeating-linear-gradient(90deg, var(--edge) 0 8px, transparent 8px 16px); opacity:.6; }
+  .face .label{ position:absolute; top:14px; left:20px; font-family: -apple-system, sans-serif; font-size: 10.5px; letter-spacing: 1.5px; text-transform: uppercase; color: var(--gold); }
+  .face .txt{ font-size: 22px; line-height: 1.5; max-height: 100%; overflow:auto; }
+  .face.back{ transform: rotateY(180deg); background: var(--surface-hi); }
+  .card3d .hint{ position:absolute; bottom:12px; left:0; right:0; text-align:center; font-family:-apple-system, sans-serif; font-size:11px; color: var(--muted); }
+
+  .mark-row{ display:flex; justify-content:center; gap: 14px; margin-top: 8px; }
+  .mark-row button{ font-family: -apple-system, sans-serif; font-size: 14px; padding: 11px 22px; border-radius: 999px; border: 1px solid var(--edge); background: var(--surface); color: var(--text); }
+  .mark-row .btn-good:hover{ border-color: var(--good); color: var(--good); }
+  .mark-row .btn-bad:hover{ border-color: var(--bad); color: var(--bad); }
+
+  .mode-tabs{ display:flex; gap: 8px; margin-bottom: 4px; }
+  .mode-tabs button{ font-family:-apple-system, sans-serif; font-size: 12.5px; padding: 8px 14px; border-radius: 999px; border: 1px solid var(--edge); background: transparent; color: var(--muted); }
+  .mode-tabs button.active{ background: var(--surface); color: var(--gold-bright); border-color: var(--gold); }
+
+  /* Results */
+  .result-ring{ width: 160px; height: 160px; margin: 10px auto 20px; position:relative; }
+  .result-ring svg{ transform: rotate(-90deg); }
+  .result-ring .pct{ position:absolute; inset:0; display:flex; align-items:center; justify-content:center; font-size: 32px; color: var(--gold-bright); font-family: Georgia, serif; }
+  .result-summary{ text-align:center; font-family:-apple-system, sans-serif; color: var(--muted); margin-bottom: 22px; }
+  .miss-list{ max-width: 520px; margin: 0 auto; }
+  .miss-item{ background: var(--surface); border:1px solid var(--edge); border-radius: 8px; padding: 12px 14px; margin-bottom: 8px; font-family: -apple-system, sans-serif; font-size: 13.5px; }
+  .miss-item .q{ color: var(--gold-bright); margin-bottom: 4px; }
+  .miss-item .a{ color: var(--muted); }
+
+  .center-actions{ display:flex; justify-content:center; gap: 12px; margin-top: 22px; }
+
+  .toast{ position: fixed; bottom: 22px; left: 50%; transform: translateX(-50%); background: var(--surface-hi); border: 1px solid var(--gold); color: var(--gold-bright); padding: 10px 18px; border-radius: 999px; font-family: -apple-system, sans-serif; font-size: 13px; opacity:0; pointer-events:none; transition: opacity .25s ease, transform .25s ease; z-index: 50; }
+  .toast.show{ opacity: 1; transform: translateX(-50%) translateY(-6px); }
+
+  .hidden{ display:none !important; }
+  .muted{ color: var(--muted); font-family: -apple-system, sans-serif; font-size: 13px; }
+  .backlink{ background:none; border:none; color: var(--muted); font-family: -apple-system, sans-serif; font-size: 13px; margin-bottom: 14px; padding:0; }
+  .backlink:hover{ color: var(--gold-bright); }
+  input[type=file]{ display:none; }
 </style>
 </head>
 <body>
-<div class="wrap">
-  <header>
-    <h1>Prompt Composer</h1>
-    <p>Build, save, and reuse Role · Context · Task · Format prompts</p>
-  </header>
+<div class="app">
 
-  <div class="grid">
-    <!-- LEFT: FORM -->
-    <div class="card">
-      <h2 id="formTitle">Compose Prompt</h2>
-
-      <label for="name">Prompt Name (for saving)</label>
-      <input type="text" id="name" placeholder="e.g. Oracle migration validation">
-
-      <label for="role">Role</label>
-      <div class="role-wrap">
-        <input type="text" id="role" autocomplete="off" placeholder="e.g. Senior Oracle PL/SQL Developer">
-        <div class="autocomplete-list" id="roleAC"></div>
-      </div>
-
-      <label for="context">Context</label>
-      <textarea id="context" placeholder="Stack, constraints, existing patterns Claude needs to know..."></textarea>
-
-      <label for="task">Task</label>
-      <textarea id="task" placeholder="The specific, bounded ask..."></textarea>
-
-      <label for="format">Format (optional)</label>
-      <textarea id="format" placeholder="e.g. Code block first, then numbered steps. No long paragraphs."></textarea>
-
-      <div class="btn-row">
-        <button class="btn-primary" onclick="savePrompt()">💾 Save</button>
-        <button class="btn-secondary" onclick="copyPrompt()">📋 Copy to Clipboard</button>
-        <button class="btn-secondary" onclick="newPrompt()">＋ New / Clear</button>
+  <div class="topbar">
+    <div class="brand">
+      <span class="mark">◆</span>
+      <div>
+        <h1>Recall</h1><br>
+        <small>Flashcard study &amp; self-test</small>
       </div>
     </div>
+    <div class="top-actions ui">
+      <button class="btn" id="btnImportCode">Paste a code</button>
+      <button class="btn" id="btnImportAll">Import file</button>
+      <button class="btn btn-gold" id="btnNewDeck">+ New deck</button>
+    </div>
+    <input type="file" id="fileImportAll" accept="application/json">
+  </div>
 
-    <!-- RIGHT: LISTS -->
-    <div>
-      <div class="card">
-        <h2>Saved Prompts <span class="badge" id="savedCount">0</span></h2>
-        <div id="savedList"></div>
+  <div id="homeImportCodeBox" class="panel hidden ui">
+    <div class="field">
+      <label>Paste a deck code someone sent you</label>
+      <textarea id="homeImportCodeInput" rows="3" placeholder="Paste the code here"></textarea>
+    </div>
+    <div class="panel-actions">
+      <button class="btn btn-gold" id="homeImportCodeGo">Add deck</button>
+      <button class="btn btn-ghost" id="homeImportCodeCancel">Cancel</button>
+    </div>
+  </div>
+
+  <!-- VIEW: Deck list -->
+  <div id="view-home">
+    <div id="deckGrid" class="deck-grid"></div>
+    <div id="emptyState" class="empty hidden">
+      <span class="mark">◆</span>
+      No decks yet. Create your first deck to start building flashcards.
+    </div>
+  </div>
+
+  <!-- VIEW: Deck editor -->
+  <div id="view-editor" class="hidden ui">
+    <button class="backlink" id="editorBack">← All decks</button>
+    <div class="panel">
+      <div class="field">
+        <label>Deck name</label>
+        <input type="text" id="deckNameInput" placeholder="e.g. Anatomy — Chapter 3">
+      </div>
+      <div class="row2">
+        <div class="field">
+          <label>Question</label>
+          <textarea id="newQ" rows="2" placeholder="Front of card"></textarea>
+        </div>
+        <div class="field">
+          <label>Answer</label>
+          <textarea id="newA" rows="2" placeholder="Back of card"></textarea>
+        </div>
+      </div>
+      <button class="btn btn-gold" id="btnAddCard">+ Add card</button>
+
+      <div class="card-list" id="cardList"></div>
+
+      <div class="panel-actions">
+        <div style="display:flex; gap:10px; flex-wrap:wrap;">
+          <button class="btn btn-gold" id="btnShareCode">Share code</button>
+          <button class="btn" id="btnPasteCode">Paste code into deck</button>
+          <button class="btn" id="btnExportDeck">Export file (.json)</button>
+          <button class="btn" id="btnImportDeck">Import file</button>
+          <input type="file" id="fileImportDeck" accept="application/json">
+        </div>
+        <button class="btn btn-danger" id="btnDeleteDeck">Delete deck</button>
       </div>
 
-      <div class="card">
-        <h2>Sample Prompts</h2>
-        <div id="sampleList"></div>
+      <div id="shareCodeBox" class="hidden" style="margin-top:16px; border-top:1px solid var(--edge); padding-top:16px;">
+        <div class="field">
+          <label>Deck code — copy this and send it any way you like (chat, email, WhatsApp)</label>
+          <textarea id="shareCodeOutput" rows="4" readonly></textarea>
+        </div>
+        <div style="display:flex; gap:10px; flex-wrap:wrap;">
+          <button class="btn btn-gold" id="btnCopyCode">Copy code</button>
+          <button class="btn hidden" id="btnNativeShare">Share via apps…</button>
+          <button class="btn btn-ghost" id="btnCloseShare">Close</button>
+        </div>
+      </div>
+
+      <div id="pasteCodeBox" class="hidden" style="margin-top:16px; border-top:1px solid var(--edge); padding-top:16px;">
+        <div class="field">
+          <label>Paste a deck code — cards will be added to this deck</label>
+          <textarea id="pasteCodeInput" rows="4" placeholder="Paste the code here"></textarea>
+        </div>
+        <div style="display:flex; gap:10px;">
+          <button class="btn btn-gold" id="btnPasteCodeGo">Add cards</button>
+          <button class="btn btn-ghost" id="btnClosePaste">Cancel</button>
+        </div>
       </div>
     </div>
   </div>
-</div>
 
+  <!-- VIEW: Study hub (choose mode) -->
+  <div id="view-hub" class="hidden ui">
+    <button class="backlink" id="hubBack">← All decks</button>
+    <h2 id="hubTitle" style="font-family: Georgia, serif; margin-bottom: 4px;"></h2>
+    <p class="muted" id="hubMeta" style="margin-bottom:20px;"></p>
+    <div class="deck-grid">
+      <div class="deck-card">
+        <h3>Learn</h3>
+        <div class="count">Flip freely, mark what you know</div>
+        <button class="btn btn-gold" id="startLearn">Start</button>
+      </div>
+      <div class="deck-card">
+        <h3>Revise</h3>
+        <div class="count">Shuffled, focuses on weak cards</div>
+        <button class="btn btn-gold" id="startRevise">Start</button>
+      </div>
+      <div class="deck-card">
+        <h3>Test</h3>
+        <div class="count">Self-graded, auto-scored at the end</div>
+        <button class="btn btn-gold" id="startTest">Start</button>
+      </div>
+    </div>
+    <div class="panel" id="scoreHistoryPanel">
+      <h3 style="font-size:15px; margin-bottom:10px;">Score history</h3>
+      <div id="scoreHistory" class="muted">No test attempts yet.</div>
+    </div>
+  </div>
+
+  <!-- VIEW: Study session -->
+  <div id="view-study" class="hidden ui">
+    <div class="study-head">
+      <button class="backlink" id="studyExit" style="margin-bottom:0;">← Exit</button>
+      <span class="progress-txt" id="progressTxt"></span>
+    </div>
+    <div class="progress-track"><div class="progress-fill" id="progressFill" style="width:0%"></div></div>
+
+    <div class="stage">
+      <div class="card3d" id="card3d">
+        <div class="inner">
+          <div class="face front">
+            <span class="label" id="faceLabelFront">Question</span>
+            <div class="txt" id="faceFront"></div>
+          </div>
+          <div class="face back">
+            <span class="label">Answer</span>
+            <div class="txt" id="faceBack"></div>
+          </div>
+        </div>
+        <div class="hint">Click card to flip</div>
+      </div>
+    </div>
+
+    <div class="mark-row" id="markRow">
+      <button class="btn-bad" id="markBad">Still learning</button>
+      <button class="btn-good" id="markGood">Got it</button>
+    </div>
+  </div>
+
+  <!-- VIEW: Results -->
+  <div id="view-results" class="hidden ui" style="text-align:center;">
+    <h2 style="margin-bottom: 4px;">Session complete</h2>
+    <div class="result-ring">
+      <svg width="160" height="160">
+        <circle cx="80" cy="80" r="70" stroke="#1f4d4a" stroke-width="10" fill="none"/>
+        <circle id="resultCircle" cx="80" cy="80" r="70" stroke="#e8c873" stroke-width="10" fill="none" stroke-linecap="round"/>
+      </svg>
+      <div class="pct" id="resultPct">0%</div>
+    </div>
+    <div class="result-summary" id="resultSummary"></div>
+    <div id="missSection" class="hidden">
+      <h3 style="font-size:14px; color: var(--muted); text-transform:uppercase; letter-spacing:1px; margin-bottom:12px;">Review missed cards</h3>
+      <div class="miss-list" id="missList"></div>
+    </div>
+    <div class="center-actions">
+      <button class="btn" id="resultBackHub">Back to deck</button>
+      <button class="btn btn-gold" id="resultRetry">Retry same mode</button>
+    </div>
+  </div>
+
+</div>
 <div class="toast" id="toast"></div>
 
 <script>
-const STORAGE_KEY = 'promptComposer_savedPrompts';
+(function(){
+  const STORAGE_KEY = 'recall_decks_v1';
+  let decks = load();
+  let currentDeckId = null;
+  let session = null; // active study session state
 
-const ROLE_SUGGESTIONS = [
-  "Senior .NET Developer",
-  "ASP.NET Core Architect",
-  "Oracle PL/SQL Expert",
-  "SQL Server DBA",
-  "Crystal Reports Developer",
-  "Kendo UI Specialist",
-  "Entity Framework Expert",
-  "Database Migration Specialist",
-  "Code Reviewer",
-  "QA / Test Engineer",
-  "Frontend Developer (jQuery/Bootstrap)",
-  "Solutions Architect",
-  "Technical Writer",
-  "DevOps / Azure DevOps Engineer",
-  "REST API Designer",
-  "Performance Optimization Specialist",
-  "Security / Code Audit Reviewer"
-];
-
-const SAMPLE_PROMPTS = [
-  {
-    name: "Oracle migration edge-case validation",
-    role: "Senior Oracle PL/SQL Developer",
-    context: "Migrating quotation records from a legacy schema into VENTURE.QUOTATION_HEADER using staging tables and PRAGMA AUTONOMOUS_TRANSACTION for error logging. Existing helper function: fn_calc_edate.",
-    task: "Walk through step by step what could go wrong migrating rows where AGREEMENT_ID is null but STATUS = 'APPROVED', then write the validation procedure.",
-    format: "SQL in a code block first, then a short explanation of the edge cases handled."
-  },
-  {
-    name: "Crystal Reports grouped report design",
-    role: "Crystal Reports + Oracle Developer",
-    context: "Existing grouped invoice report uses VENTURE.INVOICE_GROUP_PRINT_VIEW with subtotals per customer and a grand total footer. New report must match this style exactly.",
-    task: "Design an Oracle view and Crystal Reports group structure for overdue PDC collections, grouped by customer with subtotals by cheque status.",
-    format: "SQL first in a code block, then a numbered list of Crystal Reports design steps. No long paragraphs."
-  },
-  {
-    name: "Kendo Grid column batch generation",
-    role: "Kendo UI Specialist",
-    context: "Existing column style: { field: \"InvoiceNo\", title: \"Invoice #\", width: 120, filterable: true }",
-    task: "Generate columns in this exact style for: CustomerName, InvoiceDate, TotalAmount (currency), Status (dropdown filter).",
-    format: "JS array only, no explanation needed."
-  },
-  {
-    name: "EF Core soft-delete pattern",
-    role: "ASP.NET Core Architect",
-    context: "ASP.NET Core 8, EF Core, Identity already scaffolded. Document entity exists with standard CRUD.",
-    task: "Add a soft-delete pattern to the Document entity: IsDeleted flag, global query filter, and a repository method to restore soft-deleted records.",
-    format: "Code changes only, organized by file."
-  },
-  {
-    name: "Conventional commit message",
-    role: "Technical Writer",
-    context: "Change involves the bulk upload staging layer for ASoft AMS.",
-    task: "Write this as a Conventional Commits message describing the change.",
-    format: "One-line summary (max 72 chars), blank line, then 2-3 bullet points."
+  function load(){
+    try{ return JSON.parse(localStorage.getItem(STORAGE_KEY)) || []; }
+    catch(e){ return []; }
   }
-];
-
-let currentEditId = null; // null = new/unsaved, otherwise id of saved prompt being edited
-
-function loadSaved(){
-  try{
-    const raw = localStorage.getItem(STORAGE_KEY);
-    return raw ? JSON.parse(raw) : [];
-  }catch(e){
-    console.error('Failed to load saved prompts', e);
-    return [];
+  function save(){ localStorage.setItem(STORAGE_KEY, JSON.stringify(decks)); }
+  function uid(){ return Date.now().toString(36) + Math.random().toString(36).slice(2,7); }
+  function toast(msg){
+    const t = document.getElementById('toast');
+    t.textContent = msg; t.classList.add('show');
+    clearTimeout(t._h); t._h = setTimeout(()=>t.classList.remove('show'), 1800);
   }
-}
+  function esc(s){ return (s||'').replace(/[&<>]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;'}[c])); }
 
-function persistSaved(list){
-  try{
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(list));
-  }catch(e){
-    console.error('Failed to save', e);
-    showToast('⚠️ Could not save (storage error)');
+  function getDeck(id){ return decks.find(d=>d.id===id); }
+
+  // ---------- SHARE CODE (mobile-friendly, no file dialogs) ----------
+  function encodeDeckToCode(deck){
+    const payload = { n: deck.name, c: deck.cards.map(c=>[c.q, c.a]) };
+    return btoa(unescape(encodeURIComponent(JSON.stringify(payload))));
   }
-}
-
-function showToast(msg){
-  const t = document.getElementById('toast');
-  t.textContent = msg;
-  t.classList.add('show');
-  clearTimeout(t._timer);
-  t._timer = setTimeout(()=> t.classList.remove('show'), 2200);
-}
-
-function getFormValues(){
-  return {
-    name: document.getElementById('name').value.trim(),
-    role: document.getElementById('role').value.trim(),
-    context: document.getElementById('context').value.trim(),
-    task: document.getElementById('task').value.trim(),
-    format: document.getElementById('format').value.trim()
-  };
-}
-
-function setFormValues(p){
-  document.getElementById('name').value = p.name || '';
-  document.getElementById('role').value = p.role || '';
-  document.getElementById('context').value = p.context || '';
-  document.getElementById('task').value = p.task || '';
-  document.getElementById('format').value = p.format || '';
-}
-
-function newPrompt(){
-  currentEditId = null;
-  setFormValues({});
-  document.getElementById('formTitle').textContent = 'Compose Prompt';
-  document.getElementById('name').focus();
-}
-
-function savePrompt(){
-  const vals = getFormValues();
-  if(!vals.role || !vals.context || !vals.task){
-    showToast('⚠️ Role, Context, and Task are required');
-    return;
+  function decodeCodeToDeck(code){
+    const payload = JSON.parse(decodeURIComponent(escape(atob(code.trim()))));
+    return { name: payload.n || 'Shared deck', cards: (payload.c||[]).map(([q,a])=>({q,a})) };
   }
-  if(!vals.name){
-    vals.name = vals.task.slice(0, 40) + (vals.task.length > 40 ? '...' : '');
-  }
-
-  let list = loadSaved();
-
-  if(currentEditId){
-    const idx = list.findIndex(p => p.id === currentEditId);
-    if(idx > -1){
-      list[idx] = {...list[idx], ...vals, updatedAt: Date.now()};
-    }else{
-      currentEditId = null;
+  function copyText(text){
+    if(navigator.clipboard && window.isSecureContext){
+      navigator.clipboard.writeText(text).then(()=>toast('Copied — now paste it anywhere')).catch(()=>fallbackCopy(text));
+    } else {
+      fallbackCopy(text);
     }
   }
-
-  if(!currentEditId){
-    const newItem = {
-      id: 'p_' + Date.now() + '_' + Math.random().toString(36).slice(2,7),
-      ...vals,
-      updatedAt: Date.now()
-    };
-    list.unshift(newItem);
-    currentEditId = newItem.id;
-  }
-
-  persistSaved(list);
-  renderSavedList();
-  showToast('✅ Prompt saved');
-  document.getElementById('formTitle').innerHTML = 'Compose Prompt <span class="badge">editing saved</span>';
-}
-
-function deletePrompt(id, evt){
-  evt.stopPropagation();
-  if(!confirm('Delete this saved prompt?')) return;
-  let list = loadSaved();
-  list = list.filter(p => p.id !== id);
-  persistSaved(list);
-  if(currentEditId === id){
-    newPrompt();
-  }
-  renderSavedList();
-  showToast('🗑️ Deleted');
-}
-
-function loadIntoForm(p, isSaved){
-  setFormValues(p);
-  currentEditId = isSaved ? p.id : null;
-  document.getElementById('formTitle').innerHTML = isSaved
-    ? 'Compose Prompt <span class="badge">editing saved</span>'
-    : 'Compose Prompt <span class="badge">from sample</span>';
-  window.scrollTo({top:0, behavior:'smooth'});
-}
-
-function renderSavedList(){
-  const list = loadSaved();
-  const container = document.getElementById('savedList');
-  document.getElementById('savedCount').textContent = list.length;
-
-  if(list.length === 0){
-    container.innerHTML = '<div class="empty-note">No saved prompts yet. Compose one and hit Save.</div>';
-    return;
-  }
-
-  container.innerHTML = '';
-  list.sort((a,b)=> b.updatedAt - a.updatedAt).forEach(p => {
-    const div = document.createElement('div');
-    div.className = 'list-item';
-    div.onclick = () => loadIntoForm(p, true);
-    div.innerHTML = `
-      <div class="meta">
-        <div class="name">${escapeHtml(p.name)}</div>
-        <div class="preview">${escapeHtml(p.role)} — ${escapeHtml(p.task)}</div>
-      </div>
-      <button class="del" title="Delete">✕</button>
-    `;
-    div.querySelector('.del').onclick = (e) => deletePrompt(p.id, e);
-    container.appendChild(div);
-  });
-}
-
-function renderSampleList(){
-  const container = document.getElementById('sampleList');
-  container.innerHTML = '';
-  SAMPLE_PROMPTS.forEach(p => {
-    const div = document.createElement('div');
-    div.className = 'list-item';
-    div.onclick = () => loadIntoForm(p, false);
-    div.innerHTML = `
-      <div class="meta">
-        <div class="name">${escapeHtml(p.name)}</div>
-        <div class="preview">${escapeHtml(p.role)}</div>
-      </div>
-    `;
-    container.appendChild(div);
-  });
-}
-
-function copyPrompt(){
-  const vals = getFormValues();
-  if(!vals.role && !vals.context && !vals.task){
-    showToast('⚠️ Nothing to copy yet');
-    return;
-  }
-  let lines = [];
-  lines.push(`Role: ${vals.role}`);
-  lines.push(`Context: ${vals.context}`);
-  lines.push(`Task: ${vals.task}`);
-  if(vals.format){
-    lines.push(`Format: ${vals.format}`);
-  }
-  const text = lines.join('\n');
-
-  navigator.clipboard.writeText(text).then(()=>{
-    showToast('📋 Copied as key: value');
-  }).catch(()=>{
-    // fallback for older/blocked clipboard API
+  function fallbackCopy(text){
     const ta = document.createElement('textarea');
-    ta.value = text;
-    document.body.appendChild(ta);
-    ta.select();
-    try{
-      document.execCommand('copy');
-      showToast('📋 Copied as key: value');
-    }catch(e){
-      showToast('⚠️ Copy failed — select and copy manually');
-    }
+    ta.value = text; ta.style.position='fixed'; ta.style.opacity='0';
+    document.body.appendChild(ta); ta.focus(); ta.select();
+    try{ document.execCommand('copy'); toast('Copied — now paste it anywhere'); }
+    catch(e){ toast('Tap the code box, then select all and copy'); }
     document.body.removeChild(ta);
-  });
-}
-
-function escapeHtml(str){
-  const div = document.createElement('div');
-  div.textContent = str || '';
-  return div.innerHTML;
-}
-
-// ---- Role autocomplete ----
-const roleInput = document.getElementById('role');
-const roleAC = document.getElementById('roleAC');
-let acActiveIndex = -1;
-
-roleInput.addEventListener('input', () => {
-  const val = roleInput.value.trim().toLowerCase();
-  acActiveIndex = -1;
-  if(!val){
-    roleAC.style.display = 'none';
-    return;
   }
-  const matches = ROLE_SUGGESTIONS.filter(r => r.toLowerCase().includes(val));
-  if(matches.length === 0){
-    roleAC.style.display = 'none';
-    return;
+
+  // ---------- VIEW SWITCHING ----------
+  const views = ['home','editor','hub','study','results'];
+  function show(view){
+    views.forEach(v => document.getElementById('view-'+v).classList.toggle('hidden', v!==view));
   }
-  roleAC.innerHTML = '';
-  matches.forEach(m => {
-    const item = document.createElement('div');
-    item.textContent = m;
-    item.onclick = () => {
-      roleInput.value = m;
-      roleAC.style.display = 'none';
-    };
-    roleAC.appendChild(item);
+
+  // ---------- HOME ----------
+  function renderHome(){
+    const grid = document.getElementById('deckGrid');
+    const empty = document.getElementById('emptyState');
+    grid.innerHTML = '';
+    if(decks.length===0){ empty.classList.remove('hidden'); return; }
+    empty.classList.add('hidden');
+    decks.forEach(d=>{
+      const attempts = d.history || [];
+      const best = attempts.length ? Math.max(...attempts.map(h=>h.pct)) : null;
+      const last = attempts.length ? attempts[attempts.length-1].pct : null;
+      const card = document.createElement('div');
+      card.className = 'deck-card';
+      card.innerHTML = `
+        <h3>${esc(d.name)}</h3>
+        <div class="count">${d.cards.length} card${d.cards.length===1?'':'s'}</div>
+        <div class="stats">
+          <span>Best: <b>${best!==null? best+'%':'—'}</b></span>
+          <span>Last: <b>${last!==null? last+'%':'—'}</b></span>
+        </div>
+        <div class="deck-actions">
+          <button class="btn btn-gold" data-act="study">Study</button>
+          <button class="btn" data-act="edit">Edit</button>
+        </div>`;
+      card.querySelector('[data-act="study"]').onclick = ()=>openHub(d.id);
+      card.querySelector('[data-act="edit"]').onclick = ()=>openEditor(d.id);
+      grid.appendChild(card);
+    });
+  }
+
+  document.getElementById('btnNewDeck').onclick = ()=>{
+    const d = { id: uid(), name: 'Untitled deck', cards: [], history: [] };
+    decks.push(d); save();
+    openEditor(d.id);
+  };
+
+  // ---------- EDITOR ----------
+  function openEditor(id){
+    currentDeckId = id;
+    const d = getDeck(id);
+    document.getElementById('deckNameInput').value = d.name;
+    renderCardList();
+    show('editor');
+  }
+  document.getElementById('editorBack').onclick = ()=>{ save(); renderHome(); show('home'); };
+  document.getElementById('deckNameInput').addEventListener('input', e=>{
+    const d = getDeck(currentDeckId); if(!d) return;
+    d.name = e.target.value || 'Untitled deck'; save();
   });
-  roleAC.style.display = 'block';
-});
 
-roleInput.addEventListener('keydown', (e) => {
-  const items = roleAC.querySelectorAll('div');
-  if(roleAC.style.display !== 'block' || items.length === 0) return;
-
-  if(e.key === 'ArrowDown'){
-    e.preventDefault();
-    acActiveIndex = Math.min(acActiveIndex + 1, items.length - 1);
-    updateActiveItem(items);
-  }else if(e.key === 'ArrowUp'){
-    e.preventDefault();
-    acActiveIndex = Math.max(acActiveIndex - 1, 0);
-    updateActiveItem(items);
-  }else if(e.key === 'Enter'){
-    if(acActiveIndex > -1){
-      e.preventDefault();
-      roleInput.value = items[acActiveIndex].textContent;
-      roleAC.style.display = 'none';
+  function renderCardList(){
+    const d = getDeck(currentDeckId);
+    const list = document.getElementById('cardList');
+    list.innerHTML = '';
+    if(d.cards.length===0){
+      list.innerHTML = '<p class="muted">No cards yet — add your first one above.</p>';
+      return;
     }
-  }else if(e.key === 'Escape'){
-    roleAC.style.display = 'none';
+    d.cards.forEach((c,i)=>{
+      const row = document.createElement('div');
+      row.className = 'card-row';
+      row.innerHTML = `
+        <div class="txt q">${esc(c.q)}</div>
+        <div class="txt">${esc(c.a)}</div>
+        <button class="del" title="Delete card">×</button>`;
+      row.querySelector('.del').onclick = ()=>{ d.cards.splice(i,1); save(); renderCardList(); };
+      list.appendChild(row);
+    });
   }
-});
 
-function updateActiveItem(items){
-  items.forEach((it, i) => it.classList.toggle('active', i === acActiveIndex));
-  if(acActiveIndex > -1) items[acActiveIndex].scrollIntoView({block:'nearest'});
-}
+  document.getElementById('btnAddCard').onclick = ()=>{
+    const q = document.getElementById('newQ').value.trim();
+    const a = document.getElementById('newA').value.trim();
+    if(!q || !a){ toast('Add both a question and an answer'); return; }
+    const d = getDeck(currentDeckId);
+    d.cards.push({ q, a });
+    save();
+    document.getElementById('newQ').value='';
+    document.getElementById('newA').value='';
+    document.getElementById('newQ').focus();
+    renderCardList();
+  };
 
-document.addEventListener('click', (e) => {
-  if(!roleInput.contains(e.target) && !roleAC.contains(e.target)){
-    roleAC.style.display = 'none';
+  document.getElementById('btnDeleteDeck').onclick = ()=>{
+    if(!confirm('Delete this deck? This cannot be undone.')) return;
+    decks = decks.filter(d=>d.id!==currentDeckId);
+    save(); renderHome(); show('home');
+  };
+
+  document.getElementById('btnExportDeck').onclick = ()=>{
+    const d = getDeck(currentDeckId);
+    const blob = new Blob([JSON.stringify(d,null,2)], {type:'application/json'});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = (d.name||'deck').replace(/[^\w\-]+/g,'_') + '.json';
+    a.click(); URL.revokeObjectURL(url);
+  };
+
+  document.getElementById('btnShareCode').onclick = ()=>{
+    const d = getDeck(currentDeckId);
+    if(d.cards.length===0){ toast('Add some cards first'); return; }
+    const code = encodeDeckToCode(d);
+    document.getElementById('shareCodeOutput').value = code;
+    document.getElementById('shareCodeBox').classList.remove('hidden');
+    document.getElementById('pasteCodeBox').classList.add('hidden');
+    const nativeBtn = document.getElementById('btnNativeShare');
+    nativeBtn.classList.toggle('hidden', !navigator.share);
+    document.getElementById('shareCodeOutput').focus();
+    document.getElementById('shareCodeOutput').select();
+  };
+  document.getElementById('btnCloseShare').onclick = ()=> document.getElementById('shareCodeBox').classList.add('hidden');
+  document.getElementById('btnCopyCode').onclick = ()=> copyText(document.getElementById('shareCodeOutput').value);
+  document.getElementById('btnNativeShare').onclick = ()=>{
+    const code = document.getElementById('shareCodeOutput').value;
+    const d = getDeck(currentDeckId);
+    navigator.share({ title: 'Recall deck: ' + d.name, text: code }).catch(()=>{});
+  };
+
+  document.getElementById('btnPasteCode').onclick = ()=>{
+    document.getElementById('pasteCodeBox').classList.remove('hidden');
+    document.getElementById('shareCodeBox').classList.add('hidden');
+    document.getElementById('pasteCodeInput').value = '';
+    document.getElementById('pasteCodeInput').focus();
+  };
+  document.getElementById('btnClosePaste').onclick = ()=> document.getElementById('pasteCodeBox').classList.add('hidden');
+  document.getElementById('btnPasteCodeGo').onclick = ()=>{
+    const raw = document.getElementById('pasteCodeInput').value.trim();
+    if(!raw){ toast('Paste a code first'); return; }
+    try{
+      const incoming = decodeCodeToDeck(raw);
+      const d = getDeck(currentDeckId);
+      incoming.cards.forEach(c=>{ if(c.q && c.a) d.cards.push(c); });
+      save(); renderCardList();
+      document.getElementById('pasteCodeBox').classList.add('hidden');
+      toast('Cards added');
+    }catch(e){ toast('That code looks invalid'); }
+  };
+
+  document.getElementById('btnImportDeck').onclick = ()=> document.getElementById('fileImportDeck').click();
+  document.getElementById('fileImportDeck').onchange = (e)=>{
+    const file = e.target.files[0]; if(!file) return;
+    const reader = new FileReader();
+    reader.onload = ()=>{
+      try{
+        const data = JSON.parse(reader.result);
+        const d = getDeck(currentDeckId);
+        const incoming = Array.isArray(data.cards) ? data.cards : [];
+        incoming.forEach(c=>{ if(c.q && c.a) d.cards.push({q:c.q,a:c.a}); });
+        save(); renderCardList(); toast('Cards imported');
+      }catch(err){ toast('Could not read that file'); }
+      e.target.value = '';
+    };
+    reader.readAsText(file);
+  };
+
+  document.getElementById('btnImportCode').onclick = ()=>{
+    const box = document.getElementById('homeImportCodeBox');
+    box.classList.toggle('hidden');
+    document.getElementById('homeImportCodeInput').value = '';
+    if(!box.classList.contains('hidden')) document.getElementById('homeImportCodeInput').focus();
+  };
+  document.getElementById('homeImportCodeCancel').onclick = ()=> document.getElementById('homeImportCodeBox').classList.add('hidden');
+  document.getElementById('homeImportCodeGo').onclick = ()=>{
+    const raw = document.getElementById('homeImportCodeInput').value.trim();
+    if(!raw){ toast('Paste a code first'); return; }
+    try{
+      const incoming = decodeCodeToDeck(raw);
+      decks.push({ id: uid(), name: incoming.name, cards: incoming.cards, history: [] });
+      save(); renderHome();
+      document.getElementById('homeImportCodeBox').classList.add('hidden');
+      toast('Deck added');
+    }catch(e){ toast('That code looks invalid'); }
+  };
+
+  document.getElementById('btnImportAll').onclick = ()=> document.getElementById('fileImportAll').click();
+  document.getElementById('fileImportAll').onchange = (e)=>{
+    const file = e.target.files[0]; if(!file) return;
+    const reader = new FileReader();
+    reader.onload = ()=>{
+      try{
+        const data = JSON.parse(reader.result);
+        const incoming = Array.isArray(data) ? data : [data];
+        incoming.forEach(d=>{
+          if(d && d.name && Array.isArray(d.cards)){
+            decks.push({ id: uid(), name: d.name, cards: d.cards.map(c=>({q:c.q,a:c.a})), history: [] });
+          }
+        });
+        save(); renderHome(); toast('Deck(s) imported');
+      }catch(err){ toast('Could not read that file'); }
+      e.target.value = '';
+    };
+    reader.readAsText(file);
+  };
+
+  // ---------- HUB ----------
+  function openHub(id){
+    currentDeckId = id;
+    const d = getDeck(id);
+    document.getElementById('hubTitle').textContent = d.name;
+    document.getElementById('hubMeta').textContent = `${d.cards.length} card${d.cards.length===1?'':'s'}`;
+    const disable = d.cards.length===0;
+    ['startLearn','startRevise','startTest'].forEach(id2=>{
+      document.getElementById(id2).disabled = disable;
+    });
+    renderScoreHistory(d);
+    show('hub');
   }
-});
+  document.getElementById('hubBack').onclick = ()=>{ renderHome(); show('home'); };
 
-// ---- Init ----
-renderSavedList();
-renderSampleList();
+  function renderScoreHistory(d){
+    const el = document.getElementById('scoreHistory');
+    if(!d.history || d.history.length===0){ el.textContent = 'No test attempts yet.'; return; }
+    const rows = d.history.slice(-8).reverse().map(h=>
+      `<div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px dashed var(--edge);">
+        <span>${h.date}</span><span style="color:var(--gold-bright);">${h.score}/${h.total} · ${h.pct}%</span>
+      </div>`).join('');
+    el.innerHTML = rows;
+  }
+
+  document.getElementById('startLearn').onclick = ()=> startSession('learn');
+  document.getElementById('startRevise').onclick = ()=> startSession('revise');
+  document.getElementById('startTest').onclick = ()=> startSession('test');
+
+  // ---------- STUDY SESSION ----------
+  function shuffle(arr){
+    const a = arr.slice();
+    for(let i=a.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [a[i],a[j]]=[a[j],a[i]]; }
+    return a;
+  }
+
+  function startSession(mode){
+    const d = getDeck(currentDeckId);
+    let order = d.cards.map((c,i)=>i);
+    if(mode==='revise'){
+      // prioritize cards previously marked "still learning" (weak), then shuffle within groups
+      const weak = order.filter(i => d.cards[i]._weak);
+      const strong = order.filter(i => !d.cards[i]._weak);
+      order = [...shuffle(weak), ...shuffle(strong)];
+    } else {
+      order = shuffle(order);
+    }
+    session = {
+      mode, order, pos: 0,
+      correct: 0, wrong: 0,
+      missed: []
+    };
+    show('study');
+    document.getElementById('markRow').classList.toggle('hidden', false);
+    renderCardFace();
+  }
+
+  document.getElementById('studyExit').onclick = ()=>{ openHub(currentDeckId); };
+
+  function currentCard(){
+    const d = getDeck(currentDeckId);
+    return d.cards[session.order[session.pos]];
+  }
+
+  function renderCardFace(){
+    const d = getDeck(currentDeckId);
+    const total = session.order.length;
+    document.getElementById('progressTxt').textContent = `${session.pos+1} / ${total}`;
+    document.getElementById('progressFill').style.width = Math.round((session.pos/total)*100) + '%';
+
+    const c = currentCard();
+    document.getElementById('faceFront').textContent = c.q;
+    document.getElementById('faceBack').textContent = c.a;
+    document.getElementById('faceLabelFront').textContent = session.mode==='test' ? 'Question' : 'Question';
+    const card3d = document.getElementById('card3d');
+    card3d.classList.remove('flipped');
+
+    const markRow = document.getElementById('markRow');
+    if(session.mode==='learn' || session.mode==='revise'){
+      markRow.classList.remove('hidden');
+      document.getElementById('markGood').textContent = 'Got it';
+      document.getElementById('markBad').textContent = 'Still learning';
+    } else {
+      // test mode: buttons only appear after flip, and mean "correct/incorrect"
+      markRow.classList.add('hidden');
+      document.getElementById('markGood').textContent = 'I was right';
+      document.getElementById('markBad').textContent = 'I was wrong';
+    }
+  }
+
+  document.getElementById('card3d').onclick = ()=>{
+    const el = document.getElementById('card3d');
+    el.classList.toggle('flipped');
+    if(session.mode==='test' && el.classList.contains('flipped')){
+      document.getElementById('markRow').classList.remove('hidden');
+    }
+  };
+
+  function advance(){
+    session.pos++;
+    if(session.pos >= session.order.length){
+      finishSession();
+    } else {
+      renderCardFace();
+    }
+  }
+
+  document.getElementById('markGood').onclick = ()=>{
+    const d = getDeck(currentDeckId);
+    const c = currentCard();
+    if(session.mode==='learn' || session.mode==='revise'){
+      c._weak = false;
+    } else { // test
+      session.correct++;
+    }
+    save();
+    advance();
+  };
+  document.getElementById('markBad').onclick = ()=>{
+    const d = getDeck(currentDeckId);
+    const c = currentCard();
+    if(session.mode==='learn' || session.mode==='revise'){
+      c._weak = true;
+    } else { // test
+      session.wrong++;
+      session.missed.push({ q: c.q, a: c.a });
+    }
+    save();
+    advance();
+  };
+
+  function finishSession(){
+    const d = getDeck(currentDeckId);
+    if(session.mode==='test'){
+      const total = session.correct + session.wrong;
+      const pct = total ? Math.round((session.correct/total)*100) : 0;
+      d.history = d.history || [];
+      d.history.push({
+        date: new Date().toLocaleDateString(undefined, {month:'short', day:'numeric', year:'numeric'}),
+        score: session.correct, total, pct
+      });
+      save();
+      showResults(session.correct, total, pct, session.missed);
+    } else {
+      // learn / revise: no score, just return to hub with a friendly toast
+      openHub(currentDeckId);
+      toast(session.mode==='learn' ? 'Learn session complete' : 'Revise session complete');
+    }
+  }
+
+  function showResults(score, total, pct, missed){
+    show('results');
+    document.getElementById('resultPct').textContent = pct + '%';
+    document.getElementById('resultSummary').textContent = `${score} out of ${total} correct`;
+    const circumference = 2*Math.PI*70;
+    const circle = document.getElementById('resultCircle');
+    circle.style.strokeDasharray = circumference;
+    circle.style.strokeDashoffset = circumference - (pct/100)*circumference;
+
+    const missSection = document.getElementById('missSection');
+    const missList = document.getElementById('missList');
+    missList.innerHTML = '';
+    if(missed.length){
+      missSection.classList.remove('hidden');
+      missed.forEach(m=>{
+        const div = document.createElement('div');
+        div.className = 'miss-item';
+        div.innerHTML = `<div class="q">${esc(m.q)}</div><div class="a">${esc(m.a)}</div>`;
+        missList.appendChild(div);
+      });
+    } else {
+      missSection.classList.add('hidden');
+    }
+  }
+
+  document.getElementById('resultBackHub').onclick = ()=> openHub(currentDeckId);
+  document.getElementById('resultRetry').onclick = ()=> startSession(session.mode);
+
+  // ---------- INIT ----------
+  renderHome();
+  show('home');
+})();
 </script>
 </body>
 </html>
