@@ -4,3 +4,9 @@
 
 /.vs/MosqueTourReportTool.slnx/FileContentIndex
 /.vs/MosqueTourReportTool.slnx/v18
+packages/
+.vs/
+
+*.suo
+*.csproj.user
+*.pubxml.user
