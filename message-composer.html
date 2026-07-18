@@ -1,0 +1,1413 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Message Composer</title>
+<style>
+:root{
+  --bg:#0d1f24;
+  --bg-alt:#0a1a1e;
+  --surface:#15323a;
+  --surface-2:#1c3f47;
+  --border:#2a4d55;
+  --gold:#c9a86a;
+  --gold-bright:#e0c48c;
+  --text:#e8f0ef;
+  --text-dim:#9fb8bc;
+  --text-faint:#6f8b8f;
+  --success:#4caf7d;
+  --danger:#d9756a;
+  --info:#6ab0d9;
+  --radius:10px;
+  --mono: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
+}
+
+*{box-sizing:border-box;}
+html,body{height:100%;}
+body{
+  margin:0;
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  background:
+    radial-gradient(1200px 600px at 10% -10%, rgba(201,168,106,0.06), transparent 60%),
+    radial-gradient(1000px 500px at 100% 0%, rgba(106,176,217,0.05), transparent 60%),
+    var(--bg);
+  color:var(--text);
+  min-height:100vh;
+}
+
+/* ---------- Layout shell ---------- */
+.app{
+  max-width:1180px;
+  margin:0 auto;
+  padding:24px 20px 60px;
+}
+
+.app-header{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:16px;
+  margin-bottom:22px;
+  flex-wrap:wrap;
+}
+
+.brand{
+  display:flex;
+  align-items:center;
+  gap:12px;
+}
+
+.brand-mark{
+  width:40px;height:40px;
+  border-radius:9px;
+  background:linear-gradient(145deg,var(--gold),#9c7c46);
+  display:flex;align-items:center;justify-content:center;
+  font-weight:700;color:#1a1206;
+  font-size:18px;
+  box-shadow:0 4px 14px rgba(201,168,106,0.25);
+  flex-shrink:0;
+}
+
+.brand-text h1{
+  font-size:18px;
+  margin:0;
+  letter-spacing:0.2px;
+  font-weight:600;
+}
+.brand-text p{
+  margin:2px 0 0;
+  font-size:12.5px;
+  color:var(--text-dim);
+}
+
+.header-actions{
+  display:flex;
+  gap:8px;
+  flex-wrap:wrap;
+}
+
+/* ---------- Buttons ---------- */
+.btn{
+  border:1px solid var(--border);
+  background:var(--surface);
+  color:var(--text);
+  padding:8px 14px;
+  border-radius:8px;
+  font-size:13px;
+  cursor:pointer;
+  display:inline-flex;
+  align-items:center;
+  gap:6px;
+  transition:background .15s ease, border-color .15s ease, transform .05s ease;
+  white-space:nowrap;
+}
+.btn:hover{background:var(--surface-2);border-color:#3a6167;}
+.btn:active{transform:scale(0.97);}
+.btn-gold{
+  background:linear-gradient(145deg,var(--gold),#b48f52);
+  border-color:transparent;
+  color:#1a1206;
+  font-weight:600;
+}
+.btn-gold:hover{filter:brightness(1.07);}
+.btn-danger{border-color:rgba(217,117,106,0.4);color:var(--danger);}
+.btn-danger:hover{background:rgba(217,117,106,0.12);}
+.btn-sm{padding:5px 10px;font-size:12px;}
+.btn-icon{
+  width:32px;height:32px;padding:0;
+  justify-content:center;
+  border-radius:8px;
+}
+.btn:disabled{opacity:0.4;cursor:not-allowed;}
+
+/* ---------- Tabs ---------- */
+.tabs{
+  display:flex;
+  gap:6px;
+  background:var(--bg-alt);
+  border:1px solid var(--border);
+  padding:5px;
+  border-radius:11px;
+  margin-bottom:20px;
+  overflow-x:auto;
+}
+.tab-btn{
+  flex:1;
+  min-width:110px;
+  border:none;
+  background:transparent;
+  color:var(--text-dim);
+  padding:9px 12px;
+  border-radius:8px;
+  font-size:13.5px;
+  font-weight:500;
+  cursor:pointer;
+  transition:all .15s ease;
+  white-space:nowrap;
+}
+.tab-btn.active{
+  background:var(--surface-2);
+  color:var(--gold-bright);
+  box-shadow:0 1px 3px rgba(0,0,0,0.3);
+}
+.tab-btn:hover:not(.active){color:var(--text);}
+
+.tab-panel{display:none;}
+.tab-panel.active{display:block;animation:fadeIn .18s ease;}
+@keyframes fadeIn{from{opacity:0;transform:translateY(3px);}to{opacity:1;transform:translateY(0);}}
+
+/* ---------- Cards ---------- */
+.card{
+  background:var(--surface);
+  border:1px solid var(--border);
+  border-radius:var(--radius);
+  padding:18px;
+  margin-bottom:16px;
+}
+.card-title{
+  font-size:13px;
+  font-weight:600;
+  text-transform:uppercase;
+  letter-spacing:0.6px;
+  color:var(--gold);
+  margin:0 0 14px;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+}
+
+.grid-2{display:grid;grid-template-columns:1.1fr 1fr;gap:16px;}
+@media (max-width:900px){.grid-2{grid-template-columns:1fr;}}
+
+/* ---------- Form controls ---------- */
+label.field-label{
+  display:block;
+  font-size:12px;
+  color:var(--text-dim);
+  margin-bottom:5px;
+  font-weight:500;
+}
+input[type=text],input[type=search],textarea,select{
+  width:100%;
+  background:var(--bg-alt);
+  border:1px solid var(--border);
+  color:var(--text);
+  padding:8px 10px;
+  border-radius:7px;
+  font-size:13.5px;
+  font-family:inherit;
+  outline:none;
+  transition:border-color .15s ease;
+}
+input:focus,textarea:focus,select:focus{border-color:var(--gold);}
+textarea{resize:vertical;min-height:60px;}
+.field-row{margin-bottom:12px;}
+.field-inline{display:flex;gap:10px;}
+.field-inline > div{flex:1;}
+
+/* ---------- Composer rows ---------- */
+.compose-row{
+  display:flex;
+  gap:8px;
+  align-items:flex-start;
+  background:var(--bg-alt);
+  border:1px solid var(--border);
+  border-radius:8px;
+  padding:10px;
+  margin-bottom:8px;
+}
+.compose-row .row-handle{
+  color:var(--text-faint);
+  font-size:12px;
+  padding-top:9px;
+  cursor:grab;
+  user-select:none;
+}
+.compose-row select{max-width:150px;flex-shrink:0;}
+.compose-row textarea{min-height:38px;flex:1;}
+.compose-row .row-actions{display:flex;gap:4px;flex-shrink:0;}
+
+.empty-hint{
+  color:var(--text-faint);
+  font-size:13px;
+  text-align:center;
+  padding:24px 10px;
+  border:1px dashed var(--border);
+  border-radius:8px;
+}
+
+/* ---------- Preview panel (signature element) ---------- */
+.preview-wrap{
+  background:
+    linear-gradient(180deg, rgba(255,255,255,0.02), transparent 40%),
+    var(--bg-alt);
+  border:1px solid var(--border);
+  border-radius:var(--radius);
+  padding:0;
+  overflow:hidden;
+  position:sticky;
+  top:20px;
+}
+.preview-header{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  padding:12px 16px;
+  border-bottom:1px solid var(--border);
+  background:rgba(0,0,0,0.15);
+}
+.preview-header .card-title{margin:0;}
+.preview-body{
+  padding:20px;
+  min-height:180px;
+  font-size:14.5px;
+  line-height:1.75;
+  white-space:pre-wrap;
+  word-break:break-word;
+  color:var(--text);
+  box-shadow:inset 0 2px 10px rgba(0,0,0,0.25);
+}
+.preview-body .ph-filled{
+  color:var(--success);
+  font-family:var(--mono);
+}
+.preview-body .ph-empty{
+  color:var(--gold-bright);
+  font-family:var(--mono);
+  background:rgba(201,168,106,0.12);
+  padding:0 4px;
+  border-radius:4px;
+}
+.preview-actions{
+  display:flex;
+  gap:8px;
+  padding:12px 16px;
+  border-top:1px solid var(--border);
+  flex-wrap:wrap;
+  background:rgba(0,0,0,0.1);
+}
+.preview-placeholder-list{
+  padding:12px 16px;
+  border-top:1px solid var(--border);
+  display:none;
+}
+.preview-placeholder-list.show{display:block;}
+.ph-item{margin-bottom:8px;}
+.ph-item:last-child{margin-bottom:0;}
+
+/* ---------- Block library ---------- */
+.block-toolbar{
+  display:flex;
+  gap:10px;
+  margin-bottom:14px;
+  flex-wrap:wrap;
+}
+.block-toolbar input[type=search]{flex:1;min-width:160px;}
+.block-toolbar select{max-width:170px;}
+
+.block-list{display:flex;flex-direction:column;gap:8px;}
+.block-item{
+  background:var(--bg-alt);
+  border:1px solid var(--border);
+  border-radius:8px;
+  padding:12px 14px;
+  display:flex;
+  gap:12px;
+  align-items:flex-start;
+}
+.block-item .block-main{flex:1;min-width:0;}
+.block-item .block-label-row{
+  display:flex;align-items:center;gap:8px;margin-bottom:3px;flex-wrap:wrap;
+}
+.block-item .block-label{font-weight:600;font-size:13.5px;}
+.badge{
+  font-size:10.5px;
+  padding:2px 7px;
+  border-radius:20px;
+  background:var(--surface-2);
+  color:var(--text-dim);
+  border:1px solid var(--border);
+  text-transform:uppercase;
+  letter-spacing:0.4px;
+}
+.badge-type{color:var(--info);border-color:rgba(106,176,217,0.3);}
+.block-item .block-value{
+  font-size:13px;
+  color:var(--text-dim);
+  white-space:pre-wrap;
+  word-break:break-word;
+}
+.star-btn{
+  background:none;border:none;cursor:pointer;
+  color:var(--text-faint);font-size:16px;padding:2px;
+  line-height:1;
+}
+.star-btn.active{color:var(--gold);}
+.block-item .block-actions{display:flex;gap:4px;flex-shrink:0;}
+
+/* ---------- Templates ---------- */
+.template-grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fill,minmax(230px,1fr));
+  gap:12px;
+}
+.template-card{
+  background:var(--bg-alt);
+  border:1px solid var(--border);
+  border-radius:9px;
+  padding:14px;
+  cursor:pointer;
+  transition:border-color .15s ease, transform .1s ease;
+}
+.template-card:hover{border-color:var(--gold);transform:translateY(-1px);}
+.template-card h4{margin:0 0 4px;font-size:14px;}
+.template-card p{margin:0 0 8px;font-size:12.5px;color:var(--text-dim);min-height:32px;}
+.template-card .badge{margin-bottom:6px;display:inline-block;}
+.template-card .template-actions{display:flex;gap:6px;margin-top:8px;}
+
+/* ---------- Toasts ---------- */
+.toast-stack{
+  position:fixed;bottom:20px;right:20px;
+  display:flex;flex-direction:column;gap:8px;
+  z-index:999;
+  max-width:320px;
+}
+.toast{
+  background:var(--surface-2);
+  border:1px solid var(--border);
+  border-left:3px solid var(--success);
+  color:var(--text);
+  padding:11px 14px;
+  border-radius:8px;
+  font-size:13px;
+  box-shadow:0 6px 20px rgba(0,0,0,0.35);
+  animation:slideIn .2s ease;
+}
+.toast.error{border-left-color:var(--danger);}
+.toast.info{border-left-color:var(--info);}
+@keyframes slideIn{from{opacity:0;transform:translateX(20px);}to{opacity:1;transform:translateX(0);}}
+
+/* ---------- Modal ---------- */
+.modal-backdrop{
+  display:none;
+  position:fixed;inset:0;
+  background:rgba(4,12,14,0.65);
+  z-index:1000;
+  align-items:center;justify-content:center;
+  padding:20px;
+}
+.modal-backdrop.show{display:flex;}
+.modal{
+  background:var(--surface);
+  border:1px solid var(--border);
+  border-radius:12px;
+  padding:20px;
+  max-width:460px;
+  width:100%;
+  max-height:85vh;
+  overflow-y:auto;
+  box-shadow:0 20px 60px rgba(0,0,0,0.5);
+}
+.modal h3{margin:0 0 14px;font-size:15px;color:var(--gold-bright);}
+.modal-actions{display:flex;justify-content:flex-end;gap:8px;margin-top:16px;}
+
+/* ---------- Settings ---------- */
+.setting-row{
+  display:flex;justify-content:space-between;align-items:center;
+  padding:12px 0;border-bottom:1px solid var(--border);
+}
+.setting-row:last-child{border-bottom:none;}
+.setting-row .label{font-size:13.5px;}
+.setting-row .desc{font-size:12px;color:var(--text-dim);margin-top:2px;}
+
+.toggle{
+  position:relative;width:42px;height:23px;flex-shrink:0;
+}
+.toggle input{opacity:0;width:0;height:0;}
+.toggle .slider{
+  position:absolute;inset:0;
+  background:var(--border);
+  border-radius:20px;
+  cursor:pointer;
+  transition:.2s;
+}
+.toggle .slider::before{
+  content:"";position:absolute;
+  height:17px;width:17px;left:3px;top:3px;
+  background:var(--text);
+  border-radius:50%;
+  transition:.2s;
+}
+.toggle input:checked + .slider{background:var(--gold);}
+.toggle input:checked + .slider::before{transform:translateX(19px);background:#1a1206;}
+
+/* Light mode override */
+body.light{
+  --bg:#f4f1ea;
+  --bg-alt:#ffffff;
+  --surface:#ffffff;
+  --surface-2:#eee7d8;
+  --border:#ddd3ba;
+  --text:#2a2418;
+  --text-dim:#6b6252;
+  --text-faint:#9a8f78;
+  --gold:#a9803f;
+  --gold-bright:#8a6a30;
+}
+body.light .brand-mark{color:#fff;}
+body.light .toggle input:checked + .slider::before{background:#fff;}
+
+::-webkit-scrollbar{width:9px;height:9px;}
+::-webkit-scrollbar-track{background:transparent;}
+::-webkit-scrollbar-thumb{background:var(--border);border-radius:20px;}
+
+.text-faint{color:var(--text-faint);font-size:12px;}
+.mt-0{margin-top:0;}
+hr.sep{border:none;border-top:1px solid var(--border);margin:14px 0;}
+</style>
+</head>
+<body>
+
+<div class="app">
+
+  <div class="app-header">
+    <div class="brand">
+      <div class="brand-mark">Mc</div>
+      <div class="brand-text">
+        <h1>Message Composer</h1>
+        <p>Reusable blocks, assembled into complete messages — offline, private, yours.</p>
+      </div>
+    </div>
+    <div class="header-actions">
+      <button class="btn" id="exportBtn" title="Export all data to JSON">Export JSON</button>
+      <button class="btn" id="importBtn" title="Import JSON">Import JSON</button>
+      <input type="file" id="importFile" accept="application/json" style="display:none;">
+    </div>
+  </div>
+
+  <div class="tabs" role="tablist">
+    <button class="tab-btn active" data-tab="compose">Compose</button>
+    <button class="tab-btn" data-tab="library">Block Library</button>
+    <button class="tab-btn" data-tab="templates">Templates</button>
+    <button class="tab-btn" data-tab="settings">Settings</button>
+  </div>
+
+  <!-- ===================== COMPOSE TAB ===================== -->
+  <div class="tab-panel active" id="tab-compose">
+    <div class="grid-2">
+      <div>
+        <div class="card">
+          <div class="card-title">
+            <span>Message Rows</span>
+            <button class="btn btn-sm btn-gold" id="addRowBtn">+ Add Row</button>
+          </div>
+          <div id="rowsContainer"></div>
+          <div class="empty-hint" id="rowsEmptyHint" style="display:none;">
+            No rows yet. Add a row, or start from a template.
+          </div>
+        </div>
+      </div>
+
+      <div>
+        <div class="preview-wrap">
+          <div class="preview-header">
+            <h3 class="card-title">Live Preview</h3>
+            <button class="btn btn-sm btn-danger" id="clearMsgBtn">Clear</button>
+          </div>
+          <div class="preview-body" id="previewBody">
+            <span class="text-faint">Your composed message will appear here as you type…</span>
+          </div>
+          <div class="preview-placeholder-list" id="placeholderList"></div>
+          <div class="preview-actions">
+            <button class="btn btn-gold btn-sm" id="copyBtn">Copy to Clipboard</button>
+            <button class="btn btn-sm" id="downloadTxtBtn">Download .txt</button>
+            <button class="btn btn-sm" id="downloadJsonBtn">Download .json</button>
+            <button class="btn btn-sm" id="saveTemplateBtn">Save as Template</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===================== BLOCK LIBRARY TAB ===================== -->
+  <div class="tab-panel" id="tab-library">
+    <div class="card">
+      <div class="card-title">
+        <span>New Block</span>
+      </div>
+      <div class="field-inline field-row">
+        <div>
+          <label class="field-label">Label</label>
+          <input type="text" id="blockLabelInput" placeholder="e.g. Greeting">
+        </div>
+        <div>
+          <label class="field-label">Category</label>
+          <select id="blockCategoryInput">
+            <option>General</option>
+            <option>Leave</option>
+            <option>WFH</option>
+            <option>Prayer</option>
+            <option>Quran</option>
+            <option>Professional</option>
+            <option>Custom</option>
+          </select>
+        </div>
+        <div>
+          <label class="field-label">Type</label>
+          <select id="blockTypeInput">
+            <option value="inline">Inline</option>
+            <option value="multiline">Multiline</option>
+          </select>
+        </div>
+      </div>
+      <div class="field-row">
+        <label class="field-label">Value <span class="text-faint">(use {{placeholder}} for variable parts)</span></label>
+        <textarea id="blockValueInput" placeholder="e.g. Assalam Alaikum Dear {{name}}"></textarea>
+      </div>
+      <button class="btn btn-gold" id="saveBlockBtn">Add Block</button>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Saved Blocks</div>
+      <div class="block-toolbar">
+        <input type="search" id="blockSearch" placeholder="Search blocks…">
+        <select id="blockFilterCategory">
+          <option value="">All Categories</option>
+          <option>General</option>
+          <option>Leave</option>
+          <option>WFH</option>
+          <option>Prayer</option>
+          <option>Quran</option>
+          <option>Professional</option>
+          <option>Custom</option>
+        </select>
+        <select id="blockSortBy">
+          <option value="order">Sort: Order</option>
+          <option value="label">Sort: Label</option>
+          <option value="favorite">Sort: Favorites First</option>
+        </select>
+      </div>
+      <div class="block-list" id="blockList"></div>
+      <div class="empty-hint" id="blockEmptyHint" style="display:none;">
+        No blocks yet. Create your first reusable block above.
+      </div>
+    </div>
+  </div>
+
+  <!-- ===================== TEMPLATES TAB ===================== -->
+  <div class="tab-panel" id="tab-templates">
+    <div class="card">
+      <div class="card-title">Saved Templates</div>
+      <p class="text-faint mt-0">Select a template to load it into Compose.</p>
+      <div class="template-grid" id="templateGrid"></div>
+      <div class="empty-hint" id="templateEmptyHint" style="display:none;">
+        No templates yet. Build a message in Compose, then click "Save as Template".
+      </div>
+    </div>
+  </div>
+
+  <!-- ===================== SETTINGS TAB ===================== -->
+  <div class="tab-panel" id="tab-settings">
+    <div class="card">
+      <div class="card-title">Preferences</div>
+      <div class="setting-row">
+        <div>
+          <div class="label">Dark mode</div>
+          <div class="desc">Toggle between dark teal and light theme.</div>
+        </div>
+        <label class="toggle">
+          <input type="checkbox" id="darkModeToggle" checked>
+          <span class="slider"></span>
+        </label>
+      </div>
+      <div class="setting-row">
+        <div>
+          <div class="label">Auto-capitalize first letter</div>
+          <div class="desc">Capitalize the first letter of the assembled message.</div>
+        </div>
+        <label class="toggle">
+          <input type="checkbox" id="autoCapToggle" checked>
+          <span class="slider"></span>
+        </label>
+      </div>
+      <div class="setting-row">
+        <div>
+          <div class="label">Smart punctuation</div>
+          <div class="desc">Avoid duplicate commas/periods when joining blocks.</div>
+        </div>
+        <label class="toggle">
+          <input type="checkbox" id="smartPunctToggle" checked>
+          <span class="slider"></span>
+        </label>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Data</div>
+      <p class="text-faint mt-0">Everything is stored locally in this browser only. Nothing leaves your device.</p>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;">
+        <button class="btn" id="exportBtn2">Export All Data</button>
+        <button class="btn" id="importBtn2">Import Data</button>
+        <button class="btn btn-danger" id="resetAllBtn">Reset Everything</button>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<div class="toast-stack" id="toastStack"></div>
+
+<!-- Save Template Modal -->
+<div class="modal-backdrop" id="templateModal">
+  <div class="modal">
+    <h3>Save as Template</h3>
+    <div class="field-row">
+      <label class="field-label">Template Name</label>
+      <input type="text" id="templateNameInput" placeholder="e.g. Half Day Leave">
+    </div>
+    <div class="field-row">
+      <label class="field-label">Category</label>
+      <select id="templateCategoryInput">
+        <option>General</option>
+        <option>Leave</option>
+        <option>WFH</option>
+        <option>Prayer</option>
+        <option>Quran</option>
+        <option>Professional</option>
+        <option>Custom</option>
+      </select>
+    </div>
+    <div class="field-row">
+      <label class="field-label">Description</label>
+      <input type="text" id="templateDescInput" placeholder="Short note about when to use this">
+    </div>
+    <div class="modal-actions">
+      <button class="btn" id="cancelTemplateBtn">Cancel</button>
+      <button class="btn btn-gold" id="confirmTemplateBtn">Save Template</button>
+    </div>
+  </div>
+</div>
+
+<!-- Placeholder Fill Modal -->
+<div class="modal-backdrop" id="placeholderModal">
+  <div class="modal">
+    <h3>Fill Placeholders</h3>
+    <div id="placeholderModalBody"></div>
+    <div class="modal-actions">
+      <button class="btn" id="cancelPlaceholderBtn">Cancel</button>
+      <button class="btn btn-gold" id="applyPlaceholderBtn">Apply</button>
+    </div>
+  </div>
+</div>
+
+<script>
+(function(){
+  'use strict';
+
+  /* ===================================================================
+     STORAGE LAYER
+     =================================================================== */
+  const STORAGE_KEY = 'msgComposer.v1';
+
+  const DEFAULT_STATE = {
+    blocks: [],
+    templates: [],
+    rows: [],
+    prefs: { darkMode: true, autoCap: true, smartPunct: true },
+    lastMessage: ''
+  };
+
+  function loadState(){
+    try{
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if(!raw) return structuredClone(DEFAULT_STATE);
+      const parsed = JSON.parse(raw);
+      return Object.assign(structuredClone(DEFAULT_STATE), parsed);
+    }catch(e){
+      console.error('Failed to load state', e);
+      return structuredClone(DEFAULT_STATE);
+    }
+  }
+
+  function saveState(){
+    try{
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+    }catch(e){
+      console.error('Failed to save state', e);
+      showToast('Could not save — storage may be full.', 'error');
+    }
+  }
+
+  let state = loadState();
+
+  /* Seed with example blocks/templates on first run */
+  function seedIfEmpty(){
+    if(state.blocks.length > 0 || state.templates.length > 0) return;
+
+    const seedBlocks = [
+      { label:'Greeting', value:'Assalam Alaikum', category:'General', type:'inline' },
+      { label:'Prefix', value:'Dear', category:'General', type:'inline' },
+      { label:'Name', value:'{{name}}', category:'General', type:'inline' },
+      { label:'Reason', value:'today suddenly I got fever and body pain', category:'Leave', type:'multiline' },
+      { label:'Request', value:'I would like to take half day leave', category:'Leave', type:'inline' },
+      { label:'Closing', value:'Thanks', category:'General', type:'inline' }
+    ];
+    seedBlocks.forEach((b,i)=> addBlock(b.label,b.value,b.category,b.type,false));
+
+    const g = state.blocks.find(b=>b.label==='Greeting').id;
+    const p = state.blocks.find(b=>b.label==='Prefix').id;
+    const n = state.blocks.find(b=>b.label==='Name').id;
+    const r = state.blocks.find(b=>b.label==='Reason').id;
+    const q = state.blocks.find(b=>b.label==='Request').id;
+    const c = state.blocks.find(b=>b.label==='Closing').id;
+
+    addTemplate('Half Day Leave','Leave','Quick half-day leave message to a manager', [
+      {blockId:g}, {blockId:p}, {blockId:n}, {blockId:r}, {blockId:q}, {blockId:c}
+    ], false);
+
+    saveState();
+  }
+
+  /* ===================================================================
+     UTILITIES
+     =================================================================== */
+  function uid(){ return 'id_' + Math.random().toString(36).slice(2,10) + Date.now().toString(36); }
+
+  function escapeHtml(str){
+    return (str || '').replace(/[&<>"']/g, s => ({
+      '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'
+    }[s]));
+  }
+
+  function showToast(msg, type='success'){
+    const stack = document.getElementById('toastStack');
+    const el = document.createElement('div');
+    el.className = 'toast ' + (type==='success' ? '' : type);
+    el.textContent = msg;
+    stack.appendChild(el);
+    setTimeout(()=>{
+      el.style.transition = 'opacity .3s ease';
+      el.style.opacity = '0';
+      setTimeout(()=> el.remove(), 300);
+    }, 2600);
+  }
+
+  function extractPlaceholders(text){
+    const matches = [...(text||'').matchAll(/{{\s*([a-zA-Z0-9_ ]+?)\s*}}/g)];
+    const names = matches.map(m => m[1].trim());
+    return [...new Set(names)];
+  }
+
+  /* ===================================================================
+     BLOCK LIBRARY LOGIC
+     =================================================================== */
+  function addBlock(label, value, category, type, doSave=true){
+    const order = state.blocks.length ? Math.max(...state.blocks.map(b=>b.order||0)) + 1 : 1;
+    state.blocks.push({
+      id: uid(), label, value, category, type, order,
+      favorite:false, createdAt: Date.now()
+    });
+    if(doSave) saveState();
+  }
+
+  function deleteBlock(id){
+    state.blocks = state.blocks.filter(b=>b.id!==id);
+    // also strip from rows referencing it
+    state.rows.forEach(r=>{ if(r.blockId===id) r.blockId=null; });
+    saveState();
+    renderBlocks();
+    renderRows();
+  }
+
+  function duplicateBlock(id){
+    const b = state.blocks.find(x=>x.id===id);
+    if(!b) return;
+    addBlock(b.label + ' (copy)', b.value, b.category, b.type);
+    renderBlocks();
+    showToast('Block duplicated.');
+  }
+
+  function toggleFavorite(id){
+    const b = state.blocks.find(x=>x.id===id);
+    if(!b) return;
+    b.favorite = !b.favorite;
+    saveState();
+    renderBlocks();
+  }
+
+  function renderBlocks(){
+    const list = document.getElementById('blockList');
+    const search = document.getElementById('blockSearch').value.trim().toLowerCase();
+    const cat = document.getElementById('blockFilterCategory').value;
+    const sortBy = document.getElementById('blockSortBy').value;
+
+    let items = state.blocks.filter(b=>{
+      const matchesSearch = !search ||
+        b.label.toLowerCase().includes(search) ||
+        (b.value||'').toLowerCase().includes(search);
+      const matchesCat = !cat || b.category === cat;
+      return matchesSearch && matchesCat;
+    });
+
+    items = items.slice().sort((a,b)=>{
+      if(sortBy==='label') return a.label.localeCompare(b.label);
+      if(sortBy==='favorite') return (b.favorite - a.favorite) || (a.order - b.order);
+      return (a.order||0) - (b.order||0);
+    });
+
+    list.innerHTML = '';
+    document.getElementById('blockEmptyHint').style.display = items.length ? 'none' : 'block';
+
+    items.forEach(b=>{
+      const el = document.createElement('div');
+      el.className = 'block-item';
+      el.innerHTML = `
+        <button class="star-btn ${b.favorite?'active':''}" title="Toggle favorite" data-fav="${b.id}">${b.favorite?'★':'☆'}</button>
+        <div class="block-main">
+          <div class="block-label-row">
+            <span class="block-label">${escapeHtml(b.label)}</span>
+            <span class="badge">${escapeHtml(b.category)}</span>
+            <span class="badge badge-type">${escapeHtml(b.type)}</span>
+          </div>
+          <div class="block-value">${escapeHtml(b.value)}</div>
+        </div>
+        <div class="block-actions">
+          <button class="btn btn-icon btn-sm" title="Edit" data-edit="${b.id}">✎</button>
+          <button class="btn btn-icon btn-sm" title="Duplicate" data-dup="${b.id}">⧉</button>
+          <button class="btn btn-icon btn-sm btn-danger" title="Delete" data-del="${b.id}">✕</button>
+        </div>
+      `;
+      list.appendChild(el);
+    });
+
+    list.querySelectorAll('[data-fav]').forEach(btn=>{
+      btn.addEventListener('click', ()=> toggleFavorite(btn.dataset.fav));
+    });
+    list.querySelectorAll('[data-del]').forEach(btn=>{
+      btn.addEventListener('click', ()=>{
+        if(confirm('Delete this block? This cannot be undone.')) deleteBlock(btn.dataset.del);
+      });
+    });
+    list.querySelectorAll('[data-dup]').forEach(btn=>{
+      btn.addEventListener('click', ()=> duplicateBlock(btn.dataset.dup));
+    });
+    list.querySelectorAll('[data-edit]').forEach(btn=>{
+      btn.addEventListener('click', ()=> editBlockPrompt(btn.dataset.edit));
+    });
+  }
+
+  function editBlockPrompt(id){
+    const b = state.blocks.find(x=>x.id===id);
+    if(!b) return;
+    const newLabel = prompt('Edit label:', b.label);
+    if(newLabel===null) return;
+    const newValue = prompt('Edit value:', b.value);
+    if(newValue===null) return;
+    b.label = newLabel.trim() || b.label;
+    b.value = newValue;
+    saveState();
+    renderBlocks();
+    renderRows();
+    showToast('Block updated.');
+  }
+
+  /* ===================================================================
+     TEMPLATES LOGIC
+     =================================================================== */
+  function addTemplate(name, category, description, structure, doSave=true){
+    state.templates.push({
+      id: uid(), name, category, description, structure, createdAt: Date.now()
+    });
+    if(doSave) saveState();
+  }
+
+  function deleteTemplate(id){
+    state.templates = state.templates.filter(t=>t.id!==id);
+    saveState();
+    renderTemplates();
+  }
+
+  function loadTemplate(id){
+    const t = state.templates.find(x=>x.id===id);
+    if(!t) return;
+    state.rows = t.structure.map(s=>({
+      id: uid(),
+      blockId: s.blockId || null,
+      value: s.value !== undefined ? s.value : (state.blocks.find(b=>b.id===s.blockId)?.value || '')
+    }));
+    saveState();
+    renderRows();
+    switchTab('compose');
+    showToast(`Loaded template "${t.name}".`);
+  }
+
+  function renderTemplates(){
+    const grid = document.getElementById('templateGrid');
+    grid.innerHTML = '';
+    document.getElementById('templateEmptyHint').style.display = state.templates.length ? 'none' : 'block';
+
+    state.templates.forEach(t=>{
+      const el = document.createElement('div');
+      el.className = 'template-card';
+      el.innerHTML = `
+        <span class="badge">${escapeHtml(t.category)}</span>
+        <h4>${escapeHtml(t.name)}</h4>
+        <p>${escapeHtml(t.description || '')}</p>
+        <div class="template-actions">
+          <button class="btn btn-sm btn-gold" data-load="${t.id}">Load</button>
+          <button class="btn btn-sm btn-danger" data-tdel="${t.id}">Delete</button>
+        </div>
+      `;
+      grid.appendChild(el);
+    });
+
+    grid.querySelectorAll('[data-load]').forEach(btn=>{
+      btn.addEventListener('click', ()=> loadTemplate(btn.dataset.load));
+    });
+    grid.querySelectorAll('[data-tdel]').forEach(btn=>{
+      btn.addEventListener('click', ()=>{
+        if(confirm('Delete this template?')) deleteTemplate(btn.dataset.tdel);
+      });
+    });
+  }
+
+  /* ===================================================================
+     COMPOSE ROWS LOGIC
+     =================================================================== */
+  function addRow(blockId=null, value=''){
+    state.rows.push({ id: uid(), blockId, value });
+    saveState();
+    renderRows();
+  }
+
+  function removeRow(rowId){
+    state.rows = state.rows.filter(r=>r.id!==rowId);
+    saveState();
+    renderRows();
+  }
+
+  function renderRows(){
+    const container = document.getElementById('rowsContainer');
+    container.innerHTML = '';
+    document.getElementById('rowsEmptyHint').style.display = state.rows.length ? 'none' : 'block';
+
+    state.rows.forEach(row=>{
+      const wrap = document.createElement('div');
+      wrap.className = 'compose-row';
+
+      const blockOptions = state.blocks
+        .slice()
+        .sort((a,b)=>(a.order||0)-(b.order||0))
+        .map(b=> `<option value="${b.id}" ${b.id===row.blockId?'selected':''}>${escapeHtml(b.label)}</option>`)
+        .join('');
+
+      wrap.innerHTML = `
+        <span class="row-handle" title="Row">⋮⋮</span>
+        <select data-row-block="${row.id}">
+          <option value="">— free text —</option>
+          ${blockOptions}
+        </select>
+        <textarea data-row-value="${row.id}" placeholder="Type or select a block…">${escapeHtml(row.value)}</textarea>
+        <div class="row-actions">
+          <button class="btn btn-icon btn-sm" title="Use saved value" data-use="${row.id}">↺</button>
+          <button class="btn btn-icon btn-sm" title="Save as reusable block" data-saveblock="${row.id}">💾</button>
+          <button class="btn btn-icon btn-sm btn-danger" title="Remove row" data-remove="${row.id}">✕</button>
+        </div>
+      `;
+      container.appendChild(wrap);
+    });
+
+    container.querySelectorAll('[data-row-block]').forEach(sel=>{
+      sel.addEventListener('change', ()=>{
+        const rowId = sel.dataset.rowBlock;
+        const row = state.rows.find(r=>r.id===rowId);
+        row.blockId = sel.value || null;
+        if(row.blockId){
+          const b = state.blocks.find(x=>x.id===row.blockId);
+          row.value = b ? b.value : row.value;
+        }
+        saveState();
+        renderRows();
+        updatePreview();
+      });
+    });
+
+    container.querySelectorAll('[data-row-value]').forEach(ta=>{
+      ta.addEventListener('input', ()=>{
+        const rowId = ta.dataset.rowValue;
+        const row = state.rows.find(r=>r.id===rowId);
+        row.value = ta.value;
+        saveState();
+        updatePreview();
+      });
+    });
+
+    container.querySelectorAll('[data-use]').forEach(btn=>{
+      btn.addEventListener('click', ()=>{
+        const rowId = btn.dataset.use;
+        const row = state.rows.find(r=>r.id===rowId);
+        if(row.blockId){
+          const b = state.blocks.find(x=>x.id===row.blockId);
+          if(b){ row.value = b.value; saveState(); renderRows(); updatePreview(); }
+        }else{
+          showToast('Select a block first to reload its saved value.', 'info');
+        }
+      });
+    });
+
+    container.querySelectorAll('[data-saveblock]').forEach(btn=>{
+      btn.addEventListener('click', ()=>{
+        const rowId = btn.dataset.saveblock;
+        const row = state.rows.find(r=>r.id===rowId);
+        if(!row.value.trim()){ showToast('Nothing to save — row is empty.', 'error'); return; }
+        const label = prompt('Label for this new reusable block:', 'New Block');
+        if(!label) return;
+        addBlock(label.trim(), row.value, 'Custom', row.value.includes('\n') ? 'multiline':'inline');
+        renderBlocks();
+        showToast('Saved as reusable block.');
+      });
+    });
+
+    container.querySelectorAll('[data-remove]').forEach(btn=>{
+      btn.addEventListener('click', ()=> removeRow(btn.dataset.remove));
+    });
+
+    updatePreview();
+  }
+
+  /* ===================================================================
+     SMART ASSEMBLY
+     =================================================================== */
+  function assembleMessage(){
+    const parts = state.rows
+      .map(r=> r.value)
+      .filter(v => v && v.trim().length);
+
+    if(!parts.length) return '';
+
+    // Determine block type per row (default inline if free text)
+    const rowMeta = state.rows.map(r=>{
+      const block = r.blockId ? state.blocks.find(b=>b.id===r.blockId) : null;
+      return {
+        value: (r.value||'').trim(),
+        type: block ? block.type : (r.value && r.value.includes('\n') ? 'multiline' : 'inline')
+      };
+    }).filter(m=>m.value.length);
+
+    let result = '';
+    rowMeta.forEach((m, i)=>{
+      if(i===0){
+        result = m.value;
+        return;
+      }
+      if(m.type === 'multiline'){
+        result = smartJoinNewline(result, m.value);
+      }else{
+        result = smartJoinInline(result, m.value);
+      }
+    });
+
+    if(document.getElementById('autoCapToggle').checked && result.length){
+      result = result.charAt(0).toUpperCase() + result.slice(1);
+    }
+
+    return result;
+  }
+
+  function smartJoinInline(a, b){
+    const smart = document.getElementById('smartPunctToggle').checked;
+    if(!smart) return a + ' ' + b;
+
+    a = a.replace(/[ \t]+$/,'');
+    const endsWithPunct = /[.,!?;:]$/.test(a);
+    const startsWithPunct = /^[.,!?;:]/.test(b);
+
+    if(startsWithPunct){
+      return a + b;
+    }
+    if(endsWithPunct){
+      return a + ' ' + b;
+    }
+    return a + ' ' + b;
+  }
+
+  function smartJoinNewline(a, b){
+    return a.replace(/[ \t]+$/,'') + '\n\n' + b;
+  }
+
+  function updatePreview(){
+    const raw = assembleMessage();
+    state.lastMessage = raw;
+    saveState();
+
+    const body = document.getElementById('previewBody');
+    const phList = document.getElementById('placeholderList');
+
+    if(!raw){
+      body.innerHTML = '<span class="text-faint">Your composed message will appear here as you type…</span>';
+      phList.classList.remove('show');
+      phList.innerHTML = '';
+      return;
+    }
+
+    const placeholders = extractPlaceholders(raw);
+    let html = escapeHtml(raw);
+
+    placeholders.forEach(name=>{
+      const re = new RegExp('{{\\s*' + name.replace(/[.*+?^${}()|[\]\\]/g,'\\$&') + '\\s*}}','g');
+      html = html.replace(re, `<span class="ph-empty">{{${escapeHtml(name)}}}</span>`);
+    });
+
+    body.innerHTML = html;
+
+    if(placeholders.length){
+      phList.classList.add('show');
+      phList.innerHTML = '<label class="field-label">Fill placeholders directly:</label>' +
+        placeholders.map(name=>`
+          <div class="ph-item">
+            <label class="field-label">${escapeHtml(name)}</label>
+            <input type="text" data-fill="${escapeHtml(name)}" placeholder="Enter value for ${escapeHtml(name)}">
+          </div>
+        `).join('');
+
+      phList.querySelectorAll('[data-fill]').forEach(inp=>{
+        inp.addEventListener('input', ()=> applyInlinePlaceholderFill());
+      });
+    }else{
+      phList.classList.remove('show');
+      phList.innerHTML = '';
+    }
+  }
+
+  function applyInlinePlaceholderFill(){
+    const phList = document.getElementById('placeholderList');
+    const inputs = phList.querySelectorAll('[data-fill]');
+    let raw = assembleMessage();
+    let html = escapeHtml(raw);
+
+    inputs.forEach(inp=>{
+      const name = inp.dataset.fill;
+      const val = inp.value;
+      const re = new RegExp('{{\\s*' + name.replace(/[.*+?^${}()|[\]\\]/g,'\\$&') + '\\s*}}','g');
+      if(val.trim()){
+        html = html.replace(re, `<span class="ph-filled">${escapeHtml(val)}</span>`);
+      }else{
+        html = html.replace(re, `<span class="ph-empty">{{${escapeHtml(name)}}}</span>`);
+      }
+    });
+
+    document.getElementById('previewBody').innerHTML = html;
+  }
+
+  function getFinalPlainMessage(){
+    // Build plain text with placeholder fill values applied if present
+    let raw = assembleMessage();
+    const phList = document.getElementById('placeholderList');
+    const inputs = phList.querySelectorAll('[data-fill]');
+    inputs.forEach(inp=>{
+      const name = inp.dataset.fill;
+      const val = inp.value;
+      if(val.trim()){
+        const re = new RegExp('{{\\s*' + name.replace(/[.*+?^${}()|[\]\\]/g,'\\$&') + '\\s*}}','g');
+        raw = raw.replace(re, val);
+      }
+    });
+    return raw;
+  }
+
+  /* ===================================================================
+     TABS
+     =================================================================== */
+  function switchTab(tabName){
+    document.querySelectorAll('.tab-btn').forEach(b=> b.classList.toggle('active', b.dataset.tab===tabName));
+    document.querySelectorAll('.tab-panel').forEach(p=> p.classList.toggle('active', p.id === 'tab-'+tabName));
+  }
+
+  document.querySelectorAll('.tab-btn').forEach(btn=>{
+    btn.addEventListener('click', ()=> switchTab(btn.dataset.tab));
+  });
+
+  /* ===================================================================
+     EXPORT / IMPORT
+     =================================================================== */
+  function exportData(){
+    const dataStr = JSON.stringify(state, null, 2);
+    const blob = new Blob([dataStr], {type:'application/json'});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `message-composer-backup-${new Date().toISOString().slice(0,10)}.json`;
+    a.click();
+    URL.revokeObjectURL(url);
+    showToast('Data exported.');
+  }
+
+  function importData(file){
+    const reader = new FileReader();
+    reader.onload = e=>{
+      try{
+        const imported = JSON.parse(e.target.result);
+        if(imported.blocks) state.blocks = state.blocks.concat(imported.blocks.filter(b=>!state.blocks.some(x=>x.id===b.id)));
+        if(imported.templates) state.templates = state.templates.concat(imported.templates.filter(t=>!state.templates.some(x=>x.id===t.id)));
+        saveState();
+        renderBlocks();
+        renderTemplates();
+        showToast('Data imported and merged.');
+      }catch(err){
+        console.error(err);
+        showToast('Import failed — invalid JSON file.', 'error');
+      }
+    };
+    reader.readAsText(file);
+  }
+
+  /* ===================================================================
+     EVENT WIRING
+     =================================================================== */
+  document.getElementById('addRowBtn').addEventListener('click', ()=> addRow());
+
+  document.getElementById('clearMsgBtn').addEventListener('click', ()=>{
+    if(!state.rows.length) return;
+    if(confirm('Clear all rows in the current message?')){
+      state.rows = [];
+      saveState();
+      renderRows();
+    }
+  });
+
+  document.getElementById('copyBtn').addEventListener('click', ()=>{
+    const text = getFinalPlainMessage();
+    if(!text.trim()){ showToast('Nothing to copy yet.', 'error'); return; }
+    navigator.clipboard.writeText(text).then(()=>{
+      showToast('Copied to clipboard.');
+    }).catch(()=>{
+      showToast('Copy failed — try selecting text manually.', 'error');
+    });
+  });
+
+  document.getElementById('downloadTxtBtn').addEventListener('click', ()=>{
+    const text = getFinalPlainMessage();
+    if(!text.trim()){ showToast('Nothing to download yet.', 'error'); return; }
+    const blob = new Blob([text], {type:'text/plain'});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = 'message.txt'; a.click();
+    URL.revokeObjectURL(url);
+    showToast('Downloaded message.txt');
+  });
+
+  document.getElementById('downloadJsonBtn').addEventListener('click', ()=>{
+    const payload = { message: getFinalPlainMessage(), rows: state.rows, exportedAt: new Date().toISOString() };
+    const blob = new Blob([JSON.stringify(payload, null, 2)], {type:'application/json'});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = 'message.json'; a.click();
+    URL.revokeObjectURL(url);
+    showToast('Downloaded message.json');
+  });
+
+  document.getElementById('saveBlockBtn').addEventListener('click', ()=>{
+    const label = document.getElementById('blockLabelInput').value.trim();
+    const value = document.getElementById('blockValueInput').value;
+    const category = document.getElementById('blockCategoryInput').value;
+    const type = document.getElementById('blockTypeInput').value;
+    if(!label || !value.trim()){
+      showToast('Label and value are required.', 'error');
+      return;
+    }
+    addBlock(label, value, category, type);
+    document.getElementById('blockLabelInput').value = '';
+    document.getElementById('blockValueInput').value = '';
+    renderBlocks();
+    showToast('Block added.');
+  });
+
+  document.getElementById('blockSearch').addEventListener('input', renderBlocks);
+  document.getElementById('blockFilterCategory').addEventListener('change', renderBlocks);
+  document.getElementById('blockSortBy').addEventListener('change', renderBlocks);
+
+  // Save-as-template modal
+  const templateModal = document.getElementById('templateModal');
+  document.getElementById('saveTemplateBtn').addEventListener('click', ()=>{
+    if(!state.rows.length){ showToast('Add some rows first.', 'error'); return; }
+    document.getElementById('templateNameInput').value = '';
+    document.getElementById('templateDescInput').value = '';
+    templateModal.classList.add('show');
+  });
+  document.getElementById('cancelTemplateBtn').addEventListener('click', ()=> templateModal.classList.remove('show'));
+  document.getElementById('confirmTemplateBtn').addEventListener('click', ()=>{
+    const name = document.getElementById('templateNameInput').value.trim();
+    const category = document.getElementById('templateCategoryInput').value;
+    const desc = document.getElementById('templateDescInput').value.trim();
+    if(!name){ showToast('Template name is required.', 'error'); return; }
+    const structure = state.rows.map(r=> ({ blockId: r.blockId, value: r.blockId ? undefined : r.value }));
+    addTemplate(name, category, desc, structure);
+    templateModal.classList.remove('show');
+    renderTemplates();
+    showToast('Template saved.');
+  });
+
+  // Export / Import buttons (header + settings)
+  [document.getElementById('exportBtn'), document.getElementById('exportBtn2')].forEach(b=>
+    b.addEventListener('click', exportData)
+  );
+  const importFileInput = document.getElementById('importFile');
+  [document.getElementById('importBtn'), document.getElementById('importBtn2')].forEach(b=>
+    b.addEventListener('click', ()=> importFileInput.click())
+  );
+  importFileInput.addEventListener('change', e=>{
+    if(e.target.files[0]) importData(e.target.files[0]);
+    e.target.value = '';
+  });
+
+  document.getElementById('resetAllBtn').addEventListener('click', ()=>{
+    if(confirm('This will delete ALL blocks, templates, and rows permanently. Continue?')){
+      state = structuredClone(DEFAULT_STATE);
+      saveState();
+      renderBlocks();
+      renderTemplates();
+      renderRows();
+      showToast('All data reset.');
+    }
+  });
+
+  // Settings toggles
+  document.getElementById('darkModeToggle').addEventListener('change', e=>{
+    state.prefs.darkMode = e.target.checked;
+    document.body.classList.toggle('light', !e.target.checked);
+    saveState();
+  });
+  document.getElementById('autoCapToggle').addEventListener('change', e=>{
+    state.prefs.autoCap = e.target.checked;
+    saveState();
+    updatePreview();
+  });
+  document.getElementById('smartPunctToggle').addEventListener('change', e=>{
+    state.prefs.smartPunct = e.target.checked;
+    saveState();
+    updatePreview();
+  });
+
+  /* ===================================================================
+     INIT
+     =================================================================== */
+  function init(){
+    seedIfEmpty();
+
+    document.getElementById('darkModeToggle').checked = state.prefs.darkMode;
+    document.getElementById('autoCapToggle').checked = state.prefs.autoCap;
+    document.getElementById('smartPunctToggle').checked = state.prefs.smartPunct;
+    document.body.classList.toggle('light', !state.prefs.darkMode);
+
+    renderBlocks();
+    renderTemplates();
+    renderRows();
+  }
+
+  init();
+})();
+</script>
+
+</body>
+</html>
