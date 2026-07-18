@@ -1,0 +1,402 @@
+/* ==========================================================================
+   Data to Table App — Stylesheet
+   Design system: dark teal + gold (consistent with the offline tool suite)
+   ========================================================================== */
+
+:root {
+  /* --- Dark theme (default) --- */
+  --bg: #0d2b2e;
+  --bg-alt: #123a3e;
+  --panel-bg: #123a3e;
+  --panel-head-bg: #0a2325;
+  --border: #1e565c;
+  --text: #eaf3f2;
+  --text-muted: #9fc2c0;
+  --teal: #2a9d8f;
+  --teal-bright: #3fc9b8;
+  --gold: #d4af37;
+  --gold-bright: #f0c93f;
+  --danger: #e2555a;
+  --shadow: 0 4px 18px rgba(0, 0, 0, 0.35);
+  --radius: 10px;
+  --row-alt: rgba(255, 255, 255, 0.03);
+  --row-hover: rgba(63, 201, 184, 0.12);
+}
+
+[data-theme="light"] {
+  --bg: #f4f7f6;
+  --bg-alt: #ffffff;
+  --panel-bg: #ffffff;
+  --panel-head-bg: #eef5f4;
+  --border: #d5e3e1;
+  --text: #10302e;
+  --text-muted: #52706d;
+  --teal: #1f7a70;
+  --teal-bright: #14615a;
+  --gold: #a9821f;
+  --gold-bright: #8a6a17;
+  --danger: #c0323a;
+  --shadow: 0 4px 14px rgba(20, 60, 55, 0.08);
+  --row-alt: rgba(20, 60, 55, 0.03);
+  --row-hover: rgba(31, 122, 112, 0.08);
+}
+
+* { box-sizing: border-box; }
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: "Segoe UI", -apple-system, BlinkMacSystemFont, Roboto, Arial, sans-serif;
+  transition: background 0.2s ease, color 0.2s ease;
+}
+
+/* ---------------- Header ---------------- */
+.app-header {
+  background: var(--panel-head-bg);
+  border-bottom: 2px solid var(--gold);
+  box-shadow: var(--shadow);
+}
+
+.brand-icon {
+  font-size: 1.9rem;
+  color: var(--gold);
+}
+
+.app-title {
+  font-size: 1.25rem;
+  font-weight: 700;
+  letter-spacing: 0.3px;
+}
+
+.app-subtitle {
+  font-size: 0.78rem;
+  color: var(--text-muted);
+}
+
+.btn-theme-toggle {
+  background: transparent;
+  border: 1px solid var(--gold);
+  color: var(--gold);
+  border-radius: 999px;
+  padding: 0.35rem 0.9rem;
+  font-size: 0.82rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.btn-theme-toggle:hover {
+  background: var(--gold);
+  color: var(--panel-head-bg);
+}
+
+/* ---------------- Panels ---------------- */
+.panel {
+  background: var(--panel-bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  overflow: hidden;
+}
+
+.panel-head {
+  background: var(--panel-head-bg);
+  border-bottom: 1px solid var(--border);
+  padding: 0.65rem 1rem;
+  font-weight: 600;
+  color: var(--gold);
+  letter-spacing: 0.3px;
+  font-size: 0.95rem;
+}
+
+.panel-body {
+  padding: 1rem;
+}
+
+.panel-foot {
+  padding: 0.6rem 1rem;
+  border-top: 1px solid var(--border);
+  background: var(--panel-head-bg);
+}
+
+/* ---------------- Input area ---------------- */
+.input-area {
+  background: var(--bg-alt);
+  color: var(--text);
+  border: 1px solid var(--border);
+  font-family: "Consolas", "Courier New", monospace;
+  font-size: 0.88rem;
+  resize: vertical;
+}
+
+.input-area:focus {
+  background: var(--bg-alt);
+  color: var(--text);
+  border-color: var(--teal-bright);
+  box-shadow: 0 0 0 0.2rem rgba(63, 201, 184, 0.25);
+}
+
+.input-area::placeholder {
+  color: var(--text-muted);
+  opacity: 0.7;
+}
+
+.parse-status {
+  font-size: 0.85rem;
+  min-height: 1.2rem;
+}
+
+.parse-status.success { color: var(--teal-bright); }
+.parse-status.error { color: var(--danger); }
+
+/* ---------------- Buttons ---------------- */
+.btn-gold {
+  background: var(--gold);
+  border: 1px solid var(--gold);
+  color: #14201a;
+  font-weight: 600;
+}
+
+.btn-gold:hover {
+  background: var(--gold-bright);
+  border-color: var(--gold-bright);
+  color: #14201a;
+}
+
+.btn-outline-teal {
+  background: transparent;
+  border: 1px solid var(--teal);
+  color: var(--teal-bright);
+}
+
+.btn-outline-teal:hover {
+  background: var(--teal);
+  color: var(--bg);
+  border-color: var(--teal);
+}
+
+/* ---------------- Dashboard cards ---------------- */
+.stat-card {
+  background: var(--panel-bg);
+  border: 1px solid var(--border);
+  border-left: 4px solid var(--teal);
+  border-radius: var(--radius);
+  padding: 0.8rem 1rem;
+  box-shadow: var(--shadow);
+  height: 100%;
+}
+
+.stat-card-gold {
+  border-left-color: var(--gold);
+}
+
+.stat-label {
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  color: var(--text-muted);
+  margin-bottom: 0.2rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.stat-value {
+  font-size: 1.6rem;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.stat-card-gold .stat-value {
+  color: var(--gold-bright);
+}
+
+/* ---------------- Table ---------------- */
+.table-scroll-wrap {
+  max-height: 520px;
+  overflow: auto;
+}
+
+#reportTable {
+  color: var(--text);
+  margin: 0;
+}
+
+#reportTable thead th {
+  position: sticky;
+  top: 0;
+  z-index: 5;
+  background: var(--panel-head-bg);
+  color: var(--gold);
+  border-bottom: 2px solid var(--gold);
+  font-size: 0.78rem;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  cursor: pointer;
+  white-space: nowrap;
+  user-select: none;
+}
+
+#reportTable thead th:hover {
+  color: var(--gold-bright);
+}
+
+#reportTable thead th.col-check,
+#reportTable thead th.col-num {
+  cursor: default;
+}
+
+.sort-icon {
+  font-size: 0.7rem;
+  opacity: 0.5;
+  margin-left: 2px;
+}
+
+.sort-icon.active-asc::before { content: "\f145"; }
+.sort-icon.active-desc::before { content: "\f12b"; }
+
+#reportTable tbody tr {
+  border-bottom: 1px solid var(--border);
+}
+
+#reportTable tbody tr:nth-child(even) {
+  background: var(--row-alt);
+}
+
+#reportTable tbody tr:hover {
+  background: var(--row-hover);
+}
+
+#reportTable tbody td {
+  font-size: 0.87rem;
+  padding: 0.5rem 0.75rem;
+}
+
+#reportTable tbody tr.row-invalid {
+  outline: 1px solid var(--danger);
+  outline-offset: -1px;
+  background: rgba(226, 85, 90, 0.12);
+}
+
+.cell-error {
+  color: var(--danger);
+  font-size: 0.7rem;
+  display: block;
+  margin-top: 2px;
+}
+
+td.editable-cell {
+  cursor: text;
+}
+
+td.editable-cell:hover {
+  box-shadow: inset 0 0 0 1px var(--teal-bright);
+}
+
+td.editing input {
+  width: 100%;
+  background: var(--bg-alt);
+  color: var(--text);
+  border: 1px solid var(--teal-bright);
+  border-radius: 4px;
+  padding: 2px 6px;
+  font-size: 0.85rem;
+}
+
+.empty-state {
+  text-align: center;
+  padding: 3rem 1rem;
+  color: var(--text-muted);
+  width: 100%;
+}
+
+.empty-state i {
+  font-size: 2.2rem;
+  color: var(--teal);
+  display: block;
+  margin-bottom: 0.5rem;
+}
+
+.search-box {
+  max-width: 220px;
+  background: var(--bg-alt);
+  color: var(--text);
+  border: 1px solid var(--border);
+}
+
+.page-size-select {
+  max-width: 130px;
+  background: var(--bg-alt);
+  color: var(--text);
+  border: 1px solid var(--border);
+}
+
+.pagination-info {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+}
+
+.pagination .page-link {
+  background: var(--bg-alt);
+  border-color: var(--border);
+  color: var(--text);
+}
+
+.pagination .page-item.active .page-link {
+  background: var(--teal);
+  border-color: var(--teal);
+  color: #fff;
+}
+
+.pagination .page-link:hover {
+  background: var(--row-hover);
+  color: var(--text);
+}
+
+/* ---------------- Modals ---------------- */
+.app-modal {
+  background: var(--panel-bg);
+  color: var(--text);
+  border: 1px solid var(--gold);
+}
+
+.app-modal .modal-header,
+.app-modal .modal-footer {
+  border-color: var(--border);
+}
+
+/* ---------------- Footer ---------------- */
+.app-footer {
+  color: var(--text-muted);
+  font-size: 0.78rem;
+}
+
+/* ---------------- Toasts ---------------- */
+.app-toast {
+  background: var(--panel-bg);
+  color: var(--text);
+  border: 1px solid var(--teal);
+}
+
+.app-toast.toast-error {
+  border-color: var(--danger);
+}
+
+/* ---------------- Charts ---------------- */
+.chart-card {
+  background: var(--bg-alt);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 0.75rem;
+}
+
+canvas {
+  max-width: 100%;
+}
+
+/* ---------------- Responsive ---------------- */
+@media (max-width: 576px) {
+  .app-title { font-size: 1.05rem; }
+  .stat-value { font-size: 1.3rem; }
+  .search-box, .page-size-select { max-width: 100%; }
+}
