@@ -1,0 +1,574 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The Deen Ledger — Daily Practice Tracker</title>
+<style>
+  :root{
+    --bg-0:#07211f;
+    --bg-1:#0d2f2c;
+    --panel:#123c38;
+    --panel-2:#164743;
+    --line:#2a5a53;
+    --gold:#cfa845;
+    --gold-soft:#e6c877;
+    --text:#eaf3ef;
+    --text-dim:#a9c4bd;
+    --ring-track:#1c4844;
+    --good:#5fbf9f;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:
+      radial-gradient(1200px 600px at 85% -10%, #0f3a35 0%, transparent 60%),
+      linear-gradient(180deg, var(--bg-0), var(--bg-1) 60%);
+    color:var(--text);
+    font-family:'Georgia','Iowan Old Style', serif;
+    min-height:100vh;
+    padding:28px 16px 80px;
+  }
+  .wrap{max-width:920px;margin:0 auto;}
+
+  header{
+    display:flex;
+    justify-content:space-between;
+    align-items:flex-end;
+    gap:20px;
+    border-bottom:1px solid var(--line);
+    padding-bottom:18px;
+    margin-bottom:26px;
+    flex-wrap:wrap;
+  }
+  .eyebrow{
+    font-family:'Trebuchet MS', sans-serif;
+    letter-spacing:.18em;
+    text-transform:uppercase;
+    font-size:11px;
+    color:var(--gold-soft);
+    margin:0 0 6px;
+  }
+  h1{
+    font-size:28px;
+    margin:0;
+    font-weight:400;
+    letter-spacing:.01em;
+  }
+  .date{
+    font-family:'Trebuchet MS', sans-serif;
+    font-size:13px;
+    color:var(--text-dim);
+    text-align:right;
+  }
+
+  /* Overall progress hero */
+  .hero{
+    display:flex;
+    align-items:center;
+    gap:26px;
+    background:linear-gradient(135deg,var(--panel),var(--panel-2));
+    border:1px solid var(--line);
+    border-radius:14px;
+    padding:20px 24px;
+    margin-bottom:30px;
+  }
+  .ring-box{position:relative;width:104px;height:104px;flex:none;}
+  .ring-box svg{transform:rotate(-90deg);}
+  .ring-track{fill:none;stroke:var(--ring-track);stroke-width:10;}
+  .ring-fill{fill:none;stroke:var(--gold);stroke-width:10;stroke-linecap:round;transition:stroke-dashoffset .5s ease;}
+  .ring-label{
+    position:absolute;inset:0;
+    display:flex;align-items:center;justify-content:center;
+    flex-direction:column;
+    font-family:'Trebuchet MS', sans-serif;
+  }
+  .ring-label .pct{font-size:22px;color:var(--gold-soft);font-weight:bold;}
+  .ring-label .sub{font-size:9px;color:var(--text-dim);letter-spacing:.05em;}
+
+  .hero-copy{flex:1;min-width:200px;}
+  .hero-copy h2{margin:0 0 6px;font-size:16px;font-weight:400;color:var(--gold-soft);font-family:'Trebuchet MS', sans-serif;}
+  .hero-copy p{margin:0;font-size:13px;color:var(--text-dim);line-height:1.5;}
+  .hero-stats{
+    display:flex;gap:18px;margin-top:10px;
+    font-family:'Trebuchet MS', sans-serif;font-size:12px;color:var(--text-dim);
+  }
+  .hero-stats b{color:var(--gold-soft);font-size:15px;display:block;}
+
+  /* Overall bar */
+  .bar-track{
+    height:8px;border-radius:6px;background:var(--ring-track);
+    overflow:hidden;margin-top:12px;
+  }
+  .bar-fill{
+    height:100%;
+    background:linear-gradient(90deg, var(--gold), var(--gold-soft));
+    border-radius:6px;
+    transition:width .5s ease;
+  }
+
+  /* Sections */
+  .pillar{
+    background:var(--panel);
+    border:1px solid var(--line);
+    border-radius:12px;
+    margin-bottom:16px;
+    overflow:hidden;
+  }
+  .pillar-head{
+    display:flex;
+    align-items:center;
+    gap:14px;
+    padding:16px 18px;
+    cursor:pointer;
+    user-select:none;
+  }
+  .pillar-num{
+    font-family:'Trebuchet MS', sans-serif;
+    font-size:11px;
+    color:var(--bg-0);
+    background:var(--gold);
+    width:26px;height:26px;border-radius:50%;
+    display:flex;align-items:center;justify-content:center;
+    flex:none;font-weight:bold;
+  }
+  .pillar-title-box{flex:1;min-width:0;}
+  .pillar-title{font-size:16px;color:var(--text);}
+  .pillar-goal{font-size:12px;color:var(--text-dim);font-family:'Trebuchet MS', sans-serif;margin-top:2px;}
+  .pillar-mini-track{
+    width:70px;height:6px;border-radius:4px;background:var(--ring-track);
+    overflow:hidden;flex:none;
+  }
+  .pillar-mini-fill{height:100%;background:var(--gold);border-radius:4px;transition:width .4s ease;}
+  .pillar-count{
+    font-family:'Trebuchet MS', sans-serif;
+    font-size:11px;color:var(--text-dim);width:36px;text-align:right;flex:none;
+  }
+  .chevron{
+    width:10px;height:10px;border-right:2px solid var(--gold-soft);border-bottom:2px solid var(--gold-soft);
+    transform:rotate(45deg);transition:transform .25s ease;flex:none;
+  }
+  .pillar.collapsed .chevron{transform:rotate(-45deg);}
+
+  .quote{
+    font-size:12.5px;
+    color:var(--gold-soft);
+    font-style:italic;
+    padding:0 18px 12px 58px;
+    border-bottom:1px solid var(--line);
+    margin:0;
+    opacity:.9;
+  }
+
+  .items{padding:6px 18px 14px 18px;}
+  .pillar.collapsed .items, .pillar.collapsed .quote{display:none;}
+
+  .item{
+    display:flex;
+    align-items:flex-start;
+    gap:12px;
+    padding:9px 0;
+    border-bottom:1px dashed rgba(255,255,255,.06);
+  }
+  .item:last-child{border-bottom:none;}
+  .check{
+    width:20px;height:20px;flex:none;
+    border:2px solid var(--gold);
+    border-radius:5px;
+    margin-top:2px;
+    display:flex;align-items:center;justify-content:center;
+    cursor:pointer;
+    background:transparent;
+    transition:background .15s ease, transform .1s ease;
+  }
+  .check:active{transform:scale(.9);}
+  .check.checked{background:var(--gold);}
+  .check svg{width:12px;height:12px;display:none;stroke:var(--bg-0);stroke-width:3;}
+  .check.checked svg{display:block;}
+  .item-text{
+    font-size:14px;
+    line-height:1.45;
+    color:var(--text-dim);
+    cursor:pointer;
+  }
+  .item.done .item-text{
+    color:var(--gold-soft);
+    font-weight:bold;
+  }
+
+  /* Daily checklist summary section */
+  .summary{
+    background:linear-gradient(135deg,var(--panel-2),var(--panel));
+    border:1px solid var(--gold);
+    border-radius:12px;
+    padding:18px 20px 6px;
+    margin-top:8px;
+  }
+  .summary h2{
+    font-family:'Trebuchet MS', sans-serif;
+    font-size:14px;color:var(--gold-soft);margin:0 0 10px;
+    letter-spacing:.05em;text-transform:uppercase;
+  }
+
+  footer{
+    text-align:center;
+    color:var(--text-dim);
+    font-family:'Trebuchet MS', sans-serif;
+    font-size:11px;
+    margin-top:36px;
+    opacity:.7;
+  }
+  .reset-btn{
+    font-family:'Trebuchet MS', sans-serif;
+    font-size:11px;
+    color:var(--text-dim);
+    background:transparent;
+    border:1px solid var(--line);
+    padding:6px 12px;
+    border-radius:20px;
+    cursor:pointer;
+    margin-top:14px;
+  }
+  .reset-btn:hover{border-color:var(--gold);color:var(--gold-soft);}
+
+  @media (max-width:600px){
+    .hero{flex-direction:column;align-items:flex-start;}
+    .date{text-align:left;}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <div>
+      <p class="eyebrow">The Deen Ledger</p>
+      <h1>Daily Practice Tracker</h1>
+    </div>
+    <div class="date" id="todayDate"></div>
+  </header>
+
+  <div class="hero">
+    <div class="ring-box">
+      <svg width="104" height="104" viewBox="0 0 104 104">
+        <circle class="ring-track" cx="52" cy="52" r="44"></circle>
+        <circle class="ring-fill" id="ringFill" cx="52" cy="52" r="44" stroke-dasharray="276.5" stroke-dashoffset="276.5"></circle>
+      </svg>
+      <div class="ring-label">
+        <span class="pct" id="pctLabel">0%</span>
+        <span class="sub">TODAY</span>
+      </div>
+    </div>
+    <div class="hero-copy">
+      <h2>Overall Progress</h2>
+      <p>Eleven pillars, one balanced day. Every checked box strengthens the same rope — worship, character, family, work, and rest, all pulled taut toward Allah.</p>
+      <div class="hero-stats">
+        <div><b id="doneCount">0</b>done</div>
+        <div><b id="totalCount">0</b>total practices</div>
+        <div><b id="streakLabel">—</b>best pillar</div>
+      </div>
+      <div class="bar-track"><div class="bar-fill" id="overallBar" style="width:0%"></div></div>
+    </div>
+  </div>
+
+  <div id="pillars"></div>
+
+  <div class="summary">
+    <h2>Daily Checklist</h2>
+    <div id="dailyItems"></div>
+  </div>
+
+  <div style="text-align:center;">
+    <button class="reset-btn" id="resetBtn">Reset today's checklist</button>
+  </div>
+
+  <footer>Offline &middot; No account &middot; Your progress is saved only on this device</footer>
+</div>
+
+<script>
+(function(){
+  const DATA = [
+    {
+      title: "Strong Belief in Allah (Tawḥīd)",
+      goal: "Make Allah the center of every decision.",
+      quote: "\u201cSo know that there is no deity except Allah.\u201d — Qur'an 47:19",
+      items: [
+        "Begin the day with the intention: \u201cI do this for the sake of Allah.\u201d",
+        "Read and reflect on at least 5–10 verses of the Qur'an daily.",
+        "Learn one Name of Allah every week and apply its meaning.",
+        "Frequently say: SubhanAllah, Alhamdulillah, Allahu Akbar, and La ilaha illa Allah.",
+        "Before important decisions, ask: \u201cWill this please Allah?\u201d"
+      ]
+    },
+    {
+      title: "Perform the Five Daily Prayers",
+      goal: "Build your day around Salah.",
+      quote: "\u201cIndeed, prayer restrains from immorality and wrongdoing.\u201d — Qur'an 29:45",
+      items: [
+        "Pray each Salah on time.",
+        "Pray Fajr and Isha in the mosque if possible (for men).",
+        "Learn the meanings of what you recite in Salah.",
+        "Make dua after every prayer.",
+        "Spend a few moments in dhikr after Salah."
+      ]
+    },
+    {
+      title: "Read and Reflect on the Qur'an",
+      goal: "Let the Qur'an guide your daily life.",
+      quote: "",
+      items: [
+        "Read at least one page every day.",
+        "Read the translation and tafsir of one verse.",
+        "Memorize one verse each week.",
+        "Choose one Qur'anic teaching and act upon it today."
+      ]
+    },
+    {
+      title: "Be Truthful, Trustworthy, Humble, and Patient",
+      goal: "Display excellent character.",
+      quote: "\u201cThe best among you are those with the best character.\u201d — Bukhari",
+      items: [
+        "Never lie, even in jokes.",
+        "Fulfill promises and commitments.",
+        "Speak kindly and avoid gossip.",
+        "Control anger before responding.",
+        "Smile and greet others with Salam."
+      ]
+    },
+    {
+      title: "Honor Parents and Maintain Family Ties",
+      goal: "Strengthen family relationships.",
+      quote: "",
+      items: [
+        "Speak respectfully to your parents.",
+        "Call or visit your parents regularly if living apart.",
+        "Help with household responsibilities.",
+        "Keep in touch with relatives.",
+        "Forgive family members and avoid unnecessary disputes."
+      ]
+    },
+    {
+      title: "Earn Through Halal Means",
+      goal: "Seek Allah's blessings in your livelihood.",
+      quote: "\u201cAllah loves that when one of you does a job, he perfects it.\u201d",
+      items: [
+        "Be honest at work and in business.",
+        "Arrive on time and fulfill your responsibilities.",
+        "Avoid cheating, bribery, and deception.",
+        "Continue learning skills to improve your work.",
+        "Thank Allah for your income."
+      ]
+    },
+    {
+      title: "Help Others and Give Charity",
+      goal: "Be beneficial to people.",
+      quote: "\u201cThe most beloved people to Allah are those most beneficial to people.\u201d",
+      items: [
+        "Give charity regularly, even a small amount.",
+        "Help someone every day with your time, wealth, or knowledge.",
+        "Visit the sick or comfort someone in distress.",
+        "Share beneficial Islamic knowledge.",
+        "Volunteer in community or dawah activities."
+      ]
+    },
+    {
+      title: "Seek Beneficial Knowledge",
+      goal: "Learn throughout your life.",
+      quote: "\u201cSeeking knowledge is an obligation upon every Muslim.\u201d — Ibn Majah",
+      items: [
+        "Read for 20–30 minutes daily.",
+        "Study one hadith or one Qur'anic verse each day.",
+        "Attend a weekly Islamic class.",
+        "Learn a new practical skill.",
+        "Teach your family what you have learned."
+      ]
+    },
+    {
+      title: "Remember Allah Often (Dhikr)",
+      goal: "Keep the heart connected to Allah.",
+      quote: "\u201cVerily, in the remembrance of Allah do hearts find rest.\u201d — Qur'an 13:28",
+      items: [
+        "Read the morning and evening adhkar.",
+        "Say Astaghfirullah at least 100 times daily.",
+        "Send salawat upon the Prophet ﷺ frequently.",
+        "Remember Allah while driving, walking, or waiting."
+      ]
+    },
+    {
+      title: "Balance Worship, Family, Work, Health, and Rest",
+      goal: "Live a balanced and productive life.",
+      quote: "\u201cYour Lord has a right over you, your body a right, your family a right. Give each their due.\u201d — Bukhari",
+      items: [
+        "Sleep early and wake for Fajr.",
+        "Exercise or walk for 20–30 minutes.",
+        "Eat halal and in moderation.",
+        "Spend quality time with your spouse and children.",
+        "Schedule time for worship, work, learning, and rest."
+      ]
+    },
+    {
+      title: "Repent Sincerely Every Day",
+      goal: "Constantly return to Allah.",
+      quote: "\u201cAll the children of Adam sin, and the best of those who sin are those who repent.\u201d — Tirmidhi",
+      items: [
+        "Review your day before sleeping.",
+        "Ask Allah for forgiveness every day.",
+        "Correct mistakes quickly.",
+        "If you wrong someone, apologize and restore their rights.",
+        "Resolve to improve tomorrow."
+      ]
+    }
+  ];
+
+  const DAILY = [
+    "Pray the five daily prayers on time.",
+    "Read at least one page of the Qur'an.",
+    "Make morning and evening adhkar.",
+    "Perform one act of kindness.",
+    "Learn one new Islamic lesson or beneficial skill.",
+    "Exercise and eat moderately.",
+    "Spend quality time with family.",
+    "Give charity or help someone.",
+    "Seek forgiveness before sleeping.",
+    "Sleep with the intention of waking for Fajr."
+  ];
+
+  const todayKey = () => {
+    const d = new Date();
+    return 'deen-ledger-' + d.getFullYear() + '-' + (d.getMonth()+1) + '-' + d.getDate();
+  };
+  const STORAGE_KEY = todayKey();
+
+  function loadState(){
+    try{
+      const raw = localStorage.getItem(STORAGE_KEY);
+      return raw ? JSON.parse(raw) : {};
+    }catch(e){ return {}; }
+  }
+  function saveState(state){
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+  }
+  let state = loadState();
+
+  const checkSvg = '<svg viewBox="0 0 24 24" fill="none"><path d="M4 12l5 5L20 6"/></svg>';
+
+  const pillarsEl = document.getElementById('pillars');
+  const dailyEl = document.getElementById('dailyItems');
+
+  function makeItemRow(id, text){
+    const row = document.createElement('div');
+    row.className = 'item' + (state[id] ? ' done' : '');
+    row.innerHTML = `
+      <div class="check ${state[id] ? 'checked' : ''}" data-id="${id}">${checkSvg}</div>
+      <div class="item-text" data-id="${id}">${text}</div>
+    `;
+    return row;
+  }
+
+  DATA.forEach((pillar, pIdx) => {
+    const section = document.createElement('div');
+    section.className = 'pillar';
+    section.innerHTML = `
+      <div class="pillar-head" data-toggle="${pIdx}">
+        <div class="pillar-num">${pIdx+1}</div>
+        <div class="pillar-title-box">
+          <div class="pillar-title">${pillar.title}</div>
+          <div class="pillar-goal">${pillar.goal}</div>
+        </div>
+        <div class="pillar-mini-track"><div class="pillar-mini-fill" id="mini-${pIdx}" style="width:0%"></div></div>
+        <div class="pillar-count" id="count-${pIdx}">0/${pillar.items.length}</div>
+        <div class="chevron"></div>
+      </div>
+      ${pillar.quote ? `<p class="quote">${pillar.quote}</p>` : ''}
+      <div class="items" id="items-${pIdx}"></div>
+    `;
+    pillarsEl.appendChild(section);
+
+    const itemsWrap = section.querySelector(`#items-${pIdx}`);
+    pillar.items.forEach((text, iIdx) => {
+      const id = `p${pIdx}-i${iIdx}`;
+      itemsWrap.appendChild(makeItemRow(id, text));
+    });
+
+    section.querySelector('.pillar-head').addEventListener('click', () => {
+      section.classList.toggle('collapsed');
+    });
+  });
+
+  DAILY.forEach((text, idx) => {
+    const id = `daily-${idx}`;
+    dailyEl.appendChild(makeItemRow(id, text));
+  });
+
+  function allIds(){
+    const ids = [];
+    DATA.forEach((pillar, pIdx) => pillar.items.forEach((_, iIdx) => ids.push(`p${pIdx}-i${iIdx}`)));
+    DAILY.forEach((_, idx) => ids.push(`daily-${idx}`));
+    return ids;
+  }
+
+  function updateAll(){
+    const ids = allIds();
+    const total = ids.length;
+    const done = ids.filter(id => state[id]).length;
+    const pct = total ? Math.round((done/total)*100) : 0;
+
+    document.getElementById('doneCount').textContent = done;
+    document.getElementById('totalCount').textContent = total;
+    document.getElementById('pctLabel').textContent = pct + '%';
+    document.getElementById('overallBar').style.width = pct + '%';
+
+    const r = 44, c = 2*Math.PI*r;
+    const ring = document.getElementById('ringFill');
+    ring.setAttribute('stroke-dasharray', c.toFixed(1));
+    ring.setAttribute('stroke-dashoffset', (c - (pct/100)*c).toFixed(1));
+
+    let bestPillar = '—', bestPct = -1;
+    DATA.forEach((pillar, pIdx) => {
+      const pdone = pillar.items.filter((_, iIdx) => state[`p${pIdx}-i${iIdx}`]).length;
+      const ppct = Math.round((pdone/pillar.items.length)*100);
+      const mini = document.getElementById(`mini-${pIdx}`);
+      if(mini) mini.style.width = ppct + '%';
+      const countEl = document.getElementById(`count-${pIdx}`);
+      if(countEl) countEl.textContent = `${pdone}/${pillar.items.length}`;
+      if(ppct > bestPct && pdone > 0){ bestPct = ppct; bestPillar = `#${pIdx+1}`; }
+    });
+    document.getElementById('streakLabel').textContent = bestPillar;
+  }
+
+  function toggle(id){
+    state[id] = !state[id];
+    saveState(state);
+    const checkEl = document.querySelector(`.check[data-id="${id}"]`);
+    const row = checkEl.closest('.item');
+    checkEl.classList.toggle('checked', !!state[id]);
+    row.classList.toggle('done', !!state[id]);
+    updateAll();
+  }
+
+  document.body.addEventListener('click', (e) => {
+    const target = e.target.closest('.check, .item-text');
+    if(target){
+      toggle(target.getAttribute('data-id'));
+    }
+  });
+
+  document.getElementById('resetBtn').addEventListener('click', () => {
+    if(confirm("Reset today's checklist? This clears all checks for today only.")){
+      state = {};
+      saveState(state);
+      document.querySelectorAll('.check').forEach(el => el.classList.remove('checked'));
+      document.querySelectorAll('.item').forEach(el => el.classList.remove('done'));
+      updateAll();
+    }
+  });
+
+  document.getElementById('todayDate').textContent = new Date().toLocaleDateString('en-US', {
+    weekday:'long', year:'numeric', month:'long', day:'numeric'
+  });
+
+  updateAll();
+})();
+</script>
+</body>
+</html>
