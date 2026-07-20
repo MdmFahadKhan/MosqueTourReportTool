@@ -1,0 +1,831 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Focus System</title>
+<style>
+  :root{
+    --bg:#0b1f1e;
+    --panel:#0f2b29;
+    --panel-2:#123430;
+    --line:#1e4440;
+    --teal:#1c5c56;
+    --teal-bright:#2e8a7f;
+    --gold:#d4af6a;
+    --gold-bright:#e8c688;
+    --text:#e7ede9;
+    --text-dim:#9db3ad;
+    --danger:#c0645a;
+    --good:#5fa892;
+    --radius:10px;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    background:
+      radial-gradient(1200px 600px at 10% -10%, #123936 0%, transparent 60%),
+      radial-gradient(1000px 700px at 100% 0%, #0e2e2b 0%, transparent 55%),
+      var(--bg);
+    color:var(--text);
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    min-height:100vh;
+  }
+  .wrap{max-width:1040px;margin:0 auto;padding:28px 20px 80px;}
+
+  header.top{
+    display:flex;justify-content:space-between;align-items:flex-end;
+    border-bottom:1px solid var(--line);
+    padding-bottom:18px;margin-bottom:22px;flex-wrap:wrap;gap:12px;
+  }
+  header.top h1{
+    margin:0;font-size:26px;letter-spacing:0.5px;font-weight:600;
+    color:var(--gold-bright);
+  }
+  header.top .sub{color:var(--text-dim);font-size:13px;margin-top:4px;}
+  header.top .date{color:var(--text-dim);font-size:13px;text-align:right;}
+  header.top .date b{color:var(--gold);display:block;font-size:15px;}
+
+  nav.tabs{
+    display:flex;gap:6px;flex-wrap:wrap;margin-bottom:22px;
+    border-bottom:1px solid var(--line);
+    padding-bottom:0;
+  }
+  nav.tabs button{
+    background:transparent;border:none;color:var(--text-dim);
+    padding:10px 14px;font-size:13.5px;cursor:pointer;
+    border-bottom:2px solid transparent;
+    font-weight:600;letter-spacing:.2px;
+    transition:color .15s, border-color .15s;
+  }
+  nav.tabs button:hover{color:var(--text);}
+  nav.tabs button.active{color:var(--gold-bright);border-bottom-color:var(--gold);}
+
+  .panel{
+    background:linear-gradient(180deg,var(--panel),var(--panel-2));
+    border:1px solid var(--line);
+    border-radius:var(--radius);
+    padding:20px;
+    margin-bottom:18px;
+  }
+  .panel h2{
+    margin:0 0 4px;font-size:16px;color:var(--gold-bright);
+    display:flex;align-items:center;gap:8px;
+  }
+  .panel .desc{color:var(--text-dim);font-size:12.5px;margin:0 0 14px;line-height:1.5;}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
+  @media(max-width:760px){.grid2{grid-template-columns:1fr;}}
+
+  /* Buttons */
+  button.btn{
+    background:var(--teal);border:1px solid var(--teal-bright);
+    color:var(--text);padding:8px 14px;border-radius:8px;
+    font-size:13px;cursor:pointer;font-weight:600;
+    transition:background .15s;
+  }
+  button.btn:hover{background:var(--teal-bright);}
+  button.btn.gold{background:transparent;border:1px solid var(--gold);color:var(--gold-bright);}
+  button.btn.gold:hover{background:rgba(212,175,106,0.12);}
+  button.btn.danger{background:transparent;border:1px solid var(--danger);color:var(--danger);}
+  button.btn.danger:hover{background:rgba(192,100,90,0.12);}
+  button.btn.small{padding:5px 10px;font-size:12px;}
+  button.icon-btn{
+    background:none;border:none;color:var(--text-dim);cursor:pointer;font-size:15px;
+    padding:2px 6px;line-height:1;
+  }
+  button.icon-btn:hover{color:var(--danger);}
+
+  input[type=text], textarea, select, input[type=time], input[type=number]{
+    background:#0a211f;border:1px solid var(--line);color:var(--text);
+    border-radius:7px;padding:9px 11px;font-size:13.5px;font-family:inherit;
+    width:100%;
+  }
+  input[type=text]:focus, textarea:focus, select:focus{
+    outline:none;border-color:var(--teal-bright);
+  }
+  textarea{resize:vertical;min-height:70px;}
+
+  .inline-form{display:flex;gap:8px;margin-bottom:12px;}
+  .inline-form input{flex:1;}
+
+  /* Checklist items -- CHECKED = BOLD, no strikethrough */
+  ul.tasklist{list-style:none;margin:0;padding:0;}
+  ul.tasklist li{
+    display:flex;align-items:flex-start;gap:10px;
+    padding:9px 4px;border-bottom:1px solid var(--line);
+  }
+  ul.tasklist li:last-child{border-bottom:none;}
+  ul.tasklist li input[type=checkbox]{
+    margin-top:3px;width:16px;height:16px;accent-color:var(--gold);cursor:pointer;flex-shrink:0;
+  }
+  ul.tasklist li .txt{
+    flex:1;font-size:14px;color:var(--text-dim);line-height:1.4;
+    word-break:break-word;
+  }
+  ul.tasklist li.done .txt{
+    color:var(--gold-bright);
+    font-weight:700;
+    /* explicitly no text-decoration: line-through */
+  }
+  ul.tasklist li .meta{font-size:11px;color:var(--text-dim);margin-left:auto;flex-shrink:0;padding-top:2px;}
+
+  .empty{color:var(--text-dim);font-size:13px;font-style:italic;padding:10px 4px;}
+
+  /* Top 3 */
+  .top3-item{
+    display:flex;align-items:center;gap:10px;
+    background:#0a211f;border:1px solid var(--line);border-radius:8px;
+    padding:10px 12px;margin-bottom:8px;
+  }
+  .top3-item .num{
+    color:var(--gold);font-weight:700;font-size:15px;width:20px;flex-shrink:0;
+  }
+  .top3-item input[type=checkbox]{width:16px;height:16px;accent-color:var(--gold);flex-shrink:0;}
+  .top3-item .txt{flex:1;font-size:14px;color:var(--text-dim);}
+  .top3-item.done .txt{color:var(--gold-bright);font-weight:700;}
+  .top3-item.done{border-color:var(--gold);}
+
+  /* Time blocks */
+  table.blocks{width:100%;border-collapse:collapse;font-size:13.5px;}
+  table.blocks th{text-align:left;color:var(--text-dim);font-weight:600;padding:6px 8px;border-bottom:1px solid var(--line);font-size:11.5px;text-transform:uppercase;letter-spacing:.5px;}
+  table.blocks td{padding:7px 8px;border-bottom:1px solid var(--line);vertical-align:middle;}
+  table.blocks tr.now{background:rgba(212,175,106,0.08);}
+  table.blocks input[type=time]{width:auto;}
+
+  /* Timer / sprint */
+  .timer-box{text-align:center;padding:20px 10px;}
+  .timer-display{
+    font-size:64px;font-weight:700;color:var(--gold-bright);
+    font-variant-numeric:tabular-nums;letter-spacing:2px;margin-bottom:6px;
+  }
+  .timer-label{color:var(--text-dim);font-size:13px;margin-bottom:18px;}
+  .timer-controls{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;}
+  .sprint-log{margin-top:16px;}
+  .sprint-badge{
+    display:inline-block;width:26px;height:26px;border-radius:50%;
+    background:var(--teal);border:1px solid var(--teal-bright);
+    text-align:center;line-height:26px;font-size:12px;color:var(--text-dim);margin:2px;
+  }
+  .sprint-badge.focused{background:var(--gold);border-color:var(--gold-bright);color:#1a1200;font-weight:700;}
+
+  /* Focus score */
+  .score-row{display:flex;align-items:center;gap:12px;margin-bottom:10px;}
+  .score-row .hourlbl{width:64px;color:var(--text-dim);font-size:12.5px;flex-shrink:0;}
+  .score-btns{display:flex;gap:4px;}
+  .score-btns button{
+    width:28px;height:28px;border-radius:6px;border:1px solid var(--line);
+    background:#0a211f;color:var(--text-dim);cursor:pointer;font-size:12px;font-weight:600;
+  }
+  .score-btns button.sel{background:var(--gold);color:#1a1200;border-color:var(--gold-bright);}
+  .avg-display{
+    text-align:center;padding:14px;margin-top:10px;
+    border-top:1px solid var(--line);
+  }
+  .avg-display .num{font-size:34px;font-weight:700;color:var(--gold-bright);}
+  .avg-display .lbl{color:var(--text-dim);font-size:12px;}
+
+  /* 30-day challenge */
+  .challenge-grid{display:grid;grid-template-columns:repeat(10,1fr);gap:6px;}
+  @media(max-width:600px){.challenge-grid{grid-template-columns:repeat(6,1fr);}}
+  .day-cell{
+    aspect-ratio:1;border-radius:6px;border:1px solid var(--line);
+    background:#0a211f;display:flex;align-items:center;justify-content:center;
+    font-size:12px;color:var(--text-dim);cursor:pointer;font-weight:600;position:relative;
+  }
+  .day-cell.complete{background:var(--gold);color:#1a1200;border-color:var(--gold-bright);font-weight:700;}
+  .day-cell.partial{background:rgba(212,175,106,0.28);color:var(--gold-bright);border-color:var(--gold);}
+  .habit-checklist{margin-top:14px;}
+
+  /* Weekly review */
+  .review-q{margin-bottom:14px;}
+  .review-q label{display:block;font-size:12.5px;color:var(--text-dim);margin-bottom:5px;font-weight:600;}
+
+  .stat-strip{display:flex;gap:14px;flex-wrap:wrap;margin-bottom:6px;}
+  .stat-chip{
+    background:#0a211f;border:1px solid var(--line);border-radius:8px;
+    padding:10px 16px;text-align:center;flex:1;min-width:100px;
+  }
+  .stat-chip .n{font-size:22px;font-weight:700;color:var(--gold-bright);}
+  .stat-chip .l{font-size:11px;color:var(--text-dim);text-transform:uppercase;letter-spacing:.4px;}
+
+  .footer-note{
+    text-align:center;color:var(--text-dim);font-size:11.5px;margin-top:30px;line-height:1.6;
+  }
+  .footer-note b{color:var(--gold);}
+
+  ::-webkit-scrollbar{width:8px;}
+  ::-webkit-scrollbar-thumb{background:var(--line);border-radius:4px;}
+
+  .tab-content{display:none;}
+  .tab-content.active{display:block;}
+
+  .collapse-toggle{cursor:pointer;user-select:none;}
+  .rule-box{
+    background:#0a211f;border-left:3px solid var(--gold);
+    padding:10px 14px;margin-bottom:12px;border-radius:0 6px 6px 0;
+    font-size:12.5px;color:var(--text-dim);line-height:1.6;
+  }
+  .rule-box b{color:var(--gold-bright);}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="top">
+    <div>
+      <h1>Focus System</h1>
+      <div class="sub">A practical operating system for concentration &mdash; not a pep talk.</div>
+    </div>
+    <div class="date">
+      <b id="todayLabel"></b>
+      Day <span id="challengeDayNum">1</span> of 30
+    </div>
+  </header>
+
+  <nav class="tabs" id="tabs">
+    <button data-tab="dump" class="active">Brain Dump</button>
+    <button data-tab="top3">Top 3</button>
+    <button data-tab="blocks">Time Blocks</button>
+    <button data-tab="sprint">Focus Sprint</button>
+    <button data-tab="parking">Thought Parking</button>
+    <button data-tab="score">Focus Score</button>
+    <button data-tab="review">Day / Week Review</button>
+    <button data-tab="challenge">30-Day Challenge</button>
+  </nav>
+
+  <!-- BRAIN DUMP -->
+  <div class="tab-content active" id="tab-dump">
+    <div class="panel">
+      <h2>Brain Dump</h2>
+      <p class="desc">Get every open loop out of your head and onto this list. Your brain is for thinking, not storing reminders. Do this every morning before you touch real work.</p>
+      <div class="inline-form">
+        <input type="text" id="dumpInput" placeholder="Need to... (press Enter to add)">
+        <button class="btn" onclick="addDump()">Add</button>
+      </div>
+      <ul class="tasklist" id="dumpList"></ul>
+      <div class="empty" id="dumpEmpty" style="display:none;">Nothing dumped yet. Start typing above &mdash; everything counts.</div>
+    </div>
+    <div class="panel">
+      <h2>Promote to Today's Top 3</h2>
+      <p class="desc">Pick the items that actually matter today. Click an item in your brain dump to promote it below, or add directly.</p>
+      <div id="promoteHint" class="empty">Click any unchecked brain dump item to send it to Top 3.</div>
+    </div>
+  </div>
+
+  <!-- TOP 3 -->
+  <div class="tab-content" id="tab-top3">
+    <div class="panel">
+      <h2>Daily Top Three</h2>
+      <p class="desc">Every morning, choose only three important tasks. If these three get done, the day is a success &mdash; everything else is optional.</p>
+      <div class="inline-form">
+        <input type="text" id="top3Input" placeholder="Add a top-3 task (max 3)">
+        <button class="btn" onclick="addTop3()">Add</button>
+      </div>
+      <div id="top3List"></div>
+      <div class="empty" id="top3Empty" style="display:none;">No top-3 tasks set for today yet.</div>
+    </div>
+  </div>
+
+  <!-- TIME BLOCKS -->
+  <div class="tab-content" id="tab-blocks">
+    <div class="panel">
+      <h2>Time Blocking</h2>
+      <p class="desc">"I'll work all day" fails. A block with a start, an end, and a purpose doesn't. When time has a purpose, your brain wanders less.</p>
+      <div class="inline-form">
+        <input type="time" id="blockStart" style="max-width:110px;">
+        <input type="time" id="blockEnd" style="max-width:110px;">
+        <input type="text" id="blockLabel" placeholder="Purpose (e.g. Deep Work, Emails, Meetings)">
+        <button class="btn" onclick="addBlock()">Add Block</button>
+      </div>
+      <table class="blocks">
+        <thead><tr><th>Start</th><th>End</th><th>Purpose</th><th></th></tr></thead>
+        <tbody id="blockRows"></tbody>
+      </table>
+      <div class="empty" id="blockEmpty" style="display:none;">No blocks yet. Try: 9:00&ndash;10:30 Deep Work.</div>
+    </div>
+    <div class="panel">
+      <h2>Suggested Template</h2>
+      <p class="desc">The routine from the system &mdash; load it as a starting point and adjust.</p>
+      <button class="btn gold" onclick="loadTemplateBlocks()">Load Recommended Day</button>
+    </div>
+  </div>
+
+  <!-- FOCUS SPRINT -->
+  <div class="tab-content" id="tab-sprint">
+    <div class="panel">
+      <h2>25-Minute Sprint</h2>
+      <p class="desc">One task. No phone, no email, no standing up. Rest 5 minutes after. Repeat four times.</p>
+      <div class="timer-box">
+        <div class="timer-display" id="timerDisplay">25:00</div>
+        <div class="timer-label" id="timerLabel">Focus session &mdash; not started</div>
+        <div class="timer-controls">
+          <button class="btn" id="startBtn" onclick="startTimer()">Start Focus</button>
+          <button class="btn gold" id="pauseBtn" onclick="pauseTimer()" style="display:none;">Pause</button>
+          <button class="btn gold" onclick="startBreak()">Start Break (5m)</button>
+          <button class="btn danger" onclick="resetTimer()">Reset</button>
+        </div>
+        <div style="margin-top:14px;">
+          <label style="font-size:12px;color:var(--text-dim);">Custom length (minutes): </label>
+          <input type="number" id="customLen" value="25" min="1" max="120" style="width:70px;display:inline-block;">
+        </div>
+      </div>
+      <div class="sprint-log">
+        <div style="font-size:12.5px;color:var(--text-dim);margin-bottom:8px;">Today's sprints (click to toggle "was I focused?")</div>
+        <div id="sprintBadges"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- THOUGHT PARKING -->
+  <div class="tab-content" id="tab-parking">
+    <div class="panel">
+      <h2>Thought Parking</h2>
+      <p class="desc">When a random thought interrupts you mid-work, don't follow it &mdash; park it here and keep working. This tells your brain "I won't forget."</p>
+      <div class="inline-form">
+        <input type="text" id="parkInput" placeholder="e.g. Need new laptop, business idea...">
+        <button class="btn" onclick="addPark()">Park It</button>
+      </div>
+      <ul class="tasklist" id="parkList"></ul>
+      <div class="empty" id="parkEmpty" style="display:none;">Nothing parked. Good &mdash; stay in the work.</div>
+    </div>
+  </div>
+
+  <!-- FOCUS SCORE -->
+  <div class="tab-content" id="tab-score">
+    <div class="panel">
+      <h2>Hourly Focus Score</h2>
+      <p class="desc">Every hour, ask: was I focused? Score 0 (completely distracted) to 5 (excellent). Awareness alone improves performance.</p>
+      <div class="inline-form">
+        <input type="text" id="scoreHourLabel" placeholder="Hour label, e.g. 9-10 AM" style="max-width:200px;">
+        <button class="btn" onclick="addScoreHour()">Add Hour</button>
+      </div>
+      <div id="scoreRows"></div>
+      <div class="empty" id="scoreEmpty" style="display:none;">No hours logged yet today.</div>
+      <div class="avg-display">
+        <div class="num" id="scoreAvg">&mdash;</div>
+        <div class="lbl">Today's average focus score</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- REVIEW -->
+  <div class="tab-content" id="tab-review">
+    <div class="grid2">
+      <div class="panel">
+        <h2>End-of-Day Review</h2>
+        <p class="desc">Five minutes. Your brain sleeps better knowing tomorrow's plan.</p>
+        <div class="review-q">
+          <label>What did I finish today?</label>
+          <textarea id="reviewFinished" onchange="saveReview()"></textarea>
+        </div>
+        <div class="review-q">
+          <label>What blocked me?</label>
+          <textarea id="reviewBlocked" onchange="saveReview()"></textarea>
+        </div>
+        <div class="review-q">
+          <label>Tomorrow's first task</label>
+          <input type="text" id="reviewTomorrow" onchange="saveReview()">
+        </div>
+      </div>
+      <div class="panel">
+        <h2>Weekly Review</h2>
+        <p class="desc">Every Friday. Continuous improvement compounds.</p>
+        <div class="review-q">
+          <label>What wasted the most time this week?</label>
+          <textarea id="weekWasted" onchange="saveReview()"></textarea>
+        </div>
+        <div class="review-q">
+          <label>What created the most value?</label>
+          <textarea id="weekValue" onchange="saveReview()"></textarea>
+        </div>
+        <div class="review-q">
+          <label>What should I stop doing?</label>
+          <textarea id="weekStop" onchange="saveReview()"></textarea>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 30-DAY CHALLENGE -->
+  <div class="tab-content" id="tab-challenge">
+    <div class="panel">
+      <h2>30-Day Focus Challenge</h2>
+      <p class="desc">Click a day to mark it complete once you've hit the habits below for that day. Don't aim for perfection &mdash; aim for consistency. Missing a day doesn't break the chain, restarting the next day does the work.</p>
+      <div class="challenge-grid" id="challengeGrid"></div>
+      <div class="habit-checklist">
+        <div style="font-size:12.5px;color:var(--text-dim);margin-bottom:8px;">Today's six habits</div>
+        <ul class="tasklist" id="habitList"></ul>
+        <div style="margin-top:10px;font-size:12px;color:var(--text-dim);">Completed <span id="habitCount">0</span> / 6 today. Mark the day complete once you're at 6/6 (or accept a partial day).</div>
+      </div>
+    </div>
+    <div class="panel">
+      <h2>Why Concentration Breaks Down</h2>
+      <div class="rule-box"><b>Common causes:</b> too many open tasks in your mind, phone/internet distractions, starting without a clear next step, perfectionism, mental fatigue, poor sleep or exercise, constant task-switching, and work that feels too big. The fix in every case is the same: reduce mental load and make focusing the path of least resistance.</div>
+      <div class="rule-box"><b>Two-Minute Rule:</b> if something takes under two minutes, do it now &mdash; replying, renaming a file, approving a request.</div>
+      <div class="rule-box"><b>Batch similar tasks:</b> 90 min coding, 30 min email, 30 min calls, 90 min coding &mdash; not constant switching between the four.</div>
+      <div class="rule-box"><b>Stop at 80%.</b> Take breaks before your brain crashes, not after.</div>
+      <div class="rule-box"><b>Sleep and exercise</b> improve concentration more reliably than any productivity hack: 7&ndash;8 hours, consistent bed/wake time, 20&ndash;30 minutes of movement daily.</div>
+      <div class="rule-box">If poor concentration is persistent for months, spans many areas of life, or comes with significant restlessness, forgetfulness, or impulsivity, it's worth discussing with a qualified healthcare professional &mdash; conditions like chronic stress, anxiety, sleep disorders, or ADHD affect focus, and an evaluation can point to the right support.</div>
+    </div>
+  </div>
+
+  <div class="footer-note">
+    All data is stored locally in this browser only &mdash; nothing is sent anywhere. <b>Goal:</b> not to force yourself to work harder, but to build a routine where focused work is the easiest thing to do.
+  </div>
+
+</div>
+
+<script>
+const todayKey = () => new Date().toISOString().slice(0,10);
+const store = {
+  get(k, def){ try{ const v = localStorage.getItem(k); return v ? JSON.parse(v) : def; }catch(e){ return def; } },
+  set(k, v){ try{ localStorage.setItem(k, JSON.stringify(v)); }catch(e){} }
+};
+
+// ---------- Date header ----------
+document.getElementById('todayLabel').textContent = new Date().toLocaleDateString(undefined,{weekday:'long', month:'long', day:'numeric', year:'numeric'});
+
+// ---------- Tabs ----------
+document.getElementById('tabs').addEventListener('click', e=>{
+  if(e.target.tagName !== 'BUTTON') return;
+  document.querySelectorAll('nav.tabs button').forEach(b=>b.classList.remove('active'));
+  document.querySelectorAll('.tab-content').forEach(c=>c.classList.remove('active'));
+  e.target.classList.add('active');
+  document.getElementById('tab-'+e.target.dataset.tab).classList.add('active');
+});
+
+// ---------- Brain Dump ----------
+let dumpKey = 'focus_dump_' + todayKey();
+let dumpItems = store.get(dumpKey, []);
+
+function renderDump(){
+  const list = document.getElementById('dumpList');
+  list.innerHTML = '';
+  document.getElementById('dumpEmpty').style.display = dumpItems.length ? 'none' : 'block';
+  dumpItems.forEach((item, i)=>{
+    const li = document.createElement('li');
+    if(item.done) li.classList.add('done');
+    li.innerHTML = `<input type="checkbox" ${item.done?'checked':''} onchange="toggleDump(${i})">
+      <span class="txt" onclick="promoteToTop3(${i})" title="Click text to promote to Top 3" style="cursor:pointer;">${escapeHtml(item.text)}</span>
+      <button class="icon-btn" onclick="deleteDump(${i})">&times;</button>`;
+    list.appendChild(li);
+  });
+  store.set(dumpKey, dumpItems);
+}
+function addDump(){
+  const inp = document.getElementById('dumpInput');
+  const v = inp.value.trim();
+  if(!v) return;
+  dumpItems.push({text:v, done:false});
+  inp.value='';
+  renderDump();
+}
+document.getElementById('dumpInput').addEventListener('keydown', e=>{ if(e.key==='Enter') addDump(); });
+function toggleDump(i){ dumpItems[i].done = !dumpItems[i].done; renderDump(); }
+function deleteDump(i){ dumpItems.splice(i,1); renderDump(); }
+function promoteToTop3(i){
+  if(dumpItems[i].done) return;
+  if(top3Items.length >= 3){ alert('Top 3 is full. Finish or remove one first.'); return; }
+  top3Items.push({text: dumpItems[i].text, done:false});
+  saveTop3(); renderTop3();
+  alert('Added to Top 3: ' + dumpItems[i].text);
+}
+function escapeHtml(s){
+  const d = document.createElement('div'); d.textContent = s; return d.innerHTML;
+}
+renderDump();
+
+// ---------- Top 3 ----------
+let top3Key = 'focus_top3_' + todayKey();
+let top3Items = store.get(top3Key, []);
+function saveTop3(){ store.set(top3Key, top3Items); }
+function renderTop3(){
+  const list = document.getElementById('top3List');
+  list.innerHTML = '';
+  document.getElementById('top3Empty').style.display = top3Items.length ? 'none' : 'block';
+  top3Items.forEach((item,i)=>{
+    const div = document.createElement('div');
+    div.className = 'top3-item' + (item.done ? ' done':'');
+    div.innerHTML = `<span class="num">${i+1}</span>
+      <input type="checkbox" ${item.done?'checked':''} onchange="toggleTop3(${i})">
+      <span class="txt">${escapeHtml(item.text)}</span>
+      <button class="icon-btn" onclick="deleteTop3(${i})">&times;</button>`;
+    list.appendChild(div);
+  });
+  saveTop3();
+}
+function addTop3(){
+  if(top3Items.length >= 3){ alert('Top 3 is intentionally limited to three tasks.'); return; }
+  const inp = document.getElementById('top3Input');
+  const v = inp.value.trim();
+  if(!v) return;
+  top3Items.push({text:v, done:false});
+  inp.value='';
+  renderTop3();
+}
+document.getElementById('top3Input').addEventListener('keydown', e=>{ if(e.key==='Enter') addTop3(); });
+function toggleTop3(i){ top3Items[i].done = !top3Items[i].done; renderTop3(); }
+function deleteTop3(i){ top3Items.splice(i,1); renderTop3(); }
+renderTop3();
+
+// ---------- Time Blocks ----------
+let blockKey = 'focus_blocks_' + todayKey();
+let blocks = store.get(blockKey, []);
+function saveBlocks(){ store.set(blockKey, blocks); }
+function renderBlocks(){
+  const rows = document.getElementById('blockRows');
+  rows.innerHTML = '';
+  document.getElementById('blockEmpty').style.display = blocks.length ? 'none':'block';
+  const now = new Date(); const nowMin = now.getHours()*60+now.getMinutes();
+  blocks.sort((a,b)=> a.start.localeCompare(b.start));
+  blocks.forEach((b,i)=>{
+    const [sh,sm] = b.start.split(':').map(Number);
+    const [eh,em] = b.end.split(':').map(Number);
+    const isNow = (sh*60+sm) <= nowMin && nowMin < (eh*60+em);
+    const tr = document.createElement('tr');
+    if(isNow) tr.classList.add('now');
+    tr.innerHTML = `<td>${b.start}</td><td>${b.end}</td><td>${escapeHtml(b.label)}</td>
+      <td><button class="icon-btn" onclick="deleteBlock(${i})">&times;</button></td>`;
+    rows.appendChild(tr);
+  });
+  saveBlocks();
+}
+function addBlock(){
+  const s = document.getElementById('blockStart').value;
+  const e = document.getElementById('blockEnd').value;
+  const l = document.getElementById('blockLabel').value.trim();
+  if(!s || !e || !l){ alert('Fill start, end, and purpose.'); return; }
+  blocks.push({start:s, end:e, label:l});
+  document.getElementById('blockLabel').value='';
+  renderBlocks();
+}
+function deleteBlock(i){ blocks.splice(i,1); renderBlocks(); }
+function loadTemplateBlocks(){
+  blocks = [
+    {start:'09:00', end:'10:30', label:'Deep Work Session 1'},
+    {start:'10:30', end:'10:45', label:'Break'},
+    {start:'10:45', end:'12:15', label:'Deep Work Session 2'},
+    {start:'12:15', end:'13:00', label:'Lunch (rest completely)'},
+    {start:'13:00', end:'15:00', label:'Emails / Meetings / Admin'},
+    {start:'15:00', end:'15:15', label:'Break'},
+    {start:'15:15', end:'16:45', label:'Deep Work Session 3'},
+    {start:'16:45', end:'17:00', label:'Plan tomorrow (last 5 min)'}
+  ];
+  renderBlocks();
+}
+renderBlocks();
+setInterval(renderBlocks, 60000);
+
+// ---------- Focus Sprint (Pomodoro) ----------
+let timerSeconds = 25*60;
+let timerTotal = 25*60;
+let timerInterval = null;
+let timerRunning = false;
+let isBreak = false;
+let sprintKey = 'focus_sprints_' + todayKey();
+let sprints = store.get(sprintKey, []); // [{focused:bool}]
+
+function renderSprintBadges(){
+  const box = document.getElementById('sprintBadges');
+  box.innerHTML = '';
+  if(!sprints.length){ box.innerHTML = '<span class="empty">No sprints completed yet today.</span>'; return; }
+  sprints.forEach((s,i)=>{
+    const b = document.createElement('span');
+    b.className = 'sprint-badge' + (s.focused ? ' focused' : '');
+    b.textContent = i+1;
+    b.title = s.focused ? 'Focused (click to unmark)' : 'Not focused (click to mark focused)';
+    b.onclick = ()=>{ sprints[i].focused = !sprints[i].focused; store.set(sprintKey, sprints); renderSprintBadges(); };
+    box.appendChild(b);
+  });
+}
+renderSprintBadges();
+
+function formatTime(sec){
+  const m = Math.floor(sec/60).toString().padStart(2,'0');
+  const s = (sec%60).toString().padStart(2,'0');
+  return m+':'+s;
+}
+function updateTimerDisplay(){
+  document.getElementById('timerDisplay').textContent = formatTime(timerSeconds);
+}
+function startTimer(){
+  if(timerRunning) return;
+  if(timerSeconds === timerTotal && !isBreak){
+    const len = parseInt(document.getElementById('customLen').value) || 25;
+    timerTotal = len*60; timerSeconds = len*60;
+  }
+  timerRunning = true;
+  document.getElementById('startBtn').style.display='none';
+  document.getElementById('pauseBtn').style.display='inline-block';
+  document.getElementById('timerLabel').textContent = isBreak ? 'On break — step away from the screen' : 'Focus session running — no phone, no tabs, one task';
+  timerInterval = setInterval(()=>{
+    timerSeconds--;
+    updateTimerDisplay();
+    if(timerSeconds <= 0){
+      clearInterval(timerInterval);
+      timerRunning = false;
+      document.getElementById('startBtn').style.display='inline-block';
+      document.getElementById('pauseBtn').style.display='none';
+      if(!isBreak){
+        sprints.push({focused:true});
+        store.set(sprintKey, sprints);
+        renderSprintBadges();
+        document.getElementById('timerLabel').textContent = 'Sprint complete — take your 5-minute break.';
+      } else {
+        document.getElementById('timerLabel').textContent = 'Break over — ready for the next sprint.';
+        isBreak = false;
+      }
+      timerSeconds = timerTotal;
+      updateTimerDisplay();
+    }
+  }, 1000);
+}
+function pauseTimer(){
+  clearInterval(timerInterval);
+  timerRunning = false;
+  document.getElementById('startBtn').style.display='inline-block';
+  document.getElementById('pauseBtn').style.display='none';
+  document.getElementById('timerLabel').textContent = 'Paused';
+}
+function resetTimer(){
+  clearInterval(timerInterval);
+  timerRunning = false;
+  isBreak = false;
+  const len = parseInt(document.getElementById('customLen').value) || 25;
+  timerTotal = len*60; timerSeconds = len*60;
+  document.getElementById('startBtn').style.display='inline-block';
+  document.getElementById('pauseBtn').style.display='none';
+  document.getElementById('timerLabel').textContent = 'Focus session — not started';
+  updateTimerDisplay();
+}
+function startBreak(){
+  clearInterval(timerInterval);
+  timerRunning = false;
+  isBreak = true;
+  timerTotal = 5*60; timerSeconds = 5*60;
+  updateTimerDisplay();
+  startTimer();
+}
+updateTimerDisplay();
+
+// ---------- Thought Parking ----------
+let parkKey = 'focus_parking_' + todayKey();
+let parkItems = store.get(parkKey, []);
+function renderPark(){
+  const list = document.getElementById('parkList');
+  list.innerHTML='';
+  document.getElementById('parkEmpty').style.display = parkItems.length ? 'none':'block';
+  parkItems.forEach((item,i)=>{
+    const li = document.createElement('li');
+    if(item.done) li.classList.add('done');
+    li.innerHTML = `<input type="checkbox" ${item.done?'checked':''} onchange="togglePark(${i})">
+      <span class="txt">${escapeHtml(item.text)}</span>
+      <button class="icon-btn" onclick="deletePark(${i})">&times;</button>`;
+    list.appendChild(li);
+  });
+  store.set(parkKey, parkItems);
+}
+function addPark(){
+  const inp = document.getElementById('parkInput');
+  const v = inp.value.trim();
+  if(!v) return;
+  parkItems.push({text:v, done:false});
+  inp.value='';
+  renderPark();
+}
+document.getElementById('parkInput').addEventListener('keydown', e=>{ if(e.key==='Enter') addPark(); });
+function togglePark(i){ parkItems[i].done = !parkItems[i].done; renderPark(); }
+function deletePark(i){ parkItems.splice(i,1); renderPark(); }
+renderPark();
+
+// ---------- Focus Score ----------
+let scoreKey = 'focus_scores_' + todayKey();
+let scoreHours = store.get(scoreKey, []); // [{label, score}]
+function renderScores(){
+  const box = document.getElementById('scoreRows');
+  box.innerHTML='';
+  document.getElementById('scoreEmpty').style.display = scoreHours.length ? 'none':'block';
+  scoreHours.forEach((h,i)=>{
+    const row = document.createElement('div');
+    row.className = 'score-row';
+    let btns = '';
+    for(let s=0; s<=5; s++){
+      btns += `<button class="${h.score===s?'sel':''}" onclick="setScore(${i},${s})">${s}</button>`;
+    }
+    row.innerHTML = `<span class="hourlbl">${escapeHtml(h.label)}</span><div class="score-btns">${btns}</div>
+      <button class="icon-btn" onclick="deleteScoreHour(${i})">&times;</button>`;
+    box.appendChild(row);
+  });
+  store.set(scoreKey, scoreHours);
+  updateAvg();
+}
+function addScoreHour(){
+  const inp = document.getElementById('scoreHourLabel');
+  const v = inp.value.trim();
+  if(!v) return;
+  scoreHours.push({label:v, score:null});
+  inp.value='';
+  renderScores();
+}
+document.getElementById('scoreHourLabel').addEventListener('keydown', e=>{ if(e.key==='Enter') addScoreHour(); });
+function setScore(i, s){ scoreHours[i].score = s; renderScores(); }
+function deleteScoreHour(i){ scoreHours.splice(i,1); renderScores(); }
+function updateAvg(){
+  const scored = scoreHours.filter(h=>h.score !== null);
+  const avgEl = document.getElementById('scoreAvg');
+  if(!scored.length){ avgEl.textContent = '—'; return; }
+  const avg = scored.reduce((a,h)=>a+h.score,0)/scored.length;
+  avgEl.textContent = avg.toFixed(1) + ' / 5';
+}
+renderScores();
+
+// ---------- Review ----------
+let reviewKey = 'focus_review_' + todayKey();
+let review = store.get(reviewKey, {finished:'', blocked:'', tomorrow:'', wasted:'', value:'', stop:''});
+document.getElementById('reviewFinished').value = review.finished || '';
+document.getElementById('reviewBlocked').value = review.blocked || '';
+document.getElementById('reviewTomorrow').value = review.tomorrow || '';
+document.getElementById('weekWasted').value = review.wasted || '';
+document.getElementById('weekValue').value = review.value || '';
+document.getElementById('weekStop').value = review.stop || '';
+function saveReview(){
+  review = {
+    finished: document.getElementById('reviewFinished').value,
+    blocked: document.getElementById('reviewBlocked').value,
+    tomorrow: document.getElementById('reviewTomorrow').value,
+    wasted: document.getElementById('weekWasted').value,
+    value: document.getElementById('weekValue').value,
+    stop: document.getElementById('weekStop').value,
+  };
+  store.set(reviewKey, review);
+}
+
+// ---------- 30-Day Challenge ----------
+let challengeStart = store.get('focus_challenge_start', null);
+if(!challengeStart){
+  challengeStart = todayKey();
+  store.set('focus_challenge_start', challengeStart);
+}
+let challengeDays = store.get('focus_challenge_days', {}); // {dayIndex: 'complete'|'partial'}
+
+function dayNumberToday(){
+  const start = new Date(challengeStart);
+  const now = new Date(todayKey());
+  const diff = Math.round((now - start) / 86400000);
+  return diff + 1;
+}
+document.getElementById('challengeDayNum').textContent = Math.min(Math.max(dayNumberToday(),1),30);
+
+function renderChallengeGrid(){
+  const grid = document.getElementById('challengeGrid');
+  grid.innerHTML = '';
+  for(let d=1; d<=30; d++){
+    const cell = document.createElement('div');
+    cell.className = 'day-cell';
+    const state = challengeDays[d];
+    if(state === 'complete') cell.classList.add('complete');
+    else if(state === 'partial') cell.classList.add('partial');
+    cell.textContent = d;
+    cell.title = 'Click to cycle: empty → partial → complete → empty';
+    cell.onclick = ()=>{
+      const cur = challengeDays[d];
+      if(!cur) challengeDays[d] = 'partial';
+      else if(cur === 'partial') challengeDays[d] = 'complete';
+      else delete challengeDays[d];
+      store.set('focus_challenge_days', challengeDays);
+      renderChallengeGrid();
+    };
+    grid.appendChild(cell);
+  }
+}
+renderChallengeGrid();
+
+let habitKey = 'focus_habits_' + todayKey();
+const habitDefs = [
+  '10-minute brain dump this morning',
+  'Chose top 3 priorities before starting work',
+  'Completed 3+ distraction-free focus sessions (25-50 min)',
+  'Used Thought Parking for unrelated ideas',
+  'Turned off non-essential notifications during focus sessions',
+  'Planned tomorrow\'s first task before ending the day'
+];
+let habitState = store.get(habitKey, habitDefs.map(()=>false));
+function renderHabits(){
+  const list = document.getElementById('habitList');
+  list.innerHTML = '';
+  habitDefs.forEach((h,i)=>{
+    const li = document.createElement('li');
+    if(habitState[i]) li.classList.add('done');
+    li.innerHTML = `<input type="checkbox" ${habitState[i]?'checked':''} onchange="toggleHabit(${i})">
+      <span class="txt">${h}</span>`;
+    list.appendChild(li);
+  });
+  store.set(habitKey, habitState);
+  const count = habitState.filter(Boolean).length;
+  document.getElementById('habitCount').textContent = count;
+}
+function toggleHabit(i){ habitState[i] = !habitState[i]; renderHabits(); }
+renderHabits();
+</script>
+</body>
+</html>
