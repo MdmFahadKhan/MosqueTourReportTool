@@ -328,6 +328,13 @@
           <label style="font-size:12px;color:var(--text-dim);">Custom length (minutes): </label>
           <input type="number" id="customLen" value="25" min="1" max="120" style="width:70px;display:inline-block;">
         </div>
+        <div style="margin-top:12px;display:flex;align-items:center;justify-content:center;gap:10px;flex-wrap:wrap;">
+          <label style="font-size:12.5px;color:var(--text-dim);display:flex;align-items:center;gap:6px;cursor:pointer;">
+            <input type="checkbox" id="soundToggle" style="width:15px;height:15px;accent-color:var(--gold);">
+            Play bird sound on completion
+          </label>
+          <button class="btn gold small" onclick="playBirdSound()">Test sound</button>
+        </div>
       </div>
       <div class="sprint-log">
         <div style="font-size:12.5px;color:var(--text-dim);margin-bottom:8px;">Today's sprints (click to toggle "was I focused?")</div>
@@ -576,7 +583,45 @@ function loadTemplateBlocks(){
 renderBlocks();
 setInterval(renderBlocks, 60000);
 
+// ---------- Alert Sound (synthesized bird chirp, no external files) ----------
+let audioCtx = null;
+function getAudioCtx(){
+  if(!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  if(audioCtx.state === 'suspended') audioCtx.resume();
+  return audioCtx;
+}
+function chirp(ctx, startTime, freqStart, freqEnd, duration, vol){
+  const osc = ctx.createOscillator();
+  const gain = ctx.createGain();
+  osc.type = 'sine';
+  osc.frequency.setValueAtTime(freqStart, startTime);
+  osc.frequency.exponentialRampToValueAtTime(freqEnd, startTime + duration);
+  gain.gain.setValueAtTime(0.0001, startTime);
+  gain.gain.exponentialRampToValueAtTime(vol, startTime + duration*0.25);
+  gain.gain.exponentialRampToValueAtTime(0.0001, startTime + duration);
+  osc.connect(gain);
+  gain.connect(ctx.destination);
+  osc.start(startTime);
+  osc.stop(startTime + duration + 0.02);
+}
+function playBirdSound(){
+  try{
+    const ctx = getAudioCtx();
+    const now = ctx.currentTime;
+    // A little trill of 4-5 chirps, pitch bouncing like a small bird call
+    const notes = [
+      {t:0.00, f1:2200, f2:3200, d:0.09, v:0.18},
+      {t:0.11, f1:3000, f2:2400, d:0.08, v:0.16},
+      {t:0.24, f1:2600, f2:3600, d:0.10, v:0.18},
+      {t:0.38, f1:3400, f2:2200, d:0.09, v:0.15},
+      {t:0.52, f1:2800, f2:3800, d:0.11, v:0.17}
+    ];
+    notes.forEach(n=> chirp(ctx, now + n.t, n.f1, n.f2, n.d, n.v));
+  }catch(e){ /* audio not available; fail silently */ }
+}
+
 // ---------- Focus Sprint (Pomodoro) ----------
+let soundEnabled = store.get('focus_sound_enabled', true);
 let timerSeconds = 25*60;
 let timerTotal = 25*60;
 let timerInterval = null;
@@ -626,6 +671,7 @@ function startTimer(){
       timerRunning = false;
       document.getElementById('startBtn').style.display='inline-block';
       document.getElementById('pauseBtn').style.display='none';
+      if(soundEnabled) playBirdSound();
       if(!isBreak){
         sprints.push({focused:true});
         store.set(sprintKey, sprints);
@@ -667,6 +713,13 @@ function startBreak(){
   startTimer();
 }
 updateTimerDisplay();
+const soundToggleEl = document.getElementById('soundToggle');
+soundToggleEl.checked = soundEnabled;
+soundToggleEl.addEventListener('change', ()=>{
+  soundEnabled = soundToggleEl.checked;
+  store.set('focus_sound_enabled', soundEnabled);
+  if(soundEnabled) getAudioCtx(); // unlock audio context on this user gesture
+});
 
 // ---------- Thought Parking ----------
 let parkKey = 'focus_parking_' + todayKey();
