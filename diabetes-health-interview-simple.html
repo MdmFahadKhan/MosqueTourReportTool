@@ -1,0 +1,486 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Diabetes Health Interview - Patient Friendly</title>
+<style>
+  :root{
+    --bg:#0f1720;
+    --panel:#16212c;
+    --panel2:#1c2a37;
+    --accent:#2dd4bf;
+    --accent-dark:#0f766e;
+    --gold:#d4af37;
+    --text:#e6edf3;
+    --muted:#8ea3b0;
+    --border:#263844;
+    --danger:#e5484d;
+    --radius:10px;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    font-family:-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;
+    background:linear-gradient(180deg,#0f1720,#0c141c);
+    color:var(--text);
+    min-height:100vh;
+    display:flex;
+    justify-content:center;
+    padding:24px 12px 60px;
+  }
+  .app{ width:100%; max-width:720px; }
+  header.top{ text-align:center; margin-bottom:20px; }
+  header.top h1{ font-size:1.4rem; margin:0 0 4px; }
+  header.top p{ color:var(--muted); font-size:.88rem; margin:0; }
+
+  .card{
+    background:var(--panel);
+    border:1px solid var(--border);
+    border-radius:var(--radius);
+    padding:22px;
+    margin-bottom:18px;
+    box-shadow:0 6px 24px rgba(0,0,0,.2);
+  }
+  .q-number{
+    color:var(--gold);
+    font-size:.78rem;
+    letter-spacing:.5px;
+    text-transform:uppercase;
+    margin-bottom:6px;
+  }
+  .q-text{
+    font-size:1.08rem;
+    margin:0 0 12px;
+    font-weight:600;
+  }
+  .why-box{
+    background:rgba(45,212,191,.06);
+    border-left:3px solid var(--accent);
+    padding:10px 14px;
+    border-radius:6px;
+    font-size:.85rem;
+    color:var(--muted);
+    margin-bottom:12px;
+  }
+  .why-box strong{ color:var(--text); display:block; margin-bottom:2px; font-size:.78rem; text-transform:uppercase; letter-spacing:.3px; }
+  .examples-box{
+    font-size:.83rem;
+    color:var(--muted);
+    margin-bottom:14px;
+  }
+  .examples-box strong{ color:var(--text); display:block; margin-bottom:4px; font-size:.78rem; text-transform:uppercase; letter-spacing:.3px; }
+  .examples-box ul{ margin:0; padding-left:18px; }
+  .examples-box li{ margin-bottom:2px; }
+
+  .options{ display:flex; flex-direction:column; gap:8px; }
+  .option{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    background:var(--panel2);
+    border:1px solid var(--border);
+    border-radius:8px;
+    padding:10px 14px;
+    cursor:pointer;
+    transition:border-color .15s ease, background .15s ease;
+  }
+  .option:hover{ border-color:var(--accent); }
+  .option.selected{
+    border-color:var(--accent);
+    background:rgba(45,212,191,.08);
+  }
+  .option input[type=radio]{
+    accent-color:var(--accent);
+    width:16px; height:16px; flex-shrink:0;
+  }
+  .option label{ font-size:.92rem; cursor:pointer; flex:1; }
+
+  .inline-input{
+    margin-top:8px;
+    margin-left:26px;
+  }
+  .inline-input input[type=text]{
+    width:100%;
+    background:var(--panel2);
+    border:1px solid var(--border);
+    color:var(--text);
+    border-radius:8px;
+    padding:9px 12px;
+    font-size:.9rem;
+    font-family:inherit;
+  }
+  .inline-input input[type=text]:focus{ outline:none; border-color:var(--accent); }
+
+  .actions{
+    display:flex;
+    gap:10px;
+    margin-top:8px;
+  }
+  .copy-btn{
+    background:linear-gradient(90deg,var(--accent-dark),var(--accent));
+    border:none;
+    color:#052622;
+    font-weight:600;
+    padding:13px 18px;
+    border-radius:8px;
+    cursor:pointer;
+    font-size:.92rem;
+    flex:1;
+  }
+  .secondary-btn{
+    background:var(--panel2);
+    border:1px solid var(--border);
+    color:var(--text);
+    padding:13px 18px;
+    border-radius:8px;
+    cursor:pointer;
+    font-size:.9rem;
+  }
+  .report-box{
+    width:100%;
+    min-height:360px;
+    background:var(--panel2);
+    border:1px solid var(--border);
+    border-radius:8px;
+    color:var(--text);
+    padding:16px;
+    font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+    font-size:.8rem;
+    white-space:pre-wrap;
+    margin-bottom:14px;
+  }
+  .report-title{
+    font-size:1.1rem;
+    color:var(--gold);
+    margin:0 0 12px;
+  }
+  .toast{
+    position:fixed;
+    bottom:24px; left:50%;
+    transform:translateX(-50%);
+    background:var(--accent);
+    color:#052622;
+    padding:10px 20px;
+    border-radius:8px;
+    font-size:.85rem;
+    font-weight:600;
+    opacity:0;
+    pointer-events:none;
+    transition:opacity .25s ease;
+  }
+  .toast.show{ opacity:1; }
+</style>
+</head>
+<body>
+<div class="app">
+  <header class="top">
+    <h1>Diabetes Health Interview</h1>
+    <p>Simple questions, plain language — pick the answer that fits best.</p>
+  </header>
+
+  <div id="questionsWrap"></div>
+
+  <div class="card" id="reportCard">
+    <h2 class="report-title">Report</h2>
+    <textarea class="report-box" id="reportBox" readonly></textarea>
+    <div class="actions">
+      <button class="copy-btn" id="copyBtn">Copy Report to Clipboard</button>
+      <button class="secondary-btn" id="resetBtn">Reset</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast">Copied to clipboard</div>
+
+<script>
+const STORAGE_KEY = 'diabetesSimpleInterviewDraft_v1';
+
+const questions = [
+  {
+    id: 'age',
+    text: "How old is the patient?",
+    why: "Age affects diabetes risks and treatment recommendations.",
+    options: [
+      { key:'exact', label:'Enter exact age', needsText:true, textLabel:'Age' },
+      { key:'approx', label:'Approximate age', needsText:true, textLabel:'Approximate age' },
+      { key:'notsure', label:'Not sure' },
+    ]
+  },
+  {
+    id: 'diabetesType',
+    text: "What type of diabetes has the doctor told you that you have?",
+    why: "Different types of diabetes are managed differently.",
+    options: [
+      { key:'type1', label:'Type 1 Diabetes' },
+      { key:'type2', label:'Type 2 Diabetes' },
+      { key:'prediabetes', label:'Prediabetes' },
+      { key:'gestational', label:'Gestational Diabetes' },
+      { key:'nevertold', label:'Doctor never told us' },
+      { key:'notsure', label:'Not sure' },
+    ]
+  },
+  {
+    id: 'thirst',
+    text: "How often does the patient feel thirsty?",
+    why: "Feeling unusually thirsty can sometimes indicate high blood sugar.",
+    examples: [
+      'Drinking water more frequently than before',
+      'Always carrying a water bottle',
+      'Waking up at night to drink water'
+    ],
+    options: [
+      { key:'never', label:'Never' },
+      { key:'rarely', label:'Rarely' },
+      { key:'sometimes', label:'Sometimes' },
+      { key:'often', label:'Often' },
+      { key:'almostdaily', label:'Almost every day' },
+      { key:'notsure', label:'Not sure' },
+    ]
+  },
+  {
+    id: 'footNumbness',
+    text: "Has the patient experienced numbness or tingling in the feet?",
+    why: "Long-term diabetes can sometimes affect nerves.",
+    examples: [
+      'Pins and needles sensation',
+      'Burning feeling',
+      'Reduced feeling when touching the feet'
+    ],
+    options: [
+      { key:'no', label:'No' },
+      { key:'occasionally', label:'Occasionally' },
+      { key:'frequently', label:'Frequently' },
+      { key:'constantly', label:'Constantly' },
+      { key:'onlynight', label:'Only at night' },
+      { key:'notsure', label:'Not sure' },
+    ]
+  },
+  {
+    id: 'hba1c',
+    text: "What was the patient's most recent HbA1c result?",
+    why: "HbA1c is a blood test that shows the average blood sugar level over the last 2-3 months.",
+    examples: ['6.5%', '7.2%', '8.0%'],
+    options: [
+      { key:'enter', label:'Enter value', needsText:true, textLabel:'HbA1c result' },
+      { key:'nevertested', label:'Never tested' },
+      { key:'dontremember', label:"Don't remember" },
+      { key:'havereportneedhelp', label:'Have report but need help finding it' },
+    ]
+  },
+  {
+    id: 'activity',
+    text: "How active is the patient during a typical week?",
+    why: "Physical activity plays a major role in diabetes management.",
+    examples: ['Walking', 'Gardening', 'Gym', 'Cycling', 'Physical work'],
+    options: [
+      { key:'mostlysitting', label:'Mostly sitting' },
+      { key:'light', label:'Light activity (1-2 days/week)' },
+      { key:'moderate', label:'Moderate activity (3-5 days/week)' },
+      { key:'activemostdays', label:'Active most days' },
+      { key:'veryactive', label:'Very active' },
+      { key:'notsure', label:'Not sure' },
+    ]
+  },
+  {
+    id: 'vision',
+    text: "Does the patient have any problems with vision?",
+    why: "Diabetes can affect eye health over time.",
+    examples: ['Blurred vision', 'Difficulty reading', 'Frequent changes in glasses'],
+    options: [
+      { key:'none', label:'No vision problems' },
+      { key:'mild', label:'Mild problems' },
+      { key:'moderate', label:'Moderate problems' },
+      { key:'severe', label:'Severe problems' },
+      { key:'diagnosed', label:'Diagnosed eye disease' },
+      { key:'notsure', label:'Not sure' },
+    ]
+  },
+];
+
+let state = { answers: {} }; // id -> { key, text }
+
+function loadState(){
+  try{
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if(raw) state = Object.assign(state, JSON.parse(raw));
+  }catch(e){}
+}
+function saveState(){
+  try{ localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); }catch(e){}
+  updateReport();
+}
+
+const questionsWrap = document.getElementById('questionsWrap');
+
+function renderQuestions(){
+  questionsWrap.innerHTML = '';
+  questions.forEach((q, idx)=>{
+    const card = document.createElement('div');
+    card.className = 'card';
+
+    const num = document.createElement('div');
+    num.className = 'q-number';
+    num.textContent = `Question ${idx+1} of ${questions.length}`;
+    card.appendChild(num);
+
+    const qText = document.createElement('p');
+    qText.className = 'q-text';
+    qText.textContent = q.text;
+    card.appendChild(qText);
+
+    const why = document.createElement('div');
+    why.className = 'why-box';
+    why.innerHTML = `<strong>Why I'm asking</strong>${q.why}`;
+    card.appendChild(why);
+
+    if(q.examples && q.examples.length){
+      const ex = document.createElement('div');
+      ex.className = 'examples-box';
+      ex.innerHTML = `<strong>Examples</strong>`;
+      const ul = document.createElement('ul');
+      q.examples.forEach(e=>{
+        const li = document.createElement('li');
+        li.textContent = e;
+        ul.appendChild(li);
+      });
+      ex.appendChild(ul);
+      card.appendChild(ex);
+    }
+
+    const optsWrap = document.createElement('div');
+    optsWrap.className = 'options';
+
+    const current = state.answers[q.id] || {};
+
+    q.options.forEach(opt=>{
+      const optRow = document.createElement('div');
+      optRow.className = 'option' + (current.key===opt.key ? ' selected' : '');
+
+      const radio = document.createElement('input');
+      radio.type = 'radio';
+      radio.name = q.id;
+      radio.id = `${q.id}_${opt.key}`;
+      radio.checked = current.key===opt.key;
+
+      const label = document.createElement('label');
+      label.htmlFor = radio.id;
+      label.textContent = opt.label;
+
+      optRow.appendChild(radio);
+      optRow.appendChild(label);
+      optsWrap.appendChild(optRow);
+
+      let textInput = null;
+      if(opt.needsText){
+        const inlineWrap = document.createElement('div');
+        inlineWrap.className = 'inline-input';
+        inlineWrap.style.display = current.key===opt.key ? 'block' : 'none';
+        textInput = document.createElement('input');
+        textInput.type = 'text';
+        textInput.placeholder = opt.textLabel;
+        textInput.value = current.key===opt.key ? (current.text||'') : '';
+        textInput.oninput = (e)=>{
+          state.answers[q.id] = { key:opt.key, text:e.target.value };
+          saveState();
+        };
+        inlineWrap.appendChild(textInput);
+        optsWrap.appendChild(inlineWrap);
+        optRow.dataset.inlineTarget = 'true';
+        optRow._inlineWrap = inlineWrap;
+      }
+
+      const selectOption = ()=>{
+        state.answers[q.id] = { key:opt.key, text: opt.needsText ? (textInput ? textInput.value : '') : '' };
+        saveState();
+        renderQuestions();
+      };
+      optRow.onclick = (e)=>{
+        if(e.target === textInput) return;
+        selectOption();
+      };
+    });
+
+    card.appendChild(optsWrap);
+    questionsWrap.appendChild(card);
+  });
+}
+
+function fmt(v){
+  const s = (v||'').toString().trim();
+  return s.length ? s : 'Not provided';
+}
+
+function answerDisplay(q){
+  const a = state.answers[q.id];
+  if(!a || !a.key) return 'Not provided';
+  const opt = q.options.find(o=>o.key===a.key);
+  if(!opt) return 'Not provided';
+  if(opt.needsText){
+    return `${opt.label}${a.text && a.text.trim() ? ': ' + a.text.trim() : ''}`;
+  }
+  return opt.label;
+}
+
+function generateReport(){
+  let out = [];
+  out.push('DIABETES HEALTH INTERVIEW - PATIENT-FRIENDLY REPORT');
+  out.push('Generated: ' + new Date().toLocaleString());
+  out.push('='.repeat(50));
+  out.push('');
+
+  questions.forEach((q, idx)=>{
+    out.push(`${idx+1}. ${q.text}`);
+    out.push(`   Answer: ${answerDisplay(q)}`);
+    out.push('');
+  });
+
+  out.push('='.repeat(50));
+  out.push("Important topics to discuss with your doctor at the next visit.");
+
+  return out.join('\n');
+}
+
+function updateReport(){
+  document.getElementById('reportBox').value = generateReport();
+}
+
+function copyToClipboard(text){
+  const showToast = ()=>{
+    const t = document.getElementById('toast');
+    t.classList.add('show');
+    setTimeout(()=>t.classList.remove('show'), 1800);
+  };
+  if(navigator.clipboard && navigator.clipboard.writeText){
+    navigator.clipboard.writeText(text).then(showToast).catch(()=>fallbackCopy(text, showToast));
+  } else {
+    fallbackCopy(text, showToast);
+  }
+}
+function fallbackCopy(text, cb){
+  const ta = document.createElement('textarea');
+  ta.value = text;
+  ta.style.position='fixed'; ta.style.opacity='0';
+  document.body.appendChild(ta);
+  ta.select();
+  try{ document.execCommand('copy'); }catch(e){}
+  document.body.removeChild(ta);
+  cb();
+}
+
+document.getElementById('copyBtn').onclick = ()=> copyToClipboard(document.getElementById('reportBox').value);
+document.getElementById('resetBtn').onclick = ()=>{
+  if(confirm('This will clear all answers. Continue?')){
+    localStorage.removeItem(STORAGE_KEY);
+    state = { answers:{} };
+    renderQuestions();
+    updateReport();
+  }
+};
+
+loadState();
+renderQuestions();
+updateReport();
+</script>
+</body>
+</html>

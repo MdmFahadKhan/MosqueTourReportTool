@@ -1,0 +1,831 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Diabetes Health Interview</title>
+<style>
+  :root{
+    --bg:#0f1720;
+    --panel:#16212c;
+    --panel2:#1c2a37;
+    --accent:#2dd4bf;
+    --accent-dark:#0f766e;
+    --gold:#d4af37;
+    --text:#e6edf3;
+    --muted:#8ea3b0;
+    --border:#263844;
+    --danger:#e5484d;
+    --radius:10px;
+  }
+  html[data-theme="light"]{
+    --bg:#f4f7f9;
+    --panel:#ffffff;
+    --panel2:#f0f4f7;
+    --accent:#0f9c8d;
+    --accent-dark:#0c7d71;
+    --gold:#b7860b;
+    --text:#16212c;
+    --muted:#5c6b76;
+    --border:#dde5ea;
+    --danger:#c62828;
+  }
+  *{box-sizing:border-box;}
+  html, body{ height:100%; }
+  body{
+    margin:0;
+    font-family:-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;
+    background:var(--bg);
+    color:var(--text);
+    display:flex;
+    justify-content:center;
+    overflow:hidden;
+  }
+  .app{
+    width:100%;
+    max-width:720px;
+    height:100vh;
+    display:flex;
+    flex-direction:column;
+    padding:0 12px;
+  }
+  header.top{
+    flex:0 0 auto;
+    text-align:center;
+    padding:36px 90px 4px;
+    position:relative;
+  }
+  @media (max-width:480px){
+    header.top{ padding:52px 8px 4px; }
+    .theme-toggle{ top:6px; right:8px; }
+  }
+  header.top h1{
+    font-size:1.5rem;
+    margin:0 0 4px;
+    letter-spacing:.3px;
+  }
+  header.top p{
+    color:var(--muted);
+    font-size:.9rem;
+    margin:0;
+  }
+  .theme-toggle{
+    position:absolute;
+    top:18px;
+    right:0;
+    background:var(--panel2);
+    border:1px solid var(--border);
+    color:var(--text);
+    border-radius:20px;
+    padding:6px 12px;
+    font-size:.78rem;
+    cursor:pointer;
+    display:flex;
+    align-items:center;
+    gap:6px;
+  }
+  .theme-toggle:hover{ border-color:var(--accent); }
+  .fixed-zone{
+    flex:0 0 auto;
+  }
+  .scroll-zone{
+    flex:1 1 auto;
+    overflow-y:auto;
+    padding-bottom:10px;
+  }
+  .progress-wrap{
+    margin:14px 0 16px;
+  }
+  .progress-bar{
+    height:8px;
+    background:var(--panel2);
+    border-radius:6px;
+    overflow:hidden;
+    border:1px solid var(--border);
+  }
+  .progress-fill{
+    height:100%;
+    background:linear-gradient(90deg,var(--accent-dark),var(--accent));
+    transition:width .25s ease;
+  }
+  .progress-label{
+    display:flex;
+    justify-content:space-between;
+    font-size:.78rem;
+    color:var(--muted);
+    margin-top:6px;
+  }
+  .card{
+    background:var(--panel);
+    border:1px solid var(--border);
+    border-radius:var(--radius);
+    padding:24px;
+    box-shadow:0 6px 24px rgba(0,0,0,.25);
+    min-height:100%;
+  }
+  .section-title{
+    font-size:1.15rem;
+    color:var(--gold);
+    margin:0 0 4px;
+  }
+  .section-sub{
+    color:var(--muted);
+    font-size:.85rem;
+    margin:0 0 20px;
+  }
+  .field{
+    margin-bottom:16px;
+  }
+  .field label{
+    display:block;
+    font-size:.88rem;
+    margin-bottom:6px;
+    color:var(--text);
+  }
+  .field .hint{
+    color:var(--muted);
+    font-size:.76rem;
+    display:block;
+    margin-top:4px;
+  }
+  input[type=text], textarea{
+    width:100%;
+    background:var(--panel2);
+    border:1px solid var(--border);
+    color:var(--text);
+    border-radius:8px;
+    padding:10px 12px;
+    font-size:.92rem;
+    font-family:inherit;
+    resize:vertical;
+  }
+  input[type=text]:focus, textarea:focus{
+    outline:none;
+    border-color:var(--accent);
+  }
+  .repeat-block{
+    border:1px dashed var(--border);
+    border-radius:8px;
+    padding:14px;
+    margin-bottom:12px;
+    position:relative;
+    background:rgba(45,212,191,.03);
+  }
+  .repeat-block .remove-btn{
+    position:absolute;
+    top:8px;
+    right:8px;
+    background:none;
+    border:none;
+    color:var(--danger);
+    cursor:pointer;
+    font-size:.8rem;
+  }
+  .add-btn{
+    background:none;
+    border:1px solid var(--accent);
+    color:var(--accent);
+    padding:8px 14px;
+    border-radius:8px;
+    cursor:pointer;
+    font-size:.85rem;
+    margin-bottom:6px;
+  }
+  .add-btn:hover{background:rgba(45,212,191,.1);}
+  .nav-row{
+    display:flex;
+    justify-content:space-between;
+    margin-top:26px;
+    gap:10px;
+  }
+  button.nav-btn{
+    flex:1;
+    padding:12px 16px;
+    border-radius:8px;
+    border:1px solid var(--border);
+    background:var(--panel2);
+    color:var(--text);
+    font-size:.95rem;
+    cursor:pointer;
+  }
+  button.nav-btn.primary{
+    background:linear-gradient(90deg,var(--accent-dark),var(--accent));
+    border:none;
+    color:#052622;
+    font-weight:600;
+  }
+  button.nav-btn:disabled{
+    opacity:.4;
+    cursor:not-allowed;
+  }
+  .report-wrap{
+    margin-top:10px;
+  }
+  .report-box{
+    width:100%;
+    min-height:400px;
+    background:var(--panel2);
+    border:1px solid var(--border);
+    border-radius:8px;
+    color:var(--text);
+    padding:16px;
+    font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+    font-size:.82rem;
+    white-space:pre-wrap;
+  }
+  .copy-row{
+    display:flex;
+    gap:10px;
+    margin-top:14px;
+  }
+  .copy-btn{
+    background:linear-gradient(90deg,var(--accent-dark),var(--accent));
+    border:none;
+    color:#052622;
+    font-weight:600;
+    padding:12px 18px;
+    border-radius:8px;
+    cursor:pointer;
+    font-size:.9rem;
+  }
+  .secondary-btn{
+    background:var(--panel2);
+    border:1px solid var(--border);
+    color:var(--text);
+    padding:12px 18px;
+    border-radius:8px;
+    cursor:pointer;
+    font-size:.9rem;
+  }
+  .toast{
+    position:fixed;
+    bottom:24px;
+    left:50%;
+    transform:translateX(-50%);
+    background:var(--accent);
+    color:#052622;
+    padding:10px 20px;
+    border-radius:8px;
+    font-size:.85rem;
+    font-weight:600;
+    opacity:0;
+    pointer-events:none;
+    transition:opacity .25s ease;
+  }
+  .toast.show{opacity:1;}
+  .safety-banner{
+    background:rgba(229,72,77,.12);
+    border:1px solid var(--danger);
+    color:var(--text);
+    border-radius:8px;
+    padding:10px 14px;
+    font-size:.78rem;
+    line-height:1.4;
+  }
+  .nav-footer{
+    flex:0 0 auto;
+    padding:12px 0 16px;
+  }
+  .dot-nav{
+    display:flex;
+    justify-content:center;
+    gap:5px;
+    margin-top:10px;
+    flex-wrap:wrap;
+  }
+  .dot{
+    width:7px;height:7px;border-radius:50%;
+    background:var(--border);
+  }
+  .dot.done{background:var(--accent-dark);}
+  .dot.active{background:var(--accent);}
+</style>
+</head>
+<body>
+<div class="app">
+  <header class="top">
+    <button class="theme-toggle" id="themeToggle" title="Switch theme">
+      <span id="themeIcon">🌙</span><span id="themeLabel">Dark</span>
+    </button>
+    <h1>Diabetes Health Interview</h1>
+    <p>Answer at your own pace — you can leave blank and come back later.</p>
+  </header>
+
+  <div class="fixed-zone">
+    <div class="safety-banner">
+      <strong>Seek immediate medical attention</strong> if experiencing: chest pain, sudden shortness of breath, sudden one-sided weakness, difficulty speaking, loss of consciousness, severe confusion, very low blood sugar with inability to eat/drink, or very high blood sugar with vomiting/severe dehydration/drowsiness.
+    </div>
+
+    <div class="progress-wrap" id="progressWrap">
+      <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
+      <div class="progress-label">
+        <span id="progressText">Section 1 of 15</span>
+        <span id="progressPct">7%</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="scroll-zone">
+    <div class="card" id="formCard"></div>
+  </div>
+
+  <div class="nav-footer">
+    <div class="nav-row" id="navRow">
+      <button class="nav-btn" id="btnBack">Back</button>
+      <button class="nav-btn primary" id="btnNext">Next</button>
+    </div>
+    <div class="dot-nav" id="dotNav"></div>
+  </div>
+</div>
+
+<div class="toast" id="toast">Copied to clipboard</div>
+
+<script>
+/* ---------- Data model: sections & fields ---------- */
+const sections = [
+  { id:'A', title:'Basic Information', sub:'General details about the patient.',
+    fields:[
+      {id:'name', label:'Name'},
+      {id:'age', label:'Age'},
+      {id:'sex', label:'Sex'},
+      {id:'height', label:'Height'},
+      {id:'weight', label:'Weight'},
+      {id:'waist', label:'Waist size', hint:'If known'},
+    ]},
+  { id:'B', title:'Diabetes History', sub:'',
+    fields:[
+      {id:'diabetesType', label:'Type of diabetes', hint:'If known'},
+      {id:'yearDiagnosed', label:'Year diagnosed'},
+      {id:'duration', label:'Approximate duration'},
+      {id:'familyHistory', label:'Family history of diabetes'},
+    ]},
+  { id:'C', title:'Current Sugar Control', sub:'',
+    fields:[
+      {id:'hba1c', label:'Latest HbA1c', hint:'If available'},
+      {id:'fastingSugar', label:'Fasting sugar'},
+      {id:'randomSugar', label:'Random sugar'},
+      {id:'homeReadings', label:'Typical home readings'},
+      {id:'checkFrequency', label:'How often sugar is checked'},
+    ]},
+  { id:'D', title:'Low Sugar Symptoms', sub:'Ask about the following.',
+    fields:[
+      {id:'lowSweating', label:'Sweating'},
+      {id:'lowShaking', label:'Shaking'},
+      {id:'lowHunger', label:'Hunger'},
+      {id:'lowConfusion', label:'Confusion'},
+      {id:'lowDizziness', label:'Dizziness'},
+      {id:'lowFainting', label:'Fainting'},
+    ]},
+  { id:'E', title:'High Sugar Symptoms', sub:'Ask about the following.',
+    fields:[
+      {id:'highThirst', label:'Excessive thirst'},
+      {id:'highUrination', label:'Frequent urination'},
+      {id:'highBlurredVision', label:'Blurred vision'},
+      {id:'highTiredness', label:'Tiredness'},
+      {id:'highWeightLoss', label:'Weight loss'},
+    ]},
+  { id:'F', title:'Current Medicines', sub:'For each medicine: name, dose, frequency, missed doses.',
+    repeatable:true, itemLabel:'Medicine',
+    fields:[
+      {id:'medName', label:'Name', hint:'Or note if a photo/label is available'},
+      {id:'medDose', label:'Dose', hint:'If known'},
+      {id:'medFrequency', label:'How many times per day'},
+      {id:'medMissed', label:'Whether doses are missed'},
+    ]},
+  { id:'G', title:'Blood Pressure & Cholesterol', sub:'Ask whether the patient has:',
+    fields:[
+      {id:'highBP', label:'High blood pressure'},
+      {id:'highCholesterol', label:'High cholesterol'},
+      {id:'heartDisease', label:'Heart disease'},
+    ]},
+  { id:'H', title:'Kidney Health', sub:'Ask about the following.',
+    fields:[
+      {id:'kidneyDisease', label:'Kidney disease'},
+      {id:'feetSwelling', label:'Swelling of feet'},
+      {id:'foamyUrine', label:'Foamy urine'},
+      {id:'reducedUrine', label:'Reduced urine output'},
+      {id:'dialysis', label:'Dialysis'},
+    ]},
+  { id:'I', title:'Eye Health', sub:'Ask about the following.',
+    fields:[
+      {id:'eyeBlurredVision', label:'Blurred vision'},
+      {id:'cataract', label:'Cataract'},
+      {id:'eyeInjections', label:'Eye injections'},
+      {id:'laserTreatment', label:'Laser treatment'},
+      {id:'lastEyeCheckup', label:'Date of last eye check-up'},
+    ]},
+  { id:'J', title:'Foot Health', sub:'Ask about the following.',
+    fields:[
+      {id:'cutsWounds', label:'Cuts or wounds'},
+      {id:'slowHealing', label:'Slow healing'},
+      {id:'heelCracks', label:'Cracks in the heel'},
+      {id:'nailProblems', label:'Nail problems'},
+      {id:'footInfections', label:'Foot infections'},
+      {id:'previousUlcers', label:'Previous ulcers'},
+    ]},
+  { id:'K', title:'Lifestyle', sub:'',
+    fields:[
+      {id:'breakfast', label:'Breakfast'},
+      {id:'lunch', label:'Lunch'},
+      {id:'dinner', label:'Dinner'},
+      {id:'snacks', label:'Snacks'},
+      {id:'teaCoffeeSugar', label:'Tea/coffee with sugar'},
+      {id:'softDrinksJuice', label:'Soft drinks/juice'},
+      {id:'waterIntake', label:'Water intake'},
+      {id:'fruitsVegetables', label:'Fruits and vegetables'},
+      {id:'riceBreadRoti', label:'Rice/bread/roti intake'},
+    ]},
+  { id:'L', title:'Physical Activity', sub:'Ask about the following.',
+    fields:[
+      {id:'walking', label:'Walking'},
+      {id:'householdActivity', label:'Household activity'},
+      {id:'exercise', label:'Exercise'},
+      {id:'activityFrequency', label:'Frequency'},
+      {id:'activityDuration', label:'Duration'},
+    ]},
+  { id:'M', title:'Sleep', sub:'Ask about the following.',
+    fields:[
+      {id:'sleepDuration', label:'Sleep duration'},
+      {id:'snoring', label:'Snoring'},
+      {id:'wakingTired', label:'Waking up tired'},
+    ]},
+  { id:'N', title:'Smoking and Alcohol', sub:'Ask separately.',
+    fields:[
+      {id:'smoking', label:'Smoking'},
+      {id:'alcohol', label:'Alcohol'},
+    ]},
+  { id:'O', title:'Recent Laboratory Tests', sub:'For each available report: test name and result/value.',
+    repeatable:true, itemLabel:'Lab test',
+    fields:[
+      {id:'labName', label:'Test name', hint:'e.g. HbA1c, eGFR, Vitamin D, CBC'},
+      {id:'labValue', label:'Result / value', hint:"Leave blank if not available — it's fine to say you don't know or don't have the report"},
+    ]},
+];
+
+const STORAGE_KEY = 'diabetesInterviewDraft_v1';
+
+/* ---------- State ---------- */
+let state = {
+  current: 0,
+  data: {}, // sectionId -> { field: value } for normal sections
+  repeats: {}, // sectionId -> [ {field: value}, ... ] for repeatable sections
+};
+
+function loadState(){
+  try{
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if(raw){
+      const parsed = JSON.parse(raw);
+      state = Object.assign(state, parsed);
+    }
+  }catch(e){ /* ignore corrupted draft */ }
+}
+
+function saveState(){
+  try{
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+  }catch(e){ /* storage unavailable, ignore */ }
+}
+
+/* ---------- Rendering ---------- */
+const formCard = document.getElementById('formCard');
+const progressFill = document.getElementById('progressFill');
+const progressText = document.getElementById('progressText');
+const progressPct = document.getElementById('progressPct');
+const dotNav = document.getElementById('dotNav');
+const btnBack = document.getElementById('btnBack');
+const btnNext = document.getElementById('btnNext');
+
+function renderDots(){
+  dotNav.innerHTML = '';
+  sections.forEach((s,i)=>{
+    const d = document.createElement('div');
+    d.className = 'dot' + (i===state.current ? ' active' : i<state.current ? ' done' : '');
+    dotNav.appendChild(d);
+  });
+}
+
+function renderProgress(){
+  const total = sections.length + 1; // +1 for report step
+  const step = state.current + 1;
+  const pct = Math.round((step/total)*100);
+  progressFill.style.width = pct + '%';
+  if(state.current < sections.length){
+    progressText.textContent = `Section ${step} of ${sections.length}`;
+  } else {
+    progressText.textContent = `Report`;
+  }
+  progressPct.textContent = pct + '%';
+}
+
+function ensureRepeatArray(sectionId){
+  if(!state.repeats[sectionId] || state.repeats[sectionId].length===0){
+    state.repeats[sectionId] = [ {} ];
+  }
+}
+
+function renderSection(section){
+  const wrap = document.createElement('div');
+
+  const h = document.createElement('h2');
+  h.className = 'section-title';
+  h.textContent = `${section.id}. ${section.title}`;
+  wrap.appendChild(h);
+
+  if(section.sub){
+    const p = document.createElement('p');
+    p.className = 'section-sub';
+    p.textContent = section.sub;
+    wrap.appendChild(p);
+  }
+
+  if(section.repeatable){
+    ensureRepeatArray(section.id);
+    const list = state.repeats[section.id];
+
+    list.forEach((item, idx)=>{
+      const block = document.createElement('div');
+      block.className = 'repeat-block';
+
+      if(list.length > 1){
+        const rm = document.createElement('button');
+        rm.className = 'remove-btn';
+        rm.textContent = 'Remove';
+        rm.onclick = ()=>{
+          list.splice(idx,1);
+          saveState();
+          renderCurrent();
+        };
+        block.appendChild(rm);
+      }
+
+      const label = document.createElement('div');
+      label.style.cssText='color:var(--muted);font-size:.78rem;margin-bottom:10px;';
+      label.textContent = `${section.itemLabel} ${idx+1}`;
+      block.appendChild(label);
+
+      section.fields.forEach(f=>{
+        block.appendChild(renderField(f, item[f.id]||'', (val)=>{
+          item[f.id] = val;
+          saveState();
+        }));
+      });
+
+      wrap.appendChild(block);
+    });
+
+    const addBtn = document.createElement('button');
+    addBtn.className = 'add-btn';
+    addBtn.textContent = `+ Add another ${section.itemLabel.toLowerCase()}`;
+    addBtn.onclick = ()=>{
+      list.push({});
+      saveState();
+      renderCurrent();
+    };
+    wrap.appendChild(addBtn);
+
+  } else {
+    if(!state.data[section.id]) state.data[section.id] = {};
+    const dataObj = state.data[section.id];
+
+    section.fields.forEach(f=>{
+      wrap.appendChild(renderField(f, dataObj[f.id]||'', (val)=>{
+        dataObj[f.id] = val;
+        saveState();
+      }));
+    });
+  }
+
+  formCard.innerHTML = '';
+  formCard.appendChild(wrap);
+}
+
+function renderField(f, value, onChange){
+  const fieldWrap = document.createElement('div');
+  fieldWrap.className = 'field';
+
+  const label = document.createElement('label');
+  label.textContent = f.label;
+  fieldWrap.appendChild(label);
+
+  const input = document.createElement('input');
+  input.type = 'text';
+  input.value = value;
+  input.placeholder = 'Type answer here, or leave blank';
+  input.oninput = (e)=> onChange(e.target.value);
+  fieldWrap.appendChild(input);
+
+  if(f.hint){
+    const hint = document.createElement('span');
+    hint.className = 'hint';
+    hint.textContent = f.hint;
+    fieldWrap.appendChild(hint);
+  }
+
+  return fieldWrap;
+}
+
+/* ---------- Report generation ---------- */
+function fmt(val){
+  const v = (val||'').toString().trim();
+  return v.length ? v : 'Not provided';
+}
+
+function generateReport(){
+  let out = [];
+  out.push('DIABETES HEALTH INTERVIEW - REPORT');
+  out.push('Generated: ' + new Date().toLocaleString());
+  out.push('='.repeat(50));
+  out.push('');
+
+  sections.forEach(section=>{
+    out.push(`${section.id}. ${section.title.toUpperCase()}`);
+    out.push('-'.repeat(40));
+
+    if(section.repeatable){
+      const list = (state.repeats[section.id]||[]).filter(item=>
+        section.fields.some(f=> (item[f.id]||'').toString().trim().length)
+      );
+      if(list.length===0){
+        out.push('Not provided');
+      } else {
+        list.forEach((item, idx)=>{
+          out.push(`${section.itemLabel} ${idx+1}:`);
+          section.fields.forEach(f=>{
+            out.push(`  ${f.label}: ${fmt(item[f.id])}`);
+          });
+        });
+      }
+    } else {
+      const dataObj = state.data[section.id] || {};
+      section.fields.forEach(f=>{
+        out.push(`${f.label}: ${fmt(dataObj[f.id])}`);
+      });
+    }
+    out.push('');
+  });
+
+  out.push('='.repeat(50));
+  out.push('SAFETY NOTE: If experiencing chest pain, sudden shortness of breath,');
+  out.push('sudden one-sided weakness, difficulty speaking, loss of consciousness,');
+  out.push('severe confusion, very low blood sugar with inability to eat/drink, or');
+  out.push('very high blood sugar with vomiting/severe dehydration/drowsiness -');
+  out.push('seek immediate medical attention.');
+
+  return out.join('\n');
+}
+
+function renderReportStep(){
+  const wrap = document.createElement('div');
+
+  const h = document.createElement('h2');
+  h.className = 'section-title';
+  h.textContent = 'Final Report';
+  wrap.appendChild(h);
+
+  const p = document.createElement('p');
+  p.className = 'section-sub';
+  p.textContent = 'Review the summary below, then copy it to your clipboard.';
+  wrap.appendChild(p);
+
+  const reportText = generateReport();
+
+  const box = document.createElement('textarea');
+  box.className = 'report-box';
+  box.readOnly = true;
+  box.value = reportText;
+  wrap.appendChild(box);
+
+  const copyRow = document.createElement('div');
+  copyRow.className = 'copy-row';
+
+  const copyBtn = document.createElement('button');
+  copyBtn.className = 'copy-btn';
+  copyBtn.textContent = 'Copy Report to Clipboard';
+  copyBtn.onclick = ()=> copyToClipboard(reportText);
+  copyRow.appendChild(copyBtn);
+
+  const resetBtn = document.createElement('button');
+  resetBtn.className = 'secondary-btn';
+  resetBtn.textContent = 'Start New Interview';
+  resetBtn.onclick = ()=>{
+    if(confirm('This will clear all entered data. Continue?')){
+      localStorage.removeItem(STORAGE_KEY);
+      state = { current:0, data:{}, repeats:{} };
+      renderCurrent();
+    }
+  };
+  copyRow.appendChild(resetBtn);
+
+  wrap.appendChild(copyRow);
+
+  formCard.innerHTML = '';
+  formCard.appendChild(wrap);
+}
+
+function copyToClipboard(text){
+  const showToast = ()=>{
+    const t = document.getElementById('toast');
+    t.classList.add('show');
+    setTimeout(()=>t.classList.remove('show'), 1800);
+  };
+  if(navigator.clipboard && navigator.clipboard.writeText){
+    navigator.clipboard.writeText(text).then(showToast).catch(()=>fallbackCopy(text, showToast));
+  } else {
+    fallbackCopy(text, showToast);
+  }
+}
+
+function fallbackCopy(text, cb){
+  const ta = document.createElement('textarea');
+  ta.value = text;
+  ta.style.position='fixed'; ta.style.opacity='0';
+  document.body.appendChild(ta);
+  ta.select();
+  try{ document.execCommand('copy'); }catch(e){}
+  document.body.removeChild(ta);
+  cb();
+}
+
+/* ---------- Navigation ---------- */
+function renderCurrent(){
+  const isReportStep = state.current === sections.length;
+  document.getElementById('progressWrap').style.display = 'block';
+
+  if(isReportStep){
+    renderReportStep();
+    btnNext.style.display = 'none';
+    btnBack.textContent = 'Back';
+    btnBack.disabled = false;
+    dotNav.style.display = 'none';
+  } else {
+    renderSection(sections[state.current]);
+    btnNext.style.display = 'block';
+    btnNext.textContent = state.current === sections.length-1 ? 'View Report' : 'Next';
+    btnBack.disabled = state.current === 0;
+    dotNav.style.display = 'flex';
+  }
+  renderProgress();
+  renderDots();
+  window.scrollTo({top:0, behavior:'smooth'});
+}
+
+btnNext.onclick = ()=>{
+  if(state.current < sections.length){
+    state.current++;
+    saveState();
+    renderCurrent();
+  }
+};
+
+btnBack.onclick = ()=>{
+  if(state.current > 0){
+    state.current--;
+    saveState();
+    renderCurrent();
+  }
+};
+
+/* ---------- Theme toggle ---------- */
+const THEME_KEY = 'diabetesFormTheme';
+
+function applyTheme(theme){
+  document.documentElement.setAttribute('data-theme', theme);
+  const icon = document.getElementById('themeIcon');
+  const label = document.getElementById('themeLabel');
+  if(theme === 'light'){
+    icon.textContent = '☀️';
+    label.textContent = 'Light';
+  } else {
+    icon.textContent = '🌙';
+    label.textContent = 'Dark';
+  }
+}
+
+function loadTheme(){
+  let theme = 'dark';
+  try{
+    const saved = localStorage.getItem(THEME_KEY);
+    if(saved === 'light' || saved === 'dark'){
+      theme = saved;
+    } else if(window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches){
+      theme = 'light';
+    }
+  }catch(e){}
+  applyTheme(theme);
+}
+
+document.getElementById('themeToggle').onclick = ()=>{
+  const current = document.documentElement.getAttribute('data-theme') || 'dark';
+  const next = current === 'dark' ? 'light' : 'dark';
+  applyTheme(next);
+  try{ localStorage.setItem(THEME_KEY, next); }catch(e){}
+};
+
+/* ---------- Init ---------- */
+loadTheme();
+loadState();
+renderCurrent();
+</script>
+</body>
+</html>
