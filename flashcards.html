@@ -18,6 +18,24 @@
     --good: #7fae7a;
     --bad: #c07361;
     --radius: 10px;
+    /* Card back face: fixed, high-contrast, same in both themes */
+    --back-bg: #123638;
+    --back-text: #f3d98d;
+  }
+  html[data-theme="light"]{
+    --bg: #f4f1ea;
+    --bg-alt: #ece6d8;
+    --surface: #ffffff;
+    --surface-hi: #fbf3e0;
+    --edge: #d8cfb8;
+    --gold: #a97e2b;
+    --gold-bright: #8a6118;
+    --text: #1c2b2a;
+    --muted: #5c6d68;
+    --good: #3f7a3a;
+    --bad: #a6402b;
+    --back-bg: #123638;
+    --back-text: #f3d98d;
   }
   *{ box-sizing: border-box; }
   html,body{ height:100%; }
@@ -30,6 +48,13 @@
     color: var(--text);
     font-family: Georgia, 'Times New Roman', serif;
     min-height:100vh;
+    transition: background-color .2s ease, color .2s ease;
+  }
+  html[data-theme="light"] body{
+    background:
+      radial-gradient(1200px 600px at 10% -10%, #f9f5ec 0%, transparent 60%),
+      radial-gradient(1000px 700px at 110% 10%, #f2ead6 0%, transparent 55%),
+      var(--bg);
   }
   .ui{ font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif; }
   h1,h2,h3{ font-family: Georgia, 'Times New Roman', serif; font-weight: 400; letter-spacing: .3px; margin:0; }
@@ -45,8 +70,9 @@
   .brand .mark{ color: var(--gold-bright); font-size: 26px; }
   .brand h1{ font-size: 24px; letter-spacing: .5px; }
   .brand small{ color: var(--muted); font-size: 12px; font-family: -apple-system, sans-serif; letter-spacing: 1px; text-transform: uppercase; }
-  .top-actions{ display:flex; gap:10px; }
+  .top-actions{ display:flex; gap:10px; align-items:center; }
   .top-actions button{ font-size: 12.5px; }
+  .theme-toggle{ width:38px; height:38px; padding:0; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:16px; }
 
   /* Buttons */
   .btn{ ui-font: 1; padding: 9px 16px; border-radius: 999px; border: 1px solid var(--edge); background: var(--surface); color: var(--text); font-family: -apple-system, sans-serif; font-size: 13px; transition: .15s ease; }
@@ -95,28 +121,29 @@
   .panel-actions{ display:flex; justify-content: space-between; margin-top: 18px; flex-wrap: wrap; gap: 10px; }
 
   /* Study mode */
-  .study-head{ display:flex; justify-content: space-between; align-items:center; margin-bottom: 18px; }
+  .study-head{ display:flex; justify-content: space-between; align-items:center; margin-bottom: 18px; flex-shrink:0; }
   .study-head .progress-txt{ font-family: -apple-system, sans-serif; font-size: 12.5px; color: var(--muted); }
-  .progress-track{ height: 4px; background: var(--edge); border-radius: 4px; overflow:hidden; margin-bottom: 26px; }
+  .progress-track{ height: 4px; background: var(--edge); border-radius: 4px; overflow:hidden; margin-bottom: 26px; flex-shrink:0; }
   .progress-fill{ height:100%; background: linear-gradient(90deg, var(--gold), var(--gold-bright)); transition: width .3s ease; }
 
-  .stage{ display:flex; justify-content:center; padding: 10px 0 30px; perspective: 1400px; }
-  .card3d{ width: 100%; max-width: 560px; height: 300px; position:relative; cursor:pointer; }
+  .stage{ display:flex; justify-content:center; align-items:center; padding: 10px 0 30px; perspective: 1400px; flex:1; min-height:0; }
+  .card3d{ width: 100%; max-width: 640px; height: min(60vh, 460px); min-height:260px; position:relative; cursor:pointer; }
   .card3d .inner{ position:absolute; inset:0; transition: transform .5s cubic-bezier(.4,.2,.2,1); transform-style: preserve-3d; }
   .card3d.flipped .inner{ transform: rotateY(180deg); }
   .face{
     position:absolute; inset:0; backface-visibility:hidden; border-radius: 14px;
     display:flex; align-items:center; justify-content:center; text-align:center; padding: 36px;
-    border: 1px solid var(--edge); background: var(--surface);
+    border: 1px solid var(--edge); background: var(--surface); color: var(--text);
     box-shadow: 0 12px 30px rgba(0,0,0,.35);
   }
   .face::before{ content:""; position:absolute; top:10px; left:24px; right:24px; height:1px; background: repeating-linear-gradient(90deg, var(--edge) 0 8px, transparent 8px 16px); opacity:.6; }
   .face .label{ position:absolute; top:14px; left:20px; font-family: -apple-system, sans-serif; font-size: 10.5px; letter-spacing: 1.5px; text-transform: uppercase; color: var(--gold); }
-  .face .txt{ font-size: 22px; line-height: 1.5; max-height: 100%; overflow:auto; }
-  .face.back{ transform: rotateY(180deg); background: var(--surface-hi); }
+  .face .txt{ font-size: 22px; line-height: 1.5; max-height: 100%; overflow:auto; width:100%; white-space: pre-wrap; word-break: break-word; }
+  .face.back{ transform: rotateY(180deg); background: var(--back-bg); color: var(--back-text); border-color: var(--back-text); }
+  .face.back .label{ color: var(--back-text); opacity:.75; }
   .card3d .hint{ position:absolute; bottom:12px; left:0; right:0; text-align:center; font-family:-apple-system, sans-serif; font-size:11px; color: var(--muted); }
 
-  .mark-row{ display:flex; justify-content:center; gap: 14px; margin-top: 8px; }
+  .mark-row{ display:flex; justify-content:center; gap: 14px; margin-top: 8px; flex-shrink:0; }
   .mark-row button{ font-family: -apple-system, sans-serif; font-size: 14px; padding: 11px 22px; border-radius: 999px; border: 1px solid var(--edge); background: var(--surface); color: var(--text); }
   .mark-row .btn-good:hover{ border-color: var(--good); color: var(--good); }
   .mark-row .btn-bad:hover{ border-color: var(--bad); color: var(--bad); }
@@ -145,6 +172,16 @@
   .backlink{ background:none; border:none; color: var(--muted); font-family: -apple-system, sans-serif; font-size: 13px; margin-bottom: 14px; padding:0; }
   .backlink:hover{ color: var(--gold-bright); }
   input[type=file]{ display:none; }
+
+  /* Fullscreen study mode */
+  #view-study{
+    position: fixed; inset: 0; z-index: 40;
+    background: var(--bg);
+    display: flex; flex-direction: column;
+    padding: 20px clamp(16px, 4vw, 40px) 24px;
+  }
+  #view-study.hidden{ display:none; }
+  #view-study .app-inner-note{ display:none; }
 </style>
 </head>
 <body>
@@ -159,6 +196,7 @@
       </div>
     </div>
     <div class="top-actions ui">
+      <button class="btn theme-toggle" id="btnToggleTheme" title="Switch theme">🌙</button>
       <button class="btn" id="btnImportCode">Paste a code</button>
       <button class="btn" id="btnImportAll">Import file</button>
       <button class="btn btn-gold" id="btnNewDeck">+ New deck</button>
@@ -201,7 +239,7 @@
         </div>
         <div class="field">
           <label>Answer</label>
-          <textarea id="newA" rows="2" placeholder="Back of card"></textarea>
+          <textarea id="newA" rows="4" placeholder="Back of card — supports multiple lines"></textarea>
         </div>
       </div>
       <button class="btn btn-gold" id="btnAddCard">+ Add card</button>
@@ -272,7 +310,7 @@
     </div>
   </div>
 
-  <!-- VIEW: Study session -->
+  <!-- VIEW: Study session (fullscreen) -->
   <div id="view-study" class="hidden ui">
     <div class="study-head">
       <button class="backlink" id="studyExit" style="margin-bottom:0;">← Exit</button>
@@ -329,6 +367,7 @@
 <script>
 (function(){
   const STORAGE_KEY = 'recall_decks_v1';
+  const THEME_KEY = 'recall_theme';
   let decks = load();
   let currentDeckId = null;
   let session = null; // active study session state
@@ -347,6 +386,23 @@
   function esc(s){ return (s||'').replace(/[&<>]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;'}[c])); }
 
   function getDeck(id){ return decks.find(d=>d.id===id); }
+
+  // ---------- THEME ----------
+  function applyTheme(theme){
+    document.documentElement.setAttribute('data-theme', theme);
+    document.getElementById('btnToggleTheme').textContent = theme === 'light' ? '☀️' : '🌙';
+    localStorage.setItem(THEME_KEY, theme);
+  }
+  function initTheme(){
+    const saved = localStorage.getItem(THEME_KEY);
+    if(saved === 'light' || saved === 'dark'){ applyTheme(saved); return; }
+    const prefersLight = window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches;
+    applyTheme(prefersLight ? 'light' : 'dark');
+  }
+  document.getElementById('btnToggleTheme').onclick = ()=>{
+    const current = document.documentElement.getAttribute('data-theme') === 'light' ? 'light' : 'dark';
+    applyTheme(current === 'light' ? 'dark' : 'light');
+  };
 
   // ---------- SHARE CODE (mobile-friendly, no file dialogs) ----------
   function encodeDeckToCode(deck){
@@ -752,6 +808,7 @@
   document.getElementById('resultRetry').onclick = ()=> startSession(session.mode);
 
   // ---------- INIT ----------
+  initTheme();
   renderHome();
   show('home');
 })();
