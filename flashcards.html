@@ -121,13 +121,13 @@
   .panel-actions{ display:flex; justify-content: space-between; margin-top: 18px; flex-wrap: wrap; gap: 10px; }
 
   /* Study mode */
-  .study-head{ display:flex; justify-content: space-between; align-items:center; margin-bottom: 18px; flex-shrink:0; }
+  .study-head{ display:flex; justify-content: space-between; align-items:center; margin-bottom: 10px; flex-shrink:0; }
   .study-head .progress-txt{ font-family: -apple-system, sans-serif; font-size: 12.5px; color: var(--muted); }
-  .progress-track{ height: 4px; background: var(--edge); border-radius: 4px; overflow:hidden; margin-bottom: 26px; flex-shrink:0; }
+  .progress-track{ height: 4px; background: var(--edge); border-radius: 4px; overflow:hidden; margin-bottom: 10px; flex-shrink:0; }
   .progress-fill{ height:100%; background: linear-gradient(90deg, var(--gold), var(--gold-bright)); transition: width .3s ease; }
 
-  .stage{ display:flex; justify-content:center; align-items:center; padding: 10px 0 30px; perspective: 1400px; flex:1; min-height:0; }
-  .card3d{ width: 100%; max-width: 640px; height: min(60vh, 460px); min-height:260px; position:relative; cursor:pointer; }
+  .stage{ display:flex; justify-content:center; align-items:stretch; padding: 6px 0; perspective: 1400px; flex:1; min-height:0; }
+  .card3d{ width: 100%; max-width: 640px; height: 100%; position:relative; cursor:pointer; }
   .card3d .inner{ position:absolute; inset:0; transition: transform .5s cubic-bezier(.4,.2,.2,1); transform-style: preserve-3d; }
   .card3d.flipped .inner{ transform: rotateY(180deg); }
   .face{
@@ -143,7 +143,7 @@
   .face.back .label{ color: var(--back-text); opacity:.75; }
   .card3d .hint{ position:absolute; bottom:12px; left:0; right:0; text-align:center; font-family:-apple-system, sans-serif; font-size:11px; color: var(--muted); }
 
-  .mark-row{ display:flex; justify-content:center; gap: 14px; margin-top: 8px; flex-shrink:0; }
+  .mark-row{ display:flex; justify-content:center; gap: 14px; margin-top: 6px; flex-shrink:0; }
   .mark-row button{ font-family: -apple-system, sans-serif; font-size: 14px; padding: 11px 22px; border-radius: 999px; border: 1px solid var(--edge); background: var(--surface); color: var(--text); }
   .mark-row .btn-good:hover{ border-color: var(--good); color: var(--good); }
   .mark-row .btn-bad:hover{ border-color: var(--bad); color: var(--bad); }
@@ -178,7 +178,7 @@
     position: fixed; inset: 0; z-index: 40;
     background: var(--bg);
     display: flex; flex-direction: column;
-    padding: 20px clamp(16px, 4vw, 40px) 24px;
+    padding: 14px clamp(16px, 4vw, 40px) 16px;
   }
   #view-study.hidden{ display:none; }
   #view-study .app-inner-note{ display:none; }
