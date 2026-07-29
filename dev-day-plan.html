@@ -278,6 +278,18 @@ const todayStr = () => {
   return new Date().toLocaleDateString(undefined, { weekday: 'long', month: 'short', day: 'numeric' });
 };
 
+// Storage shim: localStorage, wrapped to match the async get/set shape used below.
+const store = {
+  async get(key) {
+    const v = localStorage.getItem('devplan:' + key);
+    return v === null ? null : { key, value: v };
+  },
+  async set(key, value) {
+    localStorage.setItem('devplan:' + key, value);
+    return { key, value };
+  }
+};
+
 document.getElementById('today-date').textContent = todayStr();
 
 let secondaryCount = 0;
@@ -312,12 +324,12 @@ function collectSecondary() {
 
 async function loadYesterdayCarry() {
   try {
-    const idx = await window.storage.get('plan-index');
+    const idx = await store.get('plan-index');
     if (!idx) return;
     const dates = JSON.parse(idx.value).sort().reverse();
     const prevDate = dates.find(d => d !== todayKey());
     if (!prevDate) return;
-    const prev = await window.storage.get('plan:' + prevDate);
+    const prev = await store.get('plan:' + prevDate);
     if (!prev) return;
     const data = JSON.parse(prev.value);
     if (data.tomorrow && data.tomorrow.trim()) {
@@ -334,7 +346,7 @@ async function loadYesterdayCarry() {
 
 async function loadToday() {
   try {
-    const res = await window.storage.get('plan:' + todayKey());
+    const res = await store.get('plan:' + todayKey());
     if (!res) return;
     const data = JSON.parse(res.value);
     document.getElementById('primary-task').value = data.primaryTask || '';
@@ -363,14 +375,14 @@ async function saveToday() {
     tomorrow: document.getElementById('tomorrow').value
   };
   try {
-    await window.storage.set('plan:' + todayKey(), JSON.stringify(data));
+    await store.set('plan:' + todayKey(), JSON.stringify(data));
     let idxSet = new Set();
     try {
-      const idx = await window.storage.get('plan-index');
+      const idx = await store.get('plan-index');
       if (idx) idxSet = new Set(JSON.parse(idx.value));
     } catch (e) {}
     idxSet.add(todayKey());
-    await window.storage.set('plan-index', JSON.stringify(Array.from(idxSet)));
+    await store.set('plan-index', JSON.stringify(Array.from(idxSet)));
     statusEl.textContent = 'Saved';
     statusEl.classList.add('saved');
     setTimeout(() => { statusEl.textContent = ''; statusEl.classList.remove('saved'); }, 2000);
@@ -385,14 +397,14 @@ document.getElementById('save-btn').addEventListener('click', saveToday);
 async function renderHistory() {
   const listEl = document.getElementById('history-list');
   try {
-    const idx = await window.storage.get('plan-index');
+    const idx = await store.get('plan-index');
     if (!idx) { listEl.innerHTML = '<div class="history-item">No past days yet.</div>'; return; }
     const dates = JSON.parse(idx.value).filter(d => d !== todayKey()).sort().reverse();
     if (dates.length === 0) { listEl.innerHTML = '<div class="history-item">No past days yet.</div>'; return; }
     listEl.innerHTML = '';
     for (const d of dates) {
       try {
-        const res = await window.storage.get('plan:' + d);
+        const res = await store.get('plan:' + d);
         const data = JSON.parse(res.value);
         const item = document.createElement('div');
         item.className = 'history-item';
@@ -423,7 +435,7 @@ function applyTheme(theme) {
 async function initTheme() {
   let theme = null;
   try {
-    const res = await window.storage.get('theme');
+    const res = await store.get('theme');
     if (res) theme = res.value;
   } catch (e) {}
   if (!theme) {
@@ -437,7 +449,7 @@ document.getElementById('theme-toggle').addEventListener('click', async () => {
   const next = current === 'dark' ? 'light' : 'dark';
   applyTheme(next);
   try {
-    await window.storage.set('theme', next);
+    await store.set('theme', next);
   } catch (e) {}
 });
 
