@@ -126,6 +126,14 @@
     color: var(--text-muted);
   }
 
+  /* Sub-tasks under Primary: checked = bold, never struck-through */
+  .subtask-block { margin-top: 12px; }
+  .subtask-row.done input[type="text"] {
+    font-weight: 700;
+    color: var(--text);
+    text-decoration: none;
+  }
+
   textarea.blockers { min-height: 56px; }
 
   .btn {
@@ -230,6 +238,12 @@
     <input type="text" id="primary-task" placeholder="e.g. fix null ref in PDC cheque validation">
     <label class="field-label">Definition of done</label>
     <input type="text" id="primary-done" placeholder="e.g. validation handles null dates without throwing">
+
+    <div class="subtask-block">
+      <label class="field-label">Sub-tasks</label>
+      <div id="primary-subtask-list"></div>
+      <button class="btn ghost" id="add-primary-subtask" type="button">+ Add sub-task</button>
+    </div>
   </div>
 
   <div class="card">
@@ -293,6 +307,7 @@ const store = {
 document.getElementById('today-date').textContent = todayStr();
 
 let secondaryCount = 0;
+let primarySubCount = 0;
 
 function addSecondaryRow(text = '', done = false) {
   const id = 'sec-' + (secondaryCount++);
@@ -313,10 +328,38 @@ function addSecondaryRow(text = '', done = false) {
   list.appendChild(row);
 }
 
+// Primary sub-tasks: checked items are bolded (never struck through)
+function addPrimarySubtaskRow(text = '', done = false) {
+  const id = 'psub-' + (primarySubCount++);
+  const list = document.getElementById('primary-subtask-list');
+  const row = document.createElement('div');
+  row.className = 'task-row subtask-row' + (done ? ' done' : '');
+  row.dataset.id = id;
+  row.innerHTML = `
+    <input type="checkbox" ${done ? 'checked' : ''}>
+    <input type="text" placeholder="Sub-task" value="${text.replace(/"/g, '&quot;')}">
+    <button class="btn ghost" style="padding:6px 8px;" type="button" aria-label="Remove sub-task"><i>&times;</i></button>
+  `;
+  const checkbox = row.querySelector('input[type="checkbox"]');
+  checkbox.addEventListener('change', () => {
+    row.classList.toggle('done', checkbox.checked);
+  });
+  row.querySelector('button').addEventListener('click', () => row.remove());
+  list.appendChild(row);
+}
+
 document.getElementById('add-secondary').addEventListener('click', () => addSecondaryRow());
+document.getElementById('add-primary-subtask').addEventListener('click', () => addPrimarySubtaskRow());
 
 function collectSecondary() {
   return Array.from(document.querySelectorAll('#secondary-list .task-row')).map(row => ({
+    text: row.querySelector('input[type="text"]').value,
+    done: row.querySelector('input[type="checkbox"]').checked
+  })).filter(t => t.text.trim() !== '');
+}
+
+function collectPrimarySubtasks() {
+  return Array.from(document.querySelectorAll('#primary-subtask-list .task-row')).map(row => ({
     text: row.querySelector('input[type="text"]').value,
     done: row.querySelector('input[type="checkbox"]').checked
   })).filter(t => t.text.trim() !== '');
@@ -357,6 +400,7 @@ async function loadToday() {
     document.getElementById('stuck').value = data.stuck || '';
     document.getElementById('tomorrow').value = data.tomorrow || '';
     (data.secondary || []).forEach(t => addSecondaryRow(t.text, t.done));
+    (data.primarySubtasks || []).forEach(t => addPrimarySubtaskRow(t.text, t.done));
   } catch (e) {
     // nothing saved yet today
   }
@@ -367,6 +411,7 @@ async function saveToday() {
   const data = {
     primaryTask: document.getElementById('primary-task').value,
     primaryDone: document.getElementById('primary-done').value,
+    primarySubtasks: collectPrimarySubtasks(),
     secondary: collectSecondary(),
     blockers: document.getElementById('blockers').value,
     first90: document.getElementById('first-90').value,
