@@ -1,0 +1,1009 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="dark light">
+<title>Wayfarer — Daily Practice Tracker</title>
+<style>
+:root{
+  --bg:#071B1A;
+  --surface:#0D2927;
+  --surface-2:#123632;
+  --line:#1D4A45;
+  --line-soft:#16403B;
+  --gold:#D4AF37;
+  --gold-dim:#9A7F27;
+  --gold-wash:rgba(212,175,55,.10);
+  --text:#E8F1EF;
+  --muted:#84A8A2;
+  --ok:#3FA07C;
+  --warn:#C9922F;
+  --bad:#B25541;
+  --on-gold:#0A2422;      /* ink placed on a gold fill */
+  --on-solid:#08201B;     /* ink placed on ok/warn/bad fills */
+  --header-top:#0A2422;
+  --warn-bg:#3A2708;
+  --warn-ink:#F0DFB4;
+  --shadow:none;
+  --radius:10px;
+  --display:"Iowan Old Style","Palatino Linotype",Palatino,Georgia,serif;
+  --sans:ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+  --mono:ui-monospace,SFMono-Regular,Menlo,Consolas,"Liberation Mono",monospace;
+}
+html[data-theme="light"]{
+  --bg:#F1F5F3;
+  --surface:#FFFFFF;
+  --surface-2:#E9F0ED;
+  --line:#C6D8D3;
+  --line-soft:#DCE7E4;
+  --gold:#856512;
+  --gold-dim:#7C6320;
+  --gold-wash:rgba(133,101,18,.09);
+  --text:#0E2B27;
+  --muted:#4F6F6A;
+  --ok:#26775A;
+  --warn:#8E6512;
+  --bad:#9A3E2C;
+  --on-gold:#FFFFFF;
+  --on-solid:#FFFFFF;
+  --header-top:#E6EEEB;
+  --warn-bg:#FBF1D8;
+  --warn-ink:#5B4406;
+  --shadow:0 1px 2px rgba(14,43,39,.06);
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{
+  background:var(--bg);
+  color:var(--text);
+  font-family:var(--sans);
+  font-size:15px;
+  line-height:1.5;
+  -webkit-font-smoothing:antialiased;
+}
+a{color:var(--gold)}
+button{font-family:inherit;font-size:inherit;cursor:pointer}
+input,select,textarea{font-family:inherit;font-size:inherit}
+
+/* ---------- layout ---------- */
+.wrap{max-width:1080px;margin:0 auto;padding:0 18px 80px}
+header.top{
+  border-bottom:1px solid var(--line);
+  background:linear-gradient(180deg,var(--header-top) 0%,var(--bg) 100%);
+}
+.brand{display:flex;align-items:baseline;gap:14px;flex-wrap:wrap;padding:22px 0 4px}
+.brand h1{
+  font-family:var(--display);
+  font-weight:600;
+  font-size:26px;
+  letter-spacing:.01em;
+  margin:0;
+  color:var(--text);
+}
+.brand h1 .dot{color:var(--gold)}
+.brand .tag{
+  font-size:12px;color:var(--muted);letter-spacing:.14em;text-transform:uppercase;
+}
+.themebtn{
+  margin-left:auto;display:inline-flex;align-items:center;gap:7px;
+  padding:6px 12px;font-size:12.5px;letter-spacing:.06em;text-transform:uppercase;
+  color:var(--muted);align-self:center;
+}
+.themebtn:hover{color:var(--gold);border-color:var(--gold-dim)}
+.themebtn span:first-child{font-size:14px;line-height:1}
+.epigraph{
+  font-family:var(--display);
+  font-style:italic;
+  color:var(--muted);
+  font-size:13.5px;
+  margin:0 0 16px;
+  max-width:62ch;
+}
+.epigraph span{color:var(--gold-dim);font-style:normal;font-size:11.5px;letter-spacing:.08em}
+
+/* tabs */
+nav.tabs{display:flex;gap:2px;flex-wrap:wrap;padding-bottom:0}
+nav.tabs button{
+  background:transparent;border:1px solid transparent;border-bottom:none;
+  color:var(--muted);padding:9px 14px;border-radius:8px 8px 0 0;
+  letter-spacing:.02em;
+}
+nav.tabs button:hover{color:var(--text);background:var(--gold-wash)}
+nav.tabs button[aria-selected="true"]{
+  color:var(--gold);background:var(--surface);
+  border-color:var(--line);border-bottom:1px solid var(--surface);
+  margin-bottom:-1px;
+}
+nav.tabs button:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
+
+/* date bar */
+.datebar{
+  display:flex;align-items:center;gap:10px;flex-wrap:wrap;
+  margin:20px 0 18px;
+}
+.datebar .nav{display:flex;gap:6px}
+.btn{
+  background:var(--surface);border:1px solid var(--line);color:var(--text);
+  padding:7px 12px;border-radius:8px;
+}
+.btn:hover{border-color:var(--gold-dim);color:var(--gold)}
+.btn:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
+.btn.gold{border-color:var(--gold-dim);color:var(--gold)}
+.btn.danger:hover{border-color:var(--bad);color:var(--bad)}
+.datebar input[type=date],.datebar select{
+  background:var(--surface);border:1px solid var(--line);color:var(--text);
+  padding:7px 10px;border-radius:8px;
+}
+.datebar .label{
+  font-family:var(--display);font-size:19px;
+}
+.datebar .sub{color:var(--muted);font-size:12.5px}
+
+/* cards */
+.grid{display:grid;gap:16px}
+.cols-2{grid-template-columns:repeat(2,minmax(0,1fr))}
+.cols-3{grid-template-columns:repeat(3,minmax(0,1fr))}
+@media(max-width:820px){.cols-2,.cols-3{grid-template-columns:1fr}}
+.card{
+  background:var(--surface);
+  border:1px solid var(--line);
+  border-radius:var(--radius);
+  padding:16px 18px 18px;
+  box-shadow:var(--shadow);
+}
+.card h2{
+  font-family:var(--display);font-size:16px;font-weight:600;margin:0 0 2px;
+  letter-spacing:.01em;
+}
+.card .hint{color:var(--muted);font-size:12px;margin:0 0 12px}
+.card h2 .count{
+  float:right;font-family:var(--mono);font-size:12px;color:var(--gold-dim);
+  font-weight:400;letter-spacing:.04em;
+}
+
+/* checklist rows */
+.check{
+  display:flex;align-items:flex-start;gap:10px;
+  padding:6px 6px 6px 4px;border-radius:7px;cursor:pointer;
+  transition:background .12s ease;
+}
+.check:hover{background:var(--gold-wash)}
+.check input{position:absolute;opacity:0;width:0;height:0}
+.box{
+  flex:none;width:17px;height:17px;margin-top:2px;border-radius:4px;
+  border:1.5px solid var(--line);background:var(--surface-2);
+  display:grid;place-items:center;font-size:11px;color:var(--bg);
+  transition:background .12s ease,border-color .12s ease;
+}
+.check input:checked + .box{background:var(--gold);border-color:var(--gold)}
+.check input:checked + .box::after{content:"✓";color:var(--on-gold);font-weight:700}
+.check input:focus-visible + .box{outline:2px solid var(--gold);outline-offset:2px}
+.check .txt{font-size:14px}
+.check input:checked ~ .txt{color:var(--muted)}
+.check .ref{display:block;font-size:11px;color:var(--gold-dim);letter-spacing:.02em;margin-top:1px}
+
+/* prayer strip */
+.prayers{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin:4px 0 12px}
+.pcell{
+  border:1px solid var(--line);border-radius:9px;background:var(--surface-2);
+  padding:10px 8px;text-align:center;
+}
+.pcell .pname{font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
+.pcell .pbtn{
+  display:block;width:100%;margin:8px 0 6px;padding:9px 0;border-radius:7px;
+  border:1px solid var(--line);background:var(--bg);color:var(--muted);
+  font-family:var(--mono);font-size:17px;letter-spacing:.05em;
+}
+.pcell .pbtn:hover{border-color:var(--gold-dim)}
+.pcell[data-s="ontime"] .pbtn{background:var(--ok);border-color:var(--ok);color:var(--on-solid);font-weight:700}
+.pcell[data-s="late"]   .pbtn{background:var(--warn);border-color:var(--warn);color:var(--on-solid);font-weight:700}
+.pcell[data-s="qada"]   .pbtn{background:var(--bad);border-color:var(--bad);color:var(--on-solid);font-weight:700}
+.jam{
+  display:inline-flex;align-items:center;gap:5px;font-size:11px;color:var(--muted);
+  cursor:pointer;user-select:none;
+}
+.jam input{accent-color:var(--gold)}
+.legend{font-size:11.5px;color:var(--muted);display:flex;gap:14px;flex-wrap:wrap}
+.legend b{color:var(--text);font-weight:600;font-family:var(--mono)}
+
+/* number + text fields */
+.field{display:flex;align-items:center;gap:8px;margin:8px 0;font-size:13.5px;color:var(--muted)}
+.field input[type=number],.field input[type=text],.field input[type=date]{
+  background:var(--surface-2);border:1px solid var(--line);color:var(--text);
+  padding:6px 9px;border-radius:7px;width:110px;font-family:var(--mono);
+}
+.field input[type=text]{width:100%;font-family:var(--sans)}
+textarea{
+  width:100%;background:var(--surface-2);border:1px solid var(--line);color:var(--text);
+  border-radius:8px;padding:10px;min-height:70px;resize:vertical;
+}
+input:focus,textarea:focus,select:focus{outline:2px solid var(--gold-dim);outline-offset:1px}
+
+/* stats */
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+@media(max-width:700px){.stats{grid-template-columns:repeat(2,1fr)}}
+.stat{
+  background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);
+  padding:14px 16px;box-shadow:var(--shadow);
+}
+.stat .n{font-family:var(--mono);font-size:24px;color:var(--gold);letter-spacing:-.01em}
+.stat .l{font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin-top:2px}
+
+/* progress meter */
+.meter{height:5px;background:var(--surface-2);border-radius:3px;overflow:hidden;margin-top:10px}
+.meter i{display:block;height:100%;background:var(--gold);width:0;transition:width .25s ease}
+
+/* tables */
+table{width:100%;border-collapse:collapse;font-size:13px}
+th,td{border:1px solid var(--line-soft);padding:5px 6px;text-align:center}
+th{color:var(--muted);font-weight:500;font-size:11px;letter-spacing:.06em;text-transform:uppercase}
+td.name,th.name{text-align:left;white-space:nowrap;font-size:13px;color:var(--text)}
+.scroll{overflow-x:auto}
+.cellbtn{
+  width:100%;border:none;background:transparent;color:var(--muted);
+  font-family:var(--mono);font-size:14px;padding:2px 0;border-radius:4px;
+}
+.cellbtn:hover{background:var(--gold-wash)}
+.cellbtn[data-v="1"]{color:var(--ok);font-weight:700}
+.cellbtn[data-v="0"]{color:var(--bad)}
+td.today{background:var(--gold-wash)}
+tr.total td{color:var(--gold-dim);font-family:var(--mono);font-size:12px}
+
+/* habit editor */
+.habitrow{display:flex;gap:8px;align-items:center;margin:6px 0}
+.habitrow input[type=text]{
+  flex:1;background:var(--surface-2);border:1px solid var(--line);color:var(--text);
+  padding:6px 9px;border-radius:7px;
+}
+.x{background:transparent;border:1px solid var(--line);color:var(--muted);
+  border-radius:6px;padding:4px 9px;line-height:1}
+.x:hover{border-color:var(--bad);color:var(--bad)}
+
+.note{color:var(--muted);font-size:12.5px}
+.warnbar{
+  background:var(--warn-bg);border:1px solid var(--warn);color:var(--warn-ink);
+  padding:9px 14px;border-radius:8px;margin:14px 0;font-size:13px;
+}
+.hidden{display:none !important}
+footer.foot{
+  margin-top:32px;padding-top:16px;border-top:1px solid var(--line);
+  display:flex;gap:10px;flex-wrap:wrap;align-items:center;
+}
+footer.foot .note{margin-left:auto}
+
+@media (prefers-reduced-motion:reduce){*{transition:none !important}}
+
+/* ---------- print ---------- */
+@media print{
+  body{background:#fff;color:#000}
+  header.top,nav.tabs,footer.foot,.datebar .nav,.btn,.warnbar{display:none !important}
+  .card{border:1px solid #999;break-inside:avoid;background:#fff;color:#000}
+  .box{border:1.5px solid #333;background:#fff}
+  .check input:checked + .box{background:#333}
+  .stat,.pcell{border:1px solid #999;background:#fff}
+  .stat .n,.card h2 .count,.check .ref{color:#555}
+  th,td{border:1px solid #999}
+  .wrap{max-width:100%;padding:0}
+}
+</style>
+<script>
+/* Set the theme before first paint so there is no flash. */
+(function(){
+  var t=null;
+  try{ t=localStorage.getItem("wayfarer.theme"); }catch(e){}
+  if(t!=="light"&&t!=="dark"){
+    t=(window.matchMedia&&window.matchMedia("(prefers-color-scheme: light)").matches)?"light":"dark";
+  }
+  document.documentElement.setAttribute("data-theme",t);
+})();
+</script>
+</head>
+<body>
+
+<header class="top">
+  <div class="wrap">
+    <div class="brand">
+      <h1>Wayfarer<span class="dot">.</span></h1>
+      <span class="tag">Daily practice tracker</span>
+      <button class="btn themebtn" id="themeToggle" aria-pressed="false">
+        <span id="themeIcon" aria-hidden="true">☾</span><span id="themeLabel">Dark</span>
+      </button>
+    </div>
+    <p class="epigraph">Be in this world as though you were a stranger or a wayfarer. <span>— Sahih al-Bukhari 6416</span></p>
+    <nav class="tabs" role="tablist" id="tabs">
+      <button role="tab" data-tab="today" aria-selected="true">Today</button>
+      <button role="tab" data-tab="prayers" aria-selected="false">Prayer log</button>
+      <button role="tab" data-tab="habits" aria-selected="false">Habits</button>
+      <button role="tab" data-tab="week" aria-selected="false">Week</button>
+      <button role="tab" data-tab="month" aria-selected="false">Month</button>
+      <button role="tab" data-tab="year" aria-selected="false">Year</button>
+      <button role="tab" data-tab="data" aria-selected="false">Data</button>
+    </nav>
+  </div>
+</header>
+
+<div class="wrap">
+  <div id="storagewarn" class="warnbar hidden">
+    Browser storage is unavailable here, so entries will be lost when this page closes.
+    Save this file to your computer and open it directly, or use <b>Export</b> on the Data tab before leaving.
+  </div>
+
+  <!-- ================= TODAY ================= -->
+  <section id="panel-today">
+    <div class="datebar">
+      <div class="nav">
+        <button class="btn" id="dPrev" aria-label="Previous day">←</button>
+        <button class="btn" id="dNext" aria-label="Next day">→</button>
+      </div>
+      <input type="date" id="dPick">
+      <div>
+        <div class="label" id="dLabel"></div>
+        <div class="sub" id="dSub"></div>
+      </div>
+      <button class="btn gold" id="dToday" style="margin-left:auto">Jump to today</button>
+      <button class="btn" onclick="window.print()">Print</button>
+    </div>
+
+    <div class="stats" style="margin-bottom:16px">
+      <div class="stat"><div class="n" id="stDay">0%</div><div class="l">Day complete</div><div class="meter"><i id="stDayBar"></i></div></div>
+      <div class="stat"><div class="n" id="stStreak">0</div><div class="l">Five-on-time streak</div></div>
+      <div class="stat"><div class="n" id="stJam">0</div><div class="l">Congregation (30d)</div></div>
+      <div class="stat"><div class="n" id="stQuran">0</div><div class="l">Quran pages (30d)</div></div>
+    </div>
+
+    <div class="card" style="margin-bottom:16px">
+      <h2>Obligatory prayers <span class="count" id="pCount"></span></h2>
+      <p class="hint">Tap a prayer to cycle its state. The most beloved deed to Allah is prayer at its proper time — Bukhari 527.</p>
+      <div class="prayers" id="prayers"></div>
+      <div class="legend">
+        <span><b>—</b> not logged</span><span><b>✓</b> on time</span><span><b>L</b> late, within window</span><span><b>Q</b> made up (qada)</span><span><b>J</b> in congregation</span>
+      </div>
+    </div>
+
+    <div class="grid cols-2" id="dailyGroups"></div>
+
+    <div class="card" style="margin-top:16px">
+      <h2>One thing I will fix tomorrow</h2>
+      <p class="hint">Muhasabah — let every soul look to what it has put forth for tomorrow (Quran 59:18).</p>
+      <textarea id="dayNote" placeholder="Write the single correction, not a list."></textarea>
+    </div>
+  </section>
+
+  <!-- ================= PRAYER LOG ================= -->
+  <section id="panel-prayers" class="hidden">
+    <div class="datebar">
+      <div class="nav">
+        <button class="btn" id="mPrev" aria-label="Previous month">←</button>
+        <button class="btn" id="mNext" aria-label="Next month">→</button>
+      </div>
+      <div class="label" id="mLabel"></div>
+      <button class="btn" style="margin-left:auto" onclick="window.print()">Print</button>
+    </div>
+    <div class="card">
+      <h2>Monthly prayer log</h2>
+      <p class="hint">Click a cell to cycle: on time → late → qada → clear. Click <b>J</b> to mark congregation.</p>
+      <div class="scroll"><table id="prayerTable"></table></div>
+    </div>
+    <div class="stats" style="margin-top:16px">
+      <div class="stat"><div class="n" id="pmOn">0</div><div class="l">On time</div></div>
+      <div class="stat"><div class="n" id="pmLate">0</div><div class="l">Late</div></div>
+      <div class="stat"><div class="n" id="pmQada">0</div><div class="l">Made up</div></div>
+      <div class="stat"><div class="n" id="pmJam">0</div><div class="l">In congregation</div></div>
+    </div>
+  </section>
+
+  <!-- ================= HABITS ================= -->
+  <section id="panel-habits" class="hidden">
+    <div class="datebar">
+      <div class="nav">
+        <button class="btn" id="hPrev" aria-label="Previous month">←</button>
+        <button class="btn" id="hNext" aria-label="Next month">→</button>
+      </div>
+      <div class="label" id="hLabel"></div>
+      <button class="btn" style="margin-left:auto" onclick="window.print()">Print</button>
+    </div>
+    <div class="card">
+      <h2>Habit grid</h2>
+      <p class="hint">Click a cell to cycle: ✓ done → ✗ missed → clear. Rule: do not add a new habit until the current one holds 21 consecutive ticks — the most beloved deeds are the most consistent, even if few (Bukhari 6464).</p>
+      <div class="scroll"><table id="habitTable"></table></div>
+    </div>
+    <div class="card" style="margin-top:16px">
+      <h2>Habits tracked <span class="count" id="hCount"></span></h2>
+      <p class="hint">Eight is the ceiling. Renaming a habit keeps its history.</p>
+      <div id="habitEditor"></div>
+      <div class="habitrow" style="margin-top:10px">
+        <input type="text" id="newHabit" placeholder="Add a habit — e.g. Duha prayer" maxlength="48">
+        <button class="btn gold" id="addHabit">Add</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= WEEK / MONTH / YEAR ================= -->
+  <section id="panel-week" class="hidden">
+    <div class="datebar">
+      <div class="nav"><button class="btn" id="wPrev">←</button><button class="btn" id="wNext">→</button></div>
+      <div><div class="label" id="wLabel"></div><div class="sub" id="wSub"></div></div>
+      <button class="btn" style="margin-left:auto" onclick="window.print()">Print</button>
+    </div>
+    <div id="weekBody" class="grid cols-2"></div>
+  </section>
+
+  <section id="panel-month" class="hidden">
+    <div class="datebar">
+      <div class="nav"><button class="btn" id="moPrev">←</button><button class="btn" id="moNext">→</button></div>
+      <div class="label" id="moLabel"></div>
+      <button class="btn" style="margin-left:auto" onclick="window.print()">Print</button>
+    </div>
+    <div id="monthBody" class="grid cols-2"></div>
+  </section>
+
+  <section id="panel-year" class="hidden">
+    <div class="datebar">
+      <div class="nav"><button class="btn" id="yPrev">←</button><button class="btn" id="yNext">→</button></div>
+      <div class="label" id="yLabel"></div>
+      <button class="btn" style="margin-left:auto" onclick="window.print()">Print</button>
+    </div>
+    <div id="yearBody" class="grid cols-2"></div>
+  </section>
+
+  <!-- ================= DATA ================= -->
+  <section id="panel-data" class="hidden">
+    <div class="grid cols-2" style="margin-top:20px">
+      <div class="card">
+        <h2>Backup</h2>
+        <p class="hint">Everything is stored in this browser only. Nothing leaves your device. Export regularly.</p>
+        <p><button class="btn gold" id="btnExport">Export JSON</button>
+           <button class="btn" id="btnImport">Import JSON</button>
+           <input type="file" id="fileInput" accept="application/json" class="hidden"></p>
+        <p class="note" id="dataStats"></p>
+      </div>
+      <div class="card">
+        <h2>Clear data</h2>
+        <p class="hint">Irreversible. Export first.</p>
+        <p><button class="btn danger" id="btnWipe">Erase all entries</button></p>
+      </div>
+    </div>
+    <div class="card" style="margin-top:16px">
+      <h2>Reference</h2>
+      <p class="hint">Hadith numbering follows the common Dar as-Salam / sunnah.com numbering. Quran citations are chapter:verse.</p>
+      <p class="note">This tool records practice; it does not issue rulings. For questions of fiqh — making up missed prayers, zakah calculation, and similar — refer to a qualified scholar.</p>
+    </div>
+  </section>
+
+  <footer class="foot">
+    <span class="note">Offline · single file · stored in this browser</span>
+  </footer>
+</div>
+
+<script>
+"use strict";
+
+/* ---------------- storage ---------------- */
+const KEY="wayfarer.v1";
+let memFallback=null;
+const store={
+  get(){ try{ return localStorage.getItem(KEY); }catch(e){ return memFallback; } },
+  set(v){ try{ localStorage.setItem(KEY,v); }catch(e){ memFallback=v; } },
+  ok(){ try{ const k="__t"; localStorage.setItem(k,"1"); localStorage.removeItem(k); return true; }catch(e){ return false; } }
+};
+if(!store.ok()) document.getElementById("storagewarn").classList.remove("hidden");
+
+const blank={daily:{},prayers:{},habits:{list:[],log:{}},week:{},month:{},year:{},v:1};
+const fresh=()=>JSON.parse(JSON.stringify(blank));
+let S;
+try{ S=Object.assign(fresh(),JSON.parse(store.get()||"{}")); }catch(e){ S=fresh(); }
+function defaultHabits(){
+  return [
+    {id:"h1",n:"Fajr on time"},{id:"h2",n:"Five prayers on time"},
+    {id:"h3",n:"Morning adhkar"},{id:"h4",n:"Evening adhkar"},
+    {id:"h5",n:"Quran — one page"},{id:"h6",n:"Charity"},
+    {id:"h7",n:"Muhasabah before sleep"},{id:"h8",n:"No backbiting"}
+  ];
+}
+S.habits=S.habits||{list:[],log:{}};
+if(!S.habits.list.length) S.habits.list=defaultHabits();
+const save=()=>store.set(JSON.stringify(S));
+
+/* ---------------- date helpers ---------------- */
+const pad=n=>String(n).padStart(2,"0");
+const iso=d=>d.getFullYear()+"-"+pad(d.getMonth()+1)+"-"+pad(d.getDate());
+const parseISO=s=>{const[a,b,c]=s.split("-").map(Number);return new Date(a,b-1,c);};
+const addDays=(s,n)=>{const d=parseISO(s);d.setDate(d.getDate()+n);return iso(d);};
+const MONTHS=["January","February","March","April","May","June","July","August","September","October","November","December"];
+const DAYS=["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"];
+const DSHORT=["S","M","T","W","T","F","S"];
+function isoWeek(s){
+  const d=parseISO(s); const t=new Date(d.getFullYear(),d.getMonth(),d.getDate());
+  t.setDate(t.getDate()+4-(t.getDay()||7));
+  const y0=new Date(t.getFullYear(),0,1);
+  const w=Math.ceil((((t-y0)/86400000)+1)/7);
+  return t.getFullYear()+"-W"+pad(w);
+}
+function weekRange(s){
+  const d=parseISO(s); const day=(d.getDay()+6)%7; // Monday start
+  const mon=new Date(d); mon.setDate(d.getDate()-day);
+  const sun=new Date(mon); sun.setDate(mon.getDate()+6);
+  return [iso(mon),iso(sun)];
+}
+const fmt=s=>{const d=parseISO(s);return d.getDate()+" "+MONTHS[d.getMonth()].slice(0,3)+" "+d.getFullYear();};
+
+/* ---------------- content ---------------- */
+const PRAYERS=[["fajr","Fajr"],["dhuhr","Dhuhr"],["asr","Asr"],["maghrib","Maghrib"],["isha","Isha"]];
+const PSTATES=["","ontime","late","qada"];
+const PMARK={"":"—",ontime:"✓",late:"L",qada:"Q"};
+
+const DAILY=[
+ {g:"Worship",hint:"Keep it short and permanent rather than long and abandoned — Bukhari 6464.",items:[
+  ["w1","Morning adhkar",""],
+  ["w2","Evening adhkar",""],
+  ["w3","Sayyid al-Istighfar","Bukhari 6306"],
+  ["w4","Subhanallahi wa bihamdih ×100","Bukhari 6405"],
+  ["w5","La ilaha illallah wahdahu… ×100","Bukhari 6403"],
+  ["w6","Duha prayer","Bukhari 1178"],
+  ["w7","Sunan ar-rawatib",""],
+  ["w8","Witr","Bukhari 1178"],
+  ["w9","Personal dua in my own words","Quran 40:60"],
+  ["w10","Salawat on the Prophet ﷺ","Quran 33:56"]
+ ],num:[["quran","Quran — pages read",0,60]]},
+
+ {g:"Rights of people",hint:"The second ledger. Rights between people are settled separately — Bukhari 6533.",items:[
+  ["r1","Parents — contacted or served","Bukhari 5971"],
+  ["r2","Spouse — one kind word and one act of help","Bukhari 5185"],
+  ["r3","Children — undivided attention","Bukhari 5997"],
+  ["r4","One relative contacted","Bukhari 5991"],
+  ["r5","Neighbour — no harm caused, greeting given","Bukhari 6016"],
+  ["r6","Charity given, any amount or form","Bukhari 1442"],
+  ["r7","Helped someone with no benefit to me","Bukhari 2442"]
+ ]},
+
+ {g:"Character and discipline",hint:"Score behaviour, not intention.",items:[
+  ["c1","Spoke good or stayed silent","Bukhari 6018"],
+  ["c2","No backbiting — heard it and stopped it","Quran 49:12"],
+  ["c3","Lowered the gaze, including screens","Quran 24:30"],
+  ["c4","Controlled anger at least once","Bukhari 6114"],
+  ["c5","Was honest where lying was easier","Bukhari 6094"],
+  ["c6","Full and honest work hours","Bukhari 2227"],
+  ["c7","Avoided all known major sins","Quran 4:31"]
+ ]},
+
+ {g:"Health and time",hint:"Two blessings in which many people are deceived — Bukhari 6412.",items:[
+  ["h1","Ate moderately","Quran 7:31"],
+  ["h2","Moved or exercised",""],
+  ["h3","Slept early enough to protect Fajr",""]
+ ],num:[["screen","Screen time — hours",0,24]]},
+
+ {g:"Night close-out",hint:"The last ten minutes decide the next morning.",items:[
+  ["n1","Muhasabah — the five questions","Quran 59:18"],
+  ["n2","Istighfar for today's shortfalls","Bukhari 6307"],
+  ["n3","Ayat al-Kursi","Bukhari 2311"],
+  ["n4","Last two verses of Al-Baqarah","Bukhari 5009"],
+  ["n5","Three quls ×3, blown into the palms","Bukhari 5017"],
+  ["n6","Tasbih 33 / 33 / 34","Bukhari 6318"],
+  ["n7","Wudu, right side, sleeping dua","Bukhari 247"]
+ ]}
+];
+
+const WEEK=[
+ {g:"Friday",items:[
+  ["f1","Ghusl, best clothes, early to Jumu'ah","Bukhari 877, 881"],
+  ["f2","Silence and attention during the khutbah","Bukhari 934"],
+  ["f3","Surah al-Kahf","Hakim / Bayhaqi — graded sahih by many"],
+  ["f4","Increased salawat on the Prophet ﷺ","Abu Dawud 1047 — hasan"],
+  ["f5","Sought the hour of acceptance","Bukhari 935"]
+ ]},
+ {g:"The rest of the week",items:[
+  ["k1","Called or visited relatives","Bukhari 5985"],
+  ["k2","Visited someone sick","Bukhari 1240"],
+  ["k3","Weekly charity given","Bukhari 1442"],
+  ["k4","One structured learning session","Bukhari 71"],
+  ["k5","Taught one thing to someone","Bukhari 3461"],
+  ["k6","Community or mosque service","Bukhari 2442"],
+  ["k7","Voluntary fast — Monday or Thursday","Muslim 2565"],
+  ["k8","Quran review of memorised portions","Bukhari 5033"],
+  ["k9","Weekly review, next week's priority set","Quran 59:18"],
+  ["k10","Time audit — where the hours went","Bukhari 6412"]
+ ],text:[["who","Relatives contacted this week"],["focus","Next week's single priority"]]}
+];
+
+const MONTH=[
+ {g:"Worship and wealth",items:[
+  ["m1","Fasted three days — the white days","Bukhari 1178"],
+  ["m2","Monthly charity given, amount fixed in advance","Quran 2:261"],
+  ["m3","Zakah position reviewed",""],
+  ["m4","Income sources verified halal, no riba products","Quran 2:275"],
+  ["m5","Debt position reviewed and reduced","Bukhari 2287"]
+ ]},
+ {g:"Review",items:[
+  ["m6","Reviewed last month's goals, set this month's","Quran 59:18"],
+  ["m7","Support to parents or relatives","Bukhari 5985"],
+  ["m8","Finished one book, module or study unit","Bukhari 71"],
+  ["m9","Reviewed the one recurring sin — access route cut","Quran 4:31"],
+  ["m10","Re-scored one character trait",""],
+  ["m11","Repaired one damaged relationship","Bukhari 5991"],
+  ["m12","Reviewed the will and estate document","Bukhari 2738"]
+ ],text:[["qread","Quran — pages read"],["qmem","Quran — memorised"],["qrev","Quran — reviewed"],
+        ["win","Biggest win this month"],["fail","Biggest failure and its cause"]]}
+];
+
+const YEAR=[
+ {g:"Ramadan",items:[
+  ["y1","Prepared in Sha'ban — fasts, debts, disputes settled","Bukhari 1969"],
+  ["y2","Completed the Quran","Bukhari 4998"],
+  ["y3","Prayed qiyam consistently","Bukhari 37"],
+  ["y4","Sought Laylat al-Qadr in the last ten odd nights","Bukhari 2017"],
+  ["y5","I'tikaf","Bukhari 2025"],
+  ["y6","Increased charity","Bukhari 6"],
+  ["y7","Six days of Shawwal","Muslim 1164"]
+ ],text:[["qtimes","Quran completed — how many times"]]},
+ {g:"Financial",items:[
+  ["y8","Zakah calculated on the fixed date","Quran 9:103"],
+  ["y9","Zakah paid to eligible categories","Quran 9:60"],
+  ["y10","Zakat al-Fitr paid before the Eid prayer",""],
+  ["y11","Ongoing charity established or funded","Muslim 1631"]
+ ],text:[["zdate","Zakah anniversary date"],["stotal","Annual sadaqah total"]]},
+ {g:"Worship milestones",items:[
+  ["y12","Ashura — 9th and 10th Muharram","Bukhari 2004"],
+  ["y13","Day of Arafah, if not on hajj","Muslim 1162"],
+  ["y14","First ten days of Dhul-Hijjah — increased deeds","Bukhari 969"],
+  ["y15","Udhiyah, if applicable",""],
+  ["y16","Umrah or hajj performed, or funded with a date","Bukhari 1521"]
+ ]},
+ {g:"Annual review",items:[
+  ["y17","100-item self-assessment re-scored",""],
+  ["y18","Three goals set, each with a weekly action","Quran 59:18"],
+  ["y19","Will updated, debts documented","Bukhari 2738"],
+  ["y20","Health baseline reviewed","Bukhari 6412"],
+  ["y21","Knowledge plan defined for next year","Bukhari 71"]
+ ],text:[["goal1","Goal 1"],["goal2","Goal 2"],["goal3","Goal 3"]]}
+];
+
+/* ---------------- state cursors ---------------- */
+let curDate=iso(new Date());
+let curMonth=curDate.slice(0,7);   // prayer log
+let habMonth=curDate.slice(0,7);
+let curWeekDate=curDate;
+let curMonthKey=curDate.slice(0,7);
+let curYear=curDate.slice(0,4);
+
+const day=d=>(S.daily[d]=S.daily[d]||{items:{},nums:{},note:""});
+const pr=d=>(S.prayers[d]=S.prayers[d]||{});
+const bucket=(o,k)=>(o[k]=o[k]||{items:{},text:{}});
+
+/* ---------------- rendering: today ---------------- */
+function renderToday(){
+  const d=parseISO(curDate);
+  document.getElementById("dPick").value=curDate;
+  document.getElementById("dLabel").textContent=DAYS[d.getDay()]+", "+fmt(curDate);
+  const diff=Math.round((parseISO(iso(new Date()))-d)/86400000);
+  document.getElementById("dSub").textContent =
+    diff===0?"Today":diff===1?"Yesterday":diff>0?diff+" days ago":Math.abs(diff)+" days ahead";
+
+  // prayers
+  const P=pr(curDate), wrap=document.getElementById("prayers"); wrap.innerHTML="";
+  PRAYERS.forEach(([id,name])=>{
+    const rec=P[id]||{s:"",j:false};
+    const cell=document.createElement("div");
+    cell.className="pcell"; cell.dataset.s=rec.s;
+    cell.innerHTML='<div class="pname">'+name+'</div>'+
+      '<button class="pbtn" aria-label="'+name+' state">'+PMARK[rec.s]+'</button>'+
+      '<label class="jam"><input type="checkbox" '+(rec.j?"checked":"")+'> J</label>';
+    cell.querySelector(".pbtn").onclick=()=>{
+      const r=P[id]||{s:"",j:false};
+      r.s=PSTATES[(PSTATES.indexOf(r.s)+1)%4]; P[id]=r; save(); renderToday();
+    };
+    cell.querySelector("input").onchange=e=>{
+      const r=P[id]||{s:"",j:false}; r.j=e.target.checked; P[id]=r; save(); renderToday();
+    };
+    wrap.appendChild(cell);
+  });
+  const onT=PRAYERS.filter(([id])=>(P[id]||{}).s==="ontime").length;
+  document.getElementById("pCount").textContent=onT+"/5 on time";
+
+  // checklist groups
+  const D=day(curDate), host=document.getElementById("dailyGroups"); host.innerHTML="";
+  DAILY.forEach(sec=>{
+    const done=sec.items.filter(([id])=>D.items[id]).length;
+    const card=document.createElement("div"); card.className="card";
+    let html='<h2>'+sec.g+'<span class="count">'+done+'/'+sec.items.length+'</span></h2>';
+    if(sec.hint) html+='<p class="hint">'+sec.hint+'</p>';
+    sec.items.forEach(([id,label,ref])=>{
+      html+='<label class="check"><input type="checkbox" data-id="'+id+'" '+(D.items[id]?"checked":"")+'>'+
+            '<span class="box"></span><span class="txt">'+label+
+            (ref?'<span class="ref">'+ref+'</span>':'')+'</span></label>';
+    });
+    (sec.num||[]).forEach(([k,label,min,max])=>{
+      html+='<div class="field"><label for="n_'+k+'">'+label+'</label>'+
+            '<input type="number" id="n_'+k+'" data-num="'+k+'" min="'+min+'" max="'+max+'" step="0.5" value="'+
+            (D.nums[k]!==undefined?D.nums[k]:"")+'"></div>';
+    });
+    card.innerHTML=html;
+    card.querySelectorAll('input[type=checkbox]').forEach(cb=>{
+      cb.onchange=()=>{ D.items[cb.dataset.id]=cb.checked; if(!cb.checked) delete D.items[cb.dataset.id];
+        save(); renderToday(); };
+    });
+    card.querySelectorAll('input[data-num]').forEach(inp=>{
+      inp.onchange=()=>{ const v=parseFloat(inp.value);
+        if(isNaN(v)) delete D.nums[inp.dataset.num]; else D.nums[inp.dataset.num]=v; save(); renderStats(); };
+    });
+    host.appendChild(card);
+  });
+
+  const note=document.getElementById("dayNote");
+  note.value=D.note||"";
+  note.oninput=()=>{ D.note=note.value; save(); };
+
+  renderStats();
+}
+
+function renderStats(){
+  const D=day(curDate),P=pr(curDate);
+  const total=DAILY.reduce((a,s)=>a+s.items.length,0)+5;
+  const done=DAILY.reduce((a,s)=>a+s.items.filter(([id])=>D.items[id]).length,0)
+            +PRAYERS.filter(([id])=>["ontime","late"].includes((P[id]||{}).s)).length;
+  const pct=Math.round(done/total*100);
+  document.getElementById("stDay").textContent=pct+"%";
+  document.getElementById("stDayBar").style.width=pct+"%";
+
+  // streak of days where all five are on time, ending at today (or curDate if past)
+  let streak=0,cursor=iso(new Date());
+  while(streak<400){
+    const p=S.prayers[cursor];
+    if(p && PRAYERS.every(([id])=>(p[id]||{}).s==="ontime")) { streak++; cursor=addDays(cursor,-1); }
+    else break;
+  }
+  document.getElementById("stStreak").textContent=streak;
+
+  let jam=0,pages=0;
+  for(let i=0;i<30;i++){
+    const k=addDays(iso(new Date()),-i);
+    const p=S.prayers[k]||{}; PRAYERS.forEach(([id])=>{ if((p[id]||{}).j) jam++; });
+    const dd=S.daily[k]; if(dd&&dd.nums&&dd.nums.quran) pages+=dd.nums.quran;
+  }
+  document.getElementById("stJam").textContent=jam;
+  document.getElementById("stQuran").textContent=Math.round(pages);
+}
+
+/* ---------------- prayer log table ---------------- */
+function daysInMonth(mk){ const[y,m]=mk.split("-").map(Number); return new Date(y,m,0).getDate(); }
+function renderPrayerTable(){
+  const [y,m]=curMonth.split("-").map(Number);
+  document.getElementById("mLabel").textContent=MONTHS[m-1]+" "+y;
+  const n=daysInMonth(curMonth), t=document.getElementById("prayerTable");
+  let h="<thead><tr><th class='name'>Day</th>";
+  PRAYERS.forEach(([,nm])=>h+="<th>"+nm.slice(0,3)+"</th>");
+  h+="<th>Jama'ah</th></tr></thead><tbody>";
+  let on=0,late=0,qada=0,jam=0;
+  for(let i=1;i<=n;i++){
+    const k=curMonth+"-"+pad(i), d=parseISO(k), P=S.prayers[k]||{};
+    const isToday=k===iso(new Date());
+    h+="<tr><td class='name"+(isToday?" today":"")+"'>"+pad(i)+" <span style='color:var(--muted)'>"+DSHORT[d.getDay()]+"</span></td>";
+    let dayJam=0;
+    PRAYERS.forEach(([id])=>{
+      const r=P[id]||{s:"",j:false};
+      if(r.s==="ontime")on++; else if(r.s==="late")late++; else if(r.s==="qada")qada++;
+      if(r.j){jam++;dayJam++;}
+      h+="<td"+(isToday?" class='today'":"")+"><button class='cellbtn' data-k='"+k+"' data-p='"+id+"' data-v='"+
+         (r.s==="ontime"?1:r.s?0:"")+"'>"+PMARK[r.s]+"</button></td>";
+    });
+    h+="<td style='font-family:var(--mono);color:var(--gold-dim)'>"+(dayJam||"")+"</td></tr>";
+  }
+  h+="</tbody>";
+  t.innerHTML=h;
+  t.querySelectorAll(".cellbtn").forEach(b=>{
+    b.onclick=()=>{
+      const P=pr(b.dataset.k), r=P[b.dataset.p]||{s:"",j:false};
+      r.s=PSTATES[(PSTATES.indexOf(r.s)+1)%4]; P[b.dataset.p]=r; save(); renderPrayerTable();
+      if(b.dataset.k===curDate) renderToday();
+    };
+  });
+  document.getElementById("pmOn").textContent=on;
+  document.getElementById("pmLate").textContent=late;
+  document.getElementById("pmQada").textContent=qada;
+  document.getElementById("pmJam").textContent=jam;
+}
+
+/* ---------------- habits ---------------- */
+function renderHabits(){
+  const [y,m]=habMonth.split("-").map(Number);
+  document.getElementById("hLabel").textContent=MONTHS[m-1]+" "+y;
+  const n=daysInMonth(habMonth), t=document.getElementById("habitTable");
+  let h="<thead><tr><th class='name'>Habit</th>";
+  for(let i=1;i<=n;i++) h+="<th>"+i+"</th>";
+  h+="<th>Total</th></tr></thead><tbody>";
+  S.habits.list.forEach(hb=>{
+    h+="<tr><td class='name'>"+esc(hb.n)+"</td>";
+    let tot=0;
+    for(let i=1;i<=n;i++){
+      const k=habMonth+"-"+pad(i), v=(S.habits.log[k]||{})[hb.id];
+      if(v===1) tot++;
+      const isToday=k===iso(new Date());
+      h+="<td"+(isToday?" class='today'":"")+"><button class='cellbtn' data-k='"+k+"' data-h='"+hb.id+
+         "' data-v='"+(v===undefined?"":v)+"'>"+(v===1?"✓":v===0?"✗":"·")+"</button></td>";
+    }
+    h+="<td style='font-family:var(--mono);color:var(--gold)'>"+tot+"</td></tr>";
+  });
+  h+="</tbody>";
+  t.innerHTML=h;
+  t.querySelectorAll(".cellbtn").forEach(b=>{
+    b.onclick=()=>{
+      const k=b.dataset.k, id=b.dataset.h;
+      const L=(S.habits.log[k]=S.habits.log[k]||{});
+      const cur=L[id];
+      if(cur===undefined) L[id]=1; else if(cur===1) L[id]=0; else delete L[id];
+      save(); renderHabits();
+    };
+  });
+
+  const ed=document.getElementById("habitEditor"); ed.innerHTML="";
+  S.habits.list.forEach(hb=>{
+    const row=document.createElement("div"); row.className="habitrow";
+    row.innerHTML='<input type="text" value="'+esc(hb.n)+'" maxlength="48"><button class="x" title="Remove">✕</button>';
+    row.querySelector("input").onchange=e=>{ hb.n=e.target.value.trim()||hb.n; save(); renderHabits(); };
+    row.querySelector(".x").onclick=()=>{
+      if(!confirm("Remove \u201c"+hb.n+"\u201d and its history?")) return;
+      S.habits.list=S.habits.list.filter(x=>x.id!==hb.id);
+      Object.keys(S.habits.log).forEach(k=>delete S.habits.log[k][hb.id]);
+      save(); renderHabits();
+    };
+    ed.appendChild(row);
+  });
+  document.getElementById("hCount").textContent=S.habits.list.length+"/8";
+  document.getElementById("addHabit").disabled=S.habits.list.length>=8;
+}
+document.getElementById("addHabit").onclick=()=>{
+  const i=document.getElementById("newHabit"), v=i.value.trim();
+  if(!v||S.habits.list.length>=8) return;
+  S.habits.list.push({id:"h"+Date.now().toString(36),n:v}); i.value=""; save(); renderHabits();
+};
+
+/* ---------------- generic checklist panels ---------------- */
+function renderChecklistPanel(defs,bucketObj,key,hostId){
+  const B=bucket(bucketObj,key), host=document.getElementById(hostId); host.innerHTML="";
+  defs.forEach(sec=>{
+    const done=sec.items.filter(([id])=>B.items[id]).length;
+    const card=document.createElement("div"); card.className="card";
+    let html='<h2>'+sec.g+'<span class="count">'+done+'/'+sec.items.length+'</span></h2>';
+    sec.items.forEach(([id,label,ref])=>{
+      html+='<label class="check"><input type="checkbox" data-id="'+id+'" '+(B.items[id]?"checked":"")+'>'+
+            '<span class="box"></span><span class="txt">'+label+
+            (ref?'<span class="ref">'+ref+'</span>':'')+'</span></label>';
+    });
+    (sec.text||[]).forEach(([k,label])=>{
+      html+='<div class="field" style="display:block"><label style="display:block;margin-bottom:4px">'+label+
+            '</label><input type="text" data-txt="'+k+'" value="'+esc(B.text[k]||"")+'"></div>';
+    });
+    card.innerHTML=html;
+    card.querySelectorAll("input[type=checkbox]").forEach(cb=>{
+      cb.onchange=()=>{ B.items[cb.dataset.id]=cb.checked; if(!cb.checked) delete B.items[cb.dataset.id];
+        save(); renderChecklistPanel(defs,bucketObj,key,hostId); };
+    });
+    card.querySelectorAll("input[data-txt]").forEach(inp=>{
+      inp.oninput=()=>{ B.text[inp.dataset.txt]=inp.value; save(); };
+    });
+    host.appendChild(card);
+  });
+}
+function renderWeek(){
+  const wk=isoWeek(curWeekDate), [a,b]=weekRange(curWeekDate);
+  document.getElementById("wLabel").textContent="Week "+wk.split("-W")[1]+" · "+wk.split("-")[0];
+  document.getElementById("wSub").textContent=fmt(a)+" — "+fmt(b);
+  renderChecklistPanel(WEEK,S.week,wk,"weekBody");
+}
+function renderMonth(){
+  const [y,m]=curMonthKey.split("-").map(Number);
+  document.getElementById("moLabel").textContent=MONTHS[m-1]+" "+y;
+  renderChecklistPanel(MONTH,S.month,curMonthKey,"monthBody");
+}
+function renderYear(){
+  document.getElementById("yLabel").textContent=curYear;
+  renderChecklistPanel(YEAR,S.year,curYear,"yearBody");
+}
+
+/* ---------------- utils ---------------- */
+function esc(s){return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");}
+function shiftMonth(mk,n){ const[y,m]=mk.split("-").map(Number); const d=new Date(y,m-1+n,1); return d.getFullYear()+"-"+pad(d.getMonth()+1); }
+
+/* ---------------- tabs ---------------- */
+const panels=["today","prayers","habits","week","month","year","data"];
+function show(tab){
+  panels.forEach(p=>document.getElementById("panel-"+p).classList.toggle("hidden",p!==tab));
+  document.querySelectorAll("#tabs button").forEach(b=>b.setAttribute("aria-selected",String(b.dataset.tab===tab)));
+  if(tab==="prayers")renderPrayerTable();
+  if(tab==="habits")renderHabits();
+  if(tab==="week")renderWeek();
+  if(tab==="month")renderMonth();
+  if(tab==="year")renderYear();
+  if(tab==="data")renderDataStats();
+}
+document.getElementById("tabs").onclick=e=>{ if(e.target.dataset.tab) show(e.target.dataset.tab); };
+
+/* ---------------- navigation ---------------- */
+document.getElementById("dPrev").onclick=()=>{curDate=addDays(curDate,-1);renderToday();};
+document.getElementById("dNext").onclick=()=>{curDate=addDays(curDate,1);renderToday();};
+document.getElementById("dToday").onclick=()=>{curDate=iso(new Date());renderToday();};
+document.getElementById("dPick").onchange=e=>{ if(e.target.value){curDate=e.target.value;renderToday();} };
+document.getElementById("mPrev").onclick=()=>{curMonth=shiftMonth(curMonth,-1);renderPrayerTable();};
+document.getElementById("mNext").onclick=()=>{curMonth=shiftMonth(curMonth,1);renderPrayerTable();};
+document.getElementById("hPrev").onclick=()=>{habMonth=shiftMonth(habMonth,-1);renderHabits();};
+document.getElementById("hNext").onclick=()=>{habMonth=shiftMonth(habMonth,1);renderHabits();};
+document.getElementById("wPrev").onclick=()=>{curWeekDate=addDays(curWeekDate,-7);renderWeek();};
+document.getElementById("wNext").onclick=()=>{curWeekDate=addDays(curWeekDate,7);renderWeek();};
+document.getElementById("moPrev").onclick=()=>{curMonthKey=shiftMonth(curMonthKey,-1);renderMonth();};
+document.getElementById("moNext").onclick=()=>{curMonthKey=shiftMonth(curMonthKey,1);renderMonth();};
+document.getElementById("yPrev").onclick=()=>{curYear=String(+curYear-1);renderYear();};
+document.getElementById("yNext").onclick=()=>{curYear=String(+curYear+1);renderYear();};
+
+document.addEventListener("keydown",e=>{
+  if(["INPUT","TEXTAREA"].includes(document.activeElement.tagName))return;
+  if(!document.getElementById("panel-today").classList.contains("hidden")){
+    if(e.key==="ArrowLeft"){curDate=addDays(curDate,-1);renderToday();}
+    if(e.key==="ArrowRight"){curDate=addDays(curDate,1);renderToday();}
+  }
+});
+
+/* ---------------- data ---------------- */
+function renderDataStats(){
+  const days=Object.keys(S.daily).length, pdays=Object.keys(S.prayers).length;
+  document.getElementById("dataStats").textContent=
+    days+" day"+(days===1?"":"s")+" logged · "+pdays+" day"+(pdays===1?"":"s")+" of prayer records · "+
+    S.habits.list.length+" habits tracked.";
+}
+document.getElementById("btnExport").onclick=()=>{
+  const blob=new Blob([JSON.stringify(S,null,2)],{type:"application/json"});
+  const a=document.createElement("a");
+  a.href=URL.createObjectURL(blob);
+  a.download="wayfarer-"+iso(new Date())+".json";
+  a.click(); URL.revokeObjectURL(a.href);
+};
+document.getElementById("btnImport").onclick=()=>document.getElementById("fileInput").click();
+document.getElementById("fileInput").onchange=e=>{
+  const f=e.target.files[0]; if(!f) return;
+  const r=new FileReader();
+  r.onload=()=>{
+    try{
+      const inc=JSON.parse(r.result);
+      if(!inc||typeof inc!=="object") throw new Error("shape");
+      if(!confirm("Import will merge into the current data. Continue?")) return;
+      ["daily","prayers","week","month","year"].forEach(k=>{ S[k]=Object.assign({},S[k],inc[k]||{}); });
+      if(inc.habits){
+        S.habits.list=inc.habits.list&&inc.habits.list.length?inc.habits.list:S.habits.list;
+        S.habits.log=Object.assign({},S.habits.log,inc.habits.log||{});
+      }
+      save(); renderToday(); renderDataStats();
+      alert("Imported.");
+    }catch(err){ alert("That file isn't a Wayfarer backup. Choose a JSON file exported from this tool."); }
+    e.target.value="";
+  };
+  r.readAsText(f);
+};
+document.getElementById("btnWipe").onclick=()=>{
+  if(!confirm("Erase every entry in this browser? Export first if you want a copy.")) return;
+  if(!confirm("Last check — this cannot be undone.")) return;
+  S=fresh();
+  S.habits.list=defaultHabits();
+  save(); renderToday(); renderDataStats(); show("today");
+};
+
+/* ---------------- theme ---------------- */
+const THEME_KEY="wayfarer.theme";
+const themeBtn=document.getElementById("themeToggle");
+function currentTheme(){
+  return document.documentElement.getAttribute("data-theme")==="light"?"light":"dark";
+}
+function applyTheme(t){
+  document.documentElement.setAttribute("data-theme",t);
+  try{ localStorage.setItem(THEME_KEY,t); }catch(e){}
+  themeBtn.setAttribute("aria-pressed",String(t==="light"));
+  document.getElementById("themeIcon").textContent = t==="light"?"☀":"☾";
+  document.getElementById("themeLabel").textContent = t==="light"?"Light":"Dark";
+  themeBtn.title="Switch to "+(t==="light"?"dark":"light")+" mode";
+}
+themeBtn.onclick=()=>applyTheme(currentTheme()==="light"?"dark":"light");
+applyTheme(currentTheme());
+
+/* ---------------- boot ---------------- */
+renderToday();
+</script>
+</body>
+</html>
