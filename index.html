@@ -39,6 +39,9 @@
 
   --shadow-soft:0 8px 24px -8px rgba(4,32,31,.45);
   --shadow-lift:0 14px 34px -10px rgba(4,32,31,.55);
+
+  /* runtime-measured header height, used by the sticky toolbar */
+  --header-h:68px;
 }
 
 [data-theme="dark"]{
@@ -68,6 +71,7 @@
 
 *{ box-sizing:border-box; }
 html,body{ height:100%; }
+html{ scroll-padding-top:calc(var(--header-h) + 90px); }
 body{
   background:var(--bg);
   color:var(--text);
@@ -80,9 +84,13 @@ body{
 h1,h2,h3,h4,.font-display{ font-family:var(--font-display); letter-spacing:.2px; }
 
 /* Focus visibility for accessibility */
-a:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible, [tabindex]:focus-visible{
+a:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible, [tabindex]:focus-visible{
   outline:2px solid var(--gold-400);
   outline-offset:2px;
+}
+
+@media (prefers-reduced-motion:reduce){
+  *{ transition-duration:.01ms!important; animation-duration:.01ms!important; }
 }
 
 /* ============================================================
@@ -136,7 +144,7 @@ a:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible
 .stat-icon{ font-size:1.4rem; color:var(--accent-strong); }
 
 /* ============================================================
-   RIBBON SIGNATURE ELEMENT — used on category headers & quick launch
+   RIBBON SIGNATURE ELEMENT — used on category headers
    ============================================================ */
 .ribbon{
   position:relative;
@@ -152,9 +160,11 @@ a:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible
 /* ============================================================
    QUICK LAUNCH
    ============================================================ */
+.ql-item{ position:relative; height:100%; }
 .quick-launch-btn{
   background:var(--surface); border:1px solid var(--border-c); border-radius:var(--radius-md);
-  color:var(--text); text-decoration:none; padding:.85rem .9rem; display:flex; align-items:center; gap:.65rem;
+  color:var(--text); text-decoration:none; padding:.85rem .9rem .85rem 2.9rem;
+  display:flex; align-items:center; gap:.65rem;
   transition:all .18s ease; height:100%; overflow:hidden;
 }
 .quick-launch-btn:hover{
@@ -165,16 +175,39 @@ a:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible
 .quick-launch-btn .ql-name{ font-weight:600; font-size:.92rem; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
 .quick-launch-btn .ql-url{ font-family:var(--font-mono); font-size:.7rem; color:var(--text-muted); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; display:block; max-width:100%; }
 
+/* Star sits above the link so it can be tapped without navigating */
+.ql-star{
+  position:absolute; left:.45rem; top:50%; transform:translateY(-50%); z-index:3;
+  width:32px; height:32px; display:flex; align-items:center; justify-content:center;
+  background:transparent; border:1px solid transparent; border-radius:50%;
+  color:var(--text-muted); font-size:1rem; padding:0; line-height:1;
+}
+.ql-star:hover{ background:var(--surface-3); border-color:var(--border-c); color:var(--gold-400); }
+.ql-star.is-on{ color:var(--gold-500); }
+
 /* ============================================================
-   SEARCH & TOOLBAR
+   STICKY SEARCH TOOLBAR
    ============================================================ */
+.toolbar-sticky{
+  position:sticky; top:var(--header-h); z-index:1020;
+  background:var(--bg);
+  border-bottom:1px solid var(--border-c);
+  padding:.75rem 0;
+  margin-bottom:1.25rem;
+  box-shadow:0 6px 16px -12px rgba(0,0,0,.6);
+}
 .search-wrap{ position:relative; }
 .search-wrap .bi-search{
   position:absolute; left:14px; top:50%; transform:translateY(-50%); color:var(--text-muted);
 }
+.search-clear{
+  position:absolute; right:8px; top:50%; transform:translateY(-50%);
+  background:transparent; border:none; color:var(--text-muted); padding:.25rem .4rem; display:none;
+}
+.search-clear.show{ display:block; }
 .form-control-search{
   background:var(--surface); border:1px solid var(--border-c); color:var(--text);
-  padding-left:2.6rem; border-radius:var(--radius-md); height:46px;
+  padding-left:2.6rem; padding-right:2.4rem; border-radius:var(--radius-md); height:46px;
 }
 .form-control-search:focus{
   background:var(--surface); color:var(--text); border-color:var(--accent-strong);
@@ -215,18 +248,20 @@ a:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible
   font-size:.72rem; font-weight:600; padding:.25em .6em; border-radius:20px;
   background:var(--surface-3); color:var(--text-muted); margin-left:.4rem;
 }
-.cat-actions{ margin-left:auto; display:flex; gap:.35rem; }
-.cat-actions .btn{ padding:.15rem .45rem; font-size:.8rem; }
 
 /* ============================================================
-   BOOKMARK CARD
+   BOOKMARK CARD — whole row is clickable
    ============================================================ */
 .bookmark-card{
   background:var(--surface-2); border:1px solid var(--border-c); border-radius:var(--radius-md);
   padding:.75rem .9rem; margin-bottom:.6rem; display:flex; align-items:center; gap:.85rem;
-  transition:border-color .18s ease, transform .15s ease;
+  transition:border-color .18s ease, transform .15s ease, background .18s ease;
+  cursor:pointer;
 }
-.bookmark-card:hover{ border-color:var(--accent-strong); }
+.bookmark-card:hover{
+  border-color:var(--accent-strong); background:var(--surface-3); transform:translateY(-1px);
+}
+.bookmark-card:active{ transform:translateY(0); }
 .bookmark-card .bm-info{ flex:1 1 auto; min-width:0; }
 .bookmark-card .bm-name{ font-weight:600; font-size:.98rem; color:var(--text); }
 .bookmark-card .bm-url{
@@ -244,7 +279,6 @@ a:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible
   border-radius:var(--radius-sm); width:34px; height:34px; display:flex; align-items:center; justify-content:center;
 }
 .btn-icon:hover{ background:var(--surface-3); color:var(--text); }
-.btn-icon.is-fav{ color:var(--gold-500); border-color:var(--gold-500); }
 .btn-icon.fav-on i{ color:var(--gold-500); }
 
 @media (max-width:576px){
@@ -285,6 +319,23 @@ a:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible
 .btn-close{ filter:none; }
 [data-theme="dark"] .btn-close{ filter:invert(1) brightness(2); }
 
+/* Backup & restore tabs */
+.sync-tabs{ display:flex; gap:.4rem; margin-bottom:1rem; }
+.sync-tab{
+  flex:1 1 0; background:transparent; border:1px solid var(--border-c); color:var(--text-muted);
+  border-radius:var(--radius-sm); padding:.5rem .6rem; font-weight:600; font-size:.9rem;
+}
+.sync-tab.active{ background:var(--accent-strong); border-color:var(--accent-strong); color:var(--teal-950); }
+.code-area{
+  font-family:var(--font-mono); font-size:.78rem; line-height:1.45;
+  word-break:break-all; resize:vertical;
+}
+.sync-hint{ font-size:.8rem; color:var(--text-muted); }
+.preview-box{
+  background:var(--surface-2); border:1px solid var(--border-c); border-radius:var(--radius-md);
+  padding:.85rem 1rem; margin-top:.9rem;
+}
+
 /* ============================================================
    TOASTS
    ============================================================ */
@@ -323,7 +374,7 @@ kbd{ background:var(--surface-3); color:var(--text); border:1px solid var(--bord
 <!-- ============================================================
      HEADER
      ============================================================ -->
-<header class="app-header py-2">
+<header class="app-header py-2" id="appHeader">
   <div class="container-xxl d-flex align-items-center gap-3 flex-wrap py-1">
     <div class="d-flex align-items-center gap-2">
       <div class="brand-mark"><i class="bi bi-bookmark-star-fill"></i></div>
@@ -340,13 +391,10 @@ kbd{ background:var(--surface-3); color:var(--text); border:1px solid var(--bord
       <button class="btn btn-ghost btn-sm" id="btnTheme" title="Toggle theme (Ctrl+D)" aria-label="Toggle dark or light theme">
         <i class="bi bi-moon-stars-fill" id="themeIcon"></i>
       </button>
-      <button class="btn btn-outline-gold btn-sm" id="btnExport" title="Export (Ctrl+E)">
-        <i class="bi bi-download me-1"></i>Export
+      <button class="btn btn-outline-gold btn-sm" id="btnSync" title="Backup &amp; restore (Ctrl+E / Ctrl+I)">
+        <i class="bi bi-arrow-down-up me-1"></i>Backup
       </button>
-      <button class="btn btn-outline-gold btn-sm" id="btnImport" title="Import (Ctrl+I)">
-        <i class="bi bi-upload me-1"></i>Import
-      </button>
-      <input type="file" id="fileImportInput" accept=".csv,.json" class="d-none">
+      <input type="file" id="fileImportInput" accept=".csv,.json,.txt" class="d-none">
       <button class="btn btn-gold btn-sm" id="btnAddBookmark" title="Add bookmark (Ctrl+N)">
         <i class="bi bi-plus-lg me-1"></i>Add Bookmark
       </button>
@@ -354,118 +402,126 @@ kbd{ background:var(--surface-3); color:var(--text); border:1px solid var(--bord
   </div>
 </header>
 
-<main class="container-xxl py-4">
+<main>
+
+  <div class="container-xxl pt-4">
+    <!-- ============================================================
+         DASHBOARD CARDS
+         ============================================================ -->
+    <section class="row g-3 mb-4" aria-label="Dashboard summary">
+      <div class="col-6 col-lg-3">
+        <div class="stat-card">
+          <div class="d-flex justify-content-between align-items-start">
+            <div>
+              <div class="stat-value" id="statTotalCategories">0</div>
+              <div class="stat-label">Categories</div>
+            </div>
+            <i class="bi bi-folder2-open stat-icon"></i>
+          </div>
+        </div>
+      </div>
+      <div class="col-6 col-lg-3">
+        <div class="stat-card">
+          <div class="d-flex justify-content-between align-items-start">
+            <div>
+              <div class="stat-value" id="statTotalBookmarks">0</div>
+              <div class="stat-label">Bookmarks</div>
+            </div>
+            <i class="bi bi-bookmarks stat-icon"></i>
+          </div>
+        </div>
+      </div>
+      <div class="col-6 col-lg-3">
+        <div class="stat-card">
+          <div class="d-flex justify-content-between align-items-start">
+            <div>
+              <div class="stat-value" id="statFavorites">0</div>
+              <div class="stat-label">Favorites</div>
+            </div>
+            <i class="bi bi-star-fill stat-icon"></i>
+          </div>
+        </div>
+      </div>
+      <div class="col-6 col-lg-3">
+        <div class="stat-card">
+          <div class="d-flex justify-content-between align-items-start">
+            <div>
+              <div class="stat-value" id="statRecent">0</div>
+              <div class="stat-label">Added This Week</div>
+            </div>
+            <i class="bi bi-clock-history stat-icon"></i>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============================================================
+         QUICK LAUNCH
+         ============================================================ -->
+    <section class="mb-3" id="quickLaunchSection">
+      <div class="d-flex align-items-center gap-2 mb-2">
+        <i class="bi bi-lightning-charge-fill" style="color:var(--gold-500)"></i>
+        <h2 class="h6 fw-bold mb-0 text-uppercase" style="letter-spacing:.08em; font-family:var(--font-body);">Quick Launch</h2>
+        <span class="sync-hint ms-1">Tap the star to add or remove a favorite</span>
+      </div>
+      <div class="row g-2" id="quickLaunchGrid"></div>
+    </section>
+  </div>
 
   <!-- ============================================================
-       DASHBOARD CARDS
+       SEARCH & TOOLBAR (sticky under the header)
        ============================================================ -->
-  <section class="row g-3 mb-4" aria-label="Dashboard summary">
-    <div class="col-6 col-lg-3">
-      <div class="stat-card">
-        <div class="d-flex justify-content-between align-items-start">
-          <div>
-            <div class="stat-value" id="statTotalCategories">0</div>
-            <div class="stat-label">Categories</div>
+  <div class="toolbar-sticky">
+    <div class="container-xxl">
+      <div class="row g-2 align-items-center">
+        <div class="col-12 col-md-6">
+          <div class="search-wrap">
+            <i class="bi bi-search"></i>
+            <input type="text" class="form-control form-control-search" id="searchInput"
+                   placeholder="Search by name or category..." aria-label="Search bookmarks">
+            <button class="search-clear" id="btnClearSearch" aria-label="Clear search"><i class="bi bi-x-lg"></i></button>
           </div>
-          <i class="bi bi-folder2-open stat-icon"></i>
+        </div>
+        <div class="col-6 col-md-3">
+          <select class="form-select" id="sortSelect" aria-label="Sort bookmarks">
+            <option value="name-asc">Name A–Z</option>
+            <option value="name-desc">Name Z–A</option>
+            <option value="recent">Recently Added</option>
+            <option value="category">Category</option>
+          </select>
+        </div>
+        <div class="col-6 col-md-3">
+          <button class="btn btn-ghost w-100" id="btnManageCategories">
+            <i class="bi bi-tags me-1"></i>Manage Categories
+          </button>
         </div>
       </div>
     </div>
-    <div class="col-6 col-lg-3">
-      <div class="stat-card">
-        <div class="d-flex justify-content-between align-items-start">
-          <div>
-            <div class="stat-value" id="statTotalBookmarks">0</div>
-            <div class="stat-label">Bookmarks</div>
-          </div>
-          <i class="bi bi-bookmarks stat-icon"></i>
-        </div>
-      </div>
-    </div>
-    <div class="col-6 col-lg-3">
-      <div class="stat-card">
-        <div class="d-flex justify-content-between align-items-start">
-          <div>
-            <div class="stat-value" id="statFavorites">0</div>
-            <div class="stat-label">Favorites</div>
-          </div>
-          <i class="bi bi-star-fill stat-icon"></i>
-        </div>
-      </div>
-    </div>
-    <div class="col-6 col-lg-3">
-      <div class="stat-card">
-        <div class="d-flex justify-content-between align-items-start">
-          <div>
-            <div class="stat-value" id="statRecent">0</div>
-            <div class="stat-label">Added This Week</div>
-          </div>
-          <i class="bi bi-clock-history stat-icon"></i>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- ============================================================
-       QUICK LAUNCH
-       ============================================================ -->
-  <section class="mb-4" id="quickLaunchSection">
-    <div class="d-flex align-items-center gap-2 mb-2">
-      <i class="bi bi-lightning-charge-fill" style="color:var(--gold-500)"></i>
-      <h2 class="h6 fw-bold mb-0 text-uppercase" style="letter-spacing:.08em; font-family:var(--font-body);">Quick Launch</h2>
-    </div>
-    <div class="row g-2" id="quickLaunchGrid"></div>
-  </section>
-
-  <!-- ============================================================
-       SEARCH & TOOLBAR
-       ============================================================ -->
-  <section class="mb-4">
-    <div class="row g-2 align-items-center">
-      <div class="col-12 col-md-6">
-        <div class="search-wrap">
-          <i class="bi bi-search"></i>
-          <input type="text" class="form-control form-control-search" id="searchInput"
-                 placeholder="Search by name or category..." aria-label="Search bookmarks">
-        </div>
-      </div>
-      <div class="col-6 col-md-3">
-        <select class="form-select" id="sortSelect" aria-label="Sort bookmarks">
-          <option value="name-asc">Name A–Z</option>
-          <option value="name-desc">Name Z–A</option>
-          <option value="recent">Recently Added</option>
-          <option value="category">Category</option>
-        </select>
-      </div>
-      <div class="col-6 col-md-3">
-        <button class="btn btn-ghost w-100" id="btnManageCategories">
-          <i class="bi bi-tags me-1"></i>Manage Categories
-        </button>
-      </div>
-    </div>
-  </section>
+  </div>
 
   <!-- ============================================================
        CATEGORY / BOOKMARK LIST
        ============================================================ -->
-  <section id="categoriesContainer">
-    <div class="accordion" id="categoryAccordion"></div>
-    <div class="empty-state d-none" id="emptyState">
-      <i class="bi bi-bookmark-heart d-block mb-3"></i>
-      <h3 class="h5">No Bookmarks Found</h3>
-      <p class="mb-3">Click Add Bookmark to create your first bookmark.</p>
-      <button class="btn btn-gold" id="btnEmptyAdd"><i class="bi bi-plus-lg me-1"></i>Add Bookmark</button>
-    </div>
-    <div class="empty-state d-none" id="noResultsState">
-      <i class="bi bi-search d-block mb-3"></i>
-      <h3 class="h5">No matches found</h3>
-      <p class="mb-0">Try a different search term or clear your filters.</p>
-    </div>
-  </section>
+  <div class="container-xxl pb-4">
+    <section id="categoriesContainer">
+      <div class="accordion" id="categoryAccordion"></div>
+      <div class="empty-state d-none" id="emptyState">
+        <i class="bi bi-bookmark-heart d-block mb-3"></i>
+        <h3 class="h5">No bookmarks yet</h3>
+        <p class="mb-3">Add your first bookmark, or restore a backup code from another device.</p>
+        <button class="btn btn-gold" id="btnEmptyAdd"><i class="bi bi-plus-lg me-1"></i>Add Bookmark</button>
+      </div>
+      <div class="empty-state d-none" id="noResultsState">
+        <i class="bi bi-search d-block mb-3"></i>
+        <h3 class="h5">No matches found</h3>
+        <p class="mb-0">Try a different search term or clear the search box.</p>
+      </div>
+    </section>
+  </div>
 </main>
 
 <footer class="app-footer">
-  <div>Bookmark Dashboard &middot; Version 1.0</div>
+  <div>Bookmark Dashboard &middot; Version 1.1</div>
   <div>Stored Locally &middot; HTML • CSS • JavaScript • Bootstrap</div>
 </footer>
 
@@ -568,25 +624,71 @@ kbd{ background:var(--surface-3); color:var(--text); border:1px solid var(--bord
 </div>
 
 <!-- ============================================================
-     IMPORT PREVIEW MODAL
+     BACKUP & RESTORE (CODE) MODAL
      ============================================================ -->
-<div class="modal fade" id="importModal" tabindex="-1" aria-hidden="true">
-  <div class="modal-dialog modal-dialog-centered">
+<div class="modal fade" id="syncModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered modal-lg">
     <div class="modal-content">
       <div class="modal-header">
-        <h5 class="modal-title">Confirm Import</h5>
+        <h5 class="modal-title">Backup &amp; Restore</h5>
         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
       </div>
       <div class="modal-body">
-        <p><i class="bi bi-exclamation-triangle-fill text-warning me-1"></i> Importing will merge with your existing bookmarks. Bookmarks matching the same Name + URL will be updated in place.</p>
-        <ul class="list-unstyled mb-0">
-          <li>Current bookmarks: <strong id="importCurrentCount">0</strong></li>
-          <li>Bookmarks in file: <strong id="importNewCount">0</strong></li>
-        </ul>
-      </div>
-      <div class="modal-footer">
-        <button type="button" class="btn btn-ghost" data-bs-dismiss="modal">Cancel</button>
-        <button type="button" class="btn btn-gold" id="btnConfirmImport">Import</button>
+        <div class="sync-tabs">
+          <button class="sync-tab active" data-sync-tab="export"><i class="bi bi-box-arrow-up me-1"></i>Copy Code</button>
+          <button class="sync-tab" data-sync-tab="import"><i class="bi bi-box-arrow-in-down me-1"></i>Paste Code</button>
+        </div>
+
+        <!-- EXPORT PANE -->
+        <div id="syncExportPane">
+          <p class="sync-hint mb-2">
+            This code holds every bookmark and category. Copy it, send it to yourself, and paste it into this app on any other device.
+          </p>
+          <textarea class="form-control code-area" id="exportCodeArea" rows="6" readonly aria-label="Backup code"></textarea>
+          <div class="sync-hint mt-1" id="exportCodeMeta"></div>
+          <div class="d-flex gap-2 mt-3 flex-wrap">
+            <button class="btn btn-gold" id="btnCopyCode"><i class="bi bi-clipboard-check me-1"></i>Copy Code</button>
+            <button class="btn btn-ghost d-none" id="btnShareCode"><i class="bi bi-share me-1"></i>Share</button>
+            <button class="btn btn-ghost" id="btnExportJson"><i class="bi bi-filetype-json me-1"></i>JSON File</button>
+            <button class="btn btn-ghost" id="btnExportCsv"><i class="bi bi-filetype-csv me-1"></i>CSV File</button>
+          </div>
+        </div>
+
+        <!-- IMPORT PANE -->
+        <div id="syncImportPane" class="d-none">
+          <p class="sync-hint mb-2">
+            Paste a backup code below. Plain JSON or CSV text works too.
+          </p>
+          <textarea class="form-control code-area" id="importCodeArea" rows="6"
+                    placeholder="Paste your backup code here..." aria-label="Restore code"></textarea>
+          <div class="row g-2 mt-2 align-items-center">
+            <div class="col-12 col-sm-6">
+              <select class="form-select" id="importMode" aria-label="Import mode">
+                <option value="merge">Merge with current bookmarks</option>
+                <option value="replace">Replace everything</option>
+              </select>
+            </div>
+            <div class="col-12 col-sm-6 d-flex gap-2">
+              <button class="btn btn-ghost flex-fill" id="btnPasteCode"><i class="bi bi-clipboard me-1"></i>Paste</button>
+              <button class="btn btn-ghost flex-fill" id="btnImportFile"><i class="bi bi-file-earmark-arrow-up me-1"></i>File</button>
+            </div>
+          </div>
+
+          <div class="preview-box d-none" id="importPreview">
+            <div class="d-flex flex-wrap gap-3">
+              <div><span class="sync-hint d-block">Currently stored</span><strong id="importCurrentCount">0</strong></div>
+              <div><span class="sync-hint d-block">Found in code</span><strong id="importNewCount">0</strong></div>
+              <div><span class="sync-hint d-block">New</span><strong id="importAddCount">0</strong></div>
+              <div><span class="sync-hint d-block">Updated</span><strong id="importUpdateCount">0</strong></div>
+            </div>
+            <div class="sync-hint mt-2" id="importModeNote"></div>
+          </div>
+
+          <div class="d-flex gap-2 mt-3 flex-wrap">
+            <button class="btn btn-ghost" id="btnCheckCode"><i class="bi bi-search me-1"></i>Check Code</button>
+            <button class="btn btn-gold" id="btnApplyImport" disabled><i class="bi bi-download me-1"></i>Restore Now</button>
+          </div>
+        </div>
       </div>
     </div>
   </div>
@@ -606,29 +708,11 @@ kbd{ background:var(--surface-3); color:var(--text); border:1px solid var(--bord
         <ul class="list-unstyled d-flex flex-column gap-2 mb-0">
           <li><kbd>Ctrl</kbd> + <kbd>N</kbd> &nbsp;Add Bookmark</li>
           <li><kbd>Ctrl</kbd> + <kbd>F</kbd> &nbsp;Focus Search</li>
-          <li><kbd>Ctrl</kbd> + <kbd>E</kbd> &nbsp;Export</li>
-          <li><kbd>Ctrl</kbd> + <kbd>I</kbd> &nbsp;Import</li>
+          <li><kbd>Ctrl</kbd> + <kbd>E</kbd> &nbsp;Backup code (copy)</li>
+          <li><kbd>Ctrl</kbd> + <kbd>I</kbd> &nbsp;Restore code (paste)</li>
           <li><kbd>Ctrl</kbd> + <kbd>D</kbd> &nbsp;Toggle Dark Mode</li>
           <li><kbd>Esc</kbd> &nbsp;Close Modal</li>
         </ul>
-      </div>
-    </div>
-  </div>
-</div>
-
-<!-- ============================================================
-     EXPORT FORMAT CHOICE MODAL
-     ============================================================ -->
-<div class="modal fade" id="exportModal" tabindex="-1" aria-hidden="true">
-  <div class="modal-dialog modal-dialog-centered modal-sm">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h5 class="modal-title">Export Bookmarks</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-      </div>
-      <div class="modal-body d-flex flex-column gap-2">
-        <button class="btn btn-outline-gold" id="btnExportJson"><i class="bi bi-filetype-json me-1"></i>Export as JSON</button>
-        <button class="btn btn-outline-gold" id="btnExportCsv"><i class="bi bi-filetype-csv me-1"></i>Export as CSV</button>
       </div>
     </div>
   </div>
@@ -670,6 +754,7 @@ const DEFAULT_CATEGORY_COLORS = {
 };
 const COLOR_CYCLE = ['primary','success','info','warning','danger','secondary'];
 const QUICK_LAUNCH_MAX = 10;
+const CODE_PREFIX = 'BMD1-';
 
 /* ============================================================
    GLOBAL VARIABLES
@@ -682,16 +767,15 @@ let currentTheme = 'dark';
 
 let editingBookmarkId = null;
 let deleteContext = null;       // { type:'bookmark'|'category', id }
-let pendingImportData = null;   // { bookmarks:[...] }
+let pendingImportData = null;   // { bookmarks:[...], categories:[...] }
 let ctxTargetBookmarkId = null;
 
 const bookmarkModalEl = document.getElementById('bookmarkModal');
 const bookmarkModal = new bootstrap.Modal(bookmarkModalEl);
 const confirmModal = new bootstrap.Modal(document.getElementById('confirmModal'));
 const categoryModal = new bootstrap.Modal(document.getElementById('categoryModal'));
-const importModal = new bootstrap.Modal(document.getElementById('importModal'));
+const syncModal = new bootstrap.Modal(document.getElementById('syncModal'));
 const shortcutsModal = new bootstrap.Modal(document.getElementById('shortcutsModal'));
-const exportModal = new bootstrap.Modal(document.getElementById('exportModal'));
 
 /* ============================================================
    LOCAL STORAGE
@@ -727,24 +811,24 @@ function uid(prefix){
 }
 function nowIso(){ return new Date().toISOString(); }
 function escapeHtml(str){
-  const div = document.createElement('div');
-  div.textContent = str ?? '';
-  return div.innerHTML;
+  const map = { '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' };
+  return String(str ?? '').replace(/[&<>"']/g, ch => map[ch]);
 }
 function isWithinDays(isoDate, days){
   const d = new Date(isoDate).getTime();
+  if (isNaN(d)) return false;
   return (Date.now() - d) <= days * 24 * 60 * 60 * 1000;
 }
 function getCategoryColor(name){
   const cat = categories.find(c => c.name.toLowerCase() === name.toLowerCase());
-  if (cat) return cat.color;
-  return 'secondary';
+  return cat ? cat.color : 'secondary';
 }
 function findOrCreateCategory(name){
-  let cat = categories.find(c => c.name.toLowerCase() === name.trim().toLowerCase());
+  const clean = String(name || '').trim() || 'Personal';
+  let cat = categories.find(c => c.name.toLowerCase() === clean.toLowerCase());
   if (cat) return cat;
-  const color = DEFAULT_CATEGORY_COLORS[name] || COLOR_CYCLE[categories.length % COLOR_CYCLE.length];
-  cat = { id: uid('cat'), name: name.trim(), color, createdDate: nowIso() };
+  const color = DEFAULT_CATEGORY_COLORS[clean] || COLOR_CYCLE[categories.length % COLOR_CYCLE.length];
+  cat = { id: uid('cat'), name: clean, color, createdDate: nowIso() };
   categories.push(cat);
   persistCategories();
   return cat;
@@ -752,6 +836,10 @@ function findOrCreateCategory(name){
 function debounce(fn, wait){
   let t;
   return (...args) => { clearTimeout(t); t = setTimeout(() => fn(...args), wait); };
+}
+function openUrl(url){
+  if (!url) return;
+  window.open(url, '_blank', 'noopener,noreferrer');
 }
 
 /* ============================================================
@@ -797,12 +885,20 @@ function toggleTheme(){
 }
 
 /* ============================================================
+   STICKY TOOLBAR OFFSET
+   ============================================================ */
+function syncHeaderHeight(){
+  const h = document.getElementById('appHeader').offsetHeight;
+  document.documentElement.style.setProperty('--header-h', h + 'px');
+}
+
+/* ============================================================
    CATEGORY MANAGEMENT
    ============================================================ */
 function renderCategoryDropdown(selectedId){
   const sel = document.getElementById('bmCategory');
   const sorted = [...categories].sort((a,b) => a.name.localeCompare(b.name));
-  sel.innerHTML = sorted.map(c => `<option value="${c.id}">${escapeHtml(c.name)}</option>`).join('')
+  sel.innerHTML = sorted.map(c => `<option value="${escapeHtml(c.id)}">${escapeHtml(c.name)}</option>`).join('')
     + `<option value="__new__">+ New Category...</option>`;
   if (selectedId) sel.value = selectedId;
 }
@@ -819,10 +915,10 @@ function renderCategoryManageList(){
     return `
     <li class="list-group-item d-flex align-items-center gap-2" style="background:var(--surface); color:var(--text); border-color:var(--border-c);">
       <span class="cat-dot bg-${c.color}"></span>
-      <span class="flex-grow-1 cat-name-text" data-id="${c.id}">${escapeHtml(c.name)}</span>
+      <span class="flex-grow-1 cat-name-text" data-id="${escapeHtml(c.id)}">${escapeHtml(c.name)}</span>
       <span class="cat-count-badge">${count}</span>
-      <button class="btn btn-icon btn-sm cat-rename-btn" data-id="${c.id}" title="Rename" aria-label="Rename category"><i class="bi bi-pencil"></i></button>
-      <button class="btn btn-icon btn-sm cat-delete-btn" data-id="${c.id}" title="Delete" aria-label="Delete category"><i class="bi bi-trash"></i></button>
+      <button class="btn btn-icon btn-sm cat-rename-btn" data-id="${escapeHtml(c.id)}" title="Rename" aria-label="Rename category"><i class="bi bi-pencil"></i></button>
+      <button class="btn btn-icon btn-sm cat-delete-btn" data-id="${escapeHtml(c.id)}" title="Delete" aria-label="Delete category"><i class="bi bi-trash"></i></button>
     </li>`;
   }).join('');
 
@@ -970,6 +1066,7 @@ function toggleFavorite(id){
   bm.modifiedDate = nowIso();
   persistBookmarks();
   renderAll();
+  showToast(bm.favorite ? 'Added to Favorites' : 'Removed from Favorites', bm.name, bm.favorite ? 'success' : 'info');
 }
 
 function performDelete(){
@@ -1003,10 +1100,12 @@ function getSearchTerm(){
 }
 function filterBookmarks(list){
   const term = getSearchTerm();
+  document.getElementById('btnClearSearch').classList.toggle('show', term.length > 0);
   if (!term) return list;
   return list.filter(b =>
     b.name.toLowerCase().includes(term) ||
-    b.category.toLowerCase().includes(term)
+    b.category.toLowerCase().includes(term) ||
+    (b.url || '').toLowerCase().includes(term)
   );
 }
 
@@ -1026,25 +1125,234 @@ function sortBookmarks(list){
 }
 
 /* ============================================================
-   IMPORT / EXPORT
+   BACKUP CODE — encode / decode
+   ============================================================ */
+function b64Encode(str){
+  const bytes = new TextEncoder().encode(str);
+  let bin = '';
+  bytes.forEach(b => bin += String.fromCharCode(b));
+  return btoa(bin);
+}
+function b64Decode(b64){
+  const bin = atob(b64);
+  const bytes = Uint8Array.from(bin, ch => ch.charCodeAt(0));
+  return new TextDecoder().decode(bytes);
+}
+
+function buildBackupCode(){
+  const payload = {
+    v: 1,
+    t: nowIso(),
+    c: categories.map(c => ({ n: c.name, k: c.color })),
+    b: bookmarks.map(b => ({
+      n: b.name, u: b.url, c: b.category,
+      f: b.favorite ? 1 : 0, d: b.createdDate
+    }))
+  };
+  return CODE_PREFIX + b64Encode(JSON.stringify(payload));
+}
+
+/* Accepts: backup code, raw JSON, or CSV text. Returns {bookmarks, categories}. */
+function parseBackupText(rawInput){
+  const raw = String(rawInput || '').trim();
+  if (!raw) throw new Error('Nothing to read.');
+
+  const compact = raw.replace(/\s+/g, '');
+  let jsonText = null;
+
+  if (compact.toUpperCase().startsWith(CODE_PREFIX)){
+    jsonText = b64Decode(compact.slice(CODE_PREFIX.length));
+  } else if (raw.startsWith('{') || raw.startsWith('[')){
+    jsonText = raw;
+  } else if (/^[A-Za-z0-9+/=]+$/.test(compact) && compact.length > 20){
+    jsonText = b64Decode(compact);           // code pasted without the prefix
+  } else {
+    return { bookmarks: normalizeList(parseCsv(raw)), categories: [] };
+  }
+
+  const parsed = JSON.parse(jsonText);
+  const rawBookmarks = Array.isArray(parsed) ? parsed : (parsed.b || parsed.bookmarks || []);
+  const rawCategories = Array.isArray(parsed) ? [] : (parsed.c || parsed.categories || []);
+
+  return {
+    bookmarks: normalizeList(rawBookmarks),
+    categories: rawCategories.map(c => ({
+      name: (c.n || c.name || '').trim(),
+      color: c.k || c.color || null
+    })).filter(c => c.name)
+  };
+}
+
+function normalizeList(list){
+  return (list || []).map(b => ({
+    name:      (b.n ?? b.name ?? b.Name ?? '').toString().trim(),
+    url:       (b.u ?? b.url ?? b.URL ?? b.Url ?? '').toString().trim(),
+    category:  (b.c ?? b.category ?? b.Category ?? 'Personal').toString().trim() || 'Personal',
+    favorite:  !!(b.f ?? b.favorite ?? b.Favorite),
+    createdDate: b.d || b.createdDate || nowIso()
+  })).filter(b => b.name);
+}
+
+function checkImportCode(){
+  const text = document.getElementById('importCodeArea').value;
+  const preview = document.getElementById('importPreview');
+  const applyBtn = document.getElementById('btnApplyImport');
+  try{
+    const data = parseBackupText(text);
+    if (!data.bookmarks.length) throw new Error('No bookmarks found in that code.');
+
+    let add = 0, upd = 0;
+    data.bookmarks.forEach(imp => {
+      const exists = bookmarks.some(b =>
+        b.name.toLowerCase() === imp.name.toLowerCase() &&
+        (b.url || '').toLowerCase() === imp.url.toLowerCase());
+      exists ? upd++ : add++;
+    });
+
+    const mode = document.getElementById('importMode').value;
+    pendingImportData = data;
+    document.getElementById('importCurrentCount').textContent = bookmarks.length;
+    document.getElementById('importNewCount').textContent = data.bookmarks.length;
+    document.getElementById('importAddCount').textContent = mode === 'replace' ? data.bookmarks.length : add;
+    document.getElementById('importUpdateCount').textContent = mode === 'replace' ? 0 : upd;
+    document.getElementById('importModeNote').textContent = mode === 'replace'
+      ? 'Replace mode deletes your current bookmarks and categories first.'
+      : 'Merge mode keeps current bookmarks; matches on name + URL are updated in place.';
+    preview.classList.remove('d-none');
+    applyBtn.disabled = false;
+    return true;
+  }catch(err){
+    console.error(err);
+    pendingImportData = null;
+    preview.classList.add('d-none');
+    applyBtn.disabled = true;
+    showToast('Code Not Recognized', 'Check that the full code was pasted, then try again.', 'danger');
+    return false;
+  }
+}
+
+function applyImport(){
+  if (!pendingImportData && !checkImportCode()) return;
+  const mode = document.getElementById('importMode').value;
+  const data = pendingImportData;
+  showSpinner(true);
+
+  setTimeout(() => {
+    if (mode === 'replace'){
+      bookmarks = [];
+      categories = [];
+      collapsedCategories = {};
+      persistCollapsed();
+    }
+
+    data.categories.forEach(c => {
+      const cat = findOrCreateCategory(c.name);
+      if (c.color) cat.color = c.color;
+    });
+
+    data.bookmarks.forEach(imp => {
+      const catName = findOrCreateCategory(imp.category).name;
+      const existing = mode === 'replace' ? null : bookmarks.find(b =>
+        b.name.toLowerCase() === imp.name.toLowerCase() &&
+        (b.url || '').toLowerCase() === imp.url.toLowerCase());
+      if (existing){
+        existing.category = catName;
+        existing.favorite = existing.favorite || imp.favorite;
+        existing.modifiedDate = nowIso();
+      } else {
+        bookmarks.push({
+          id: uid('bm'), name: imp.name, url: imp.url, category: catName,
+          favorite: imp.favorite, createdDate: imp.createdDate || nowIso(), modifiedDate: nowIso()
+        });
+      }
+    });
+
+    persistBookmarks(); persistCategories();
+    pendingImportData = null;
+    document.getElementById('importCodeArea').value = '';
+    document.getElementById('importPreview').classList.add('d-none');
+    document.getElementById('btnApplyImport').disabled = true;
+    showSpinner(false);
+    syncModal.hide();
+    renderCategoryDropdown();
+    renderAll();
+    showToast('Restore Complete', `${bookmarks.length} bookmark(s) are now on this device.`, 'success');
+  }, 300);
+}
+
+/* ============================================================
+   BACKUP MODAL UI
+   ============================================================ */
+function openSyncModal(tab = 'export'){
+  switchSyncTab(tab);
+  if (tab === 'export') refreshExportCode();
+  syncModal.show();
+}
+function switchSyncTab(tab){
+  document.querySelectorAll('.sync-tab').forEach(b =>
+    b.classList.toggle('active', b.dataset.syncTab === tab));
+  document.getElementById('syncExportPane').classList.toggle('d-none', tab !== 'export');
+  document.getElementById('syncImportPane').classList.toggle('d-none', tab !== 'import');
+}
+function refreshExportCode(){
+  const code = buildBackupCode();
+  document.getElementById('exportCodeArea').value = code;
+  document.getElementById('exportCodeMeta').textContent =
+    `${bookmarks.length} bookmark(s) · ${categories.length} category(s) · ${code.length} characters`;
+}
+async function copyExportCode(){
+  const area = document.getElementById('exportCodeArea');
+  const code = area.value;
+  try{
+    await navigator.clipboard.writeText(code);
+    showToast('Code Copied', 'Paste it into this app on your other device.', 'success');
+  }catch(e){
+    area.removeAttribute('readonly');
+    area.select();
+    area.setSelectionRange(0, code.length);
+    const ok = document.execCommand && document.execCommand('copy');
+    area.setAttribute('readonly','readonly');
+    showToast(ok ? 'Code Copied' : 'Copy Manually',
+              ok ? 'Paste it into this app on your other device.' : 'The code is selected — copy it with a long press.',
+              ok ? 'success' : 'warning');
+  }
+}
+async function shareExportCode(){
+  const code = document.getElementById('exportCodeArea').value;
+  try{
+    await navigator.share({ title: 'Bookmark Dashboard backup', text: code });
+  }catch(e){ /* user cancelled */ }
+}
+async function pasteImportCode(){
+  try{
+    const text = await navigator.clipboard.readText();
+    if (!text) throw new Error('empty');
+    document.getElementById('importCodeArea').value = text;
+    checkImportCode();
+  }catch(e){
+    showToast('Paste Blocked', 'Your browser blocked clipboard access — paste into the box manually.', 'warning');
+    document.getElementById('importCodeArea').focus();
+  }
+}
+
+/* ============================================================
+   FILE EXPORT / IMPORT (secondary, desktop)
    ============================================================ */
 function exportAsJson(){
   const data = { categories, bookmarks };
   const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
   triggerDownload(blob, `bookmarks-${dateStamp()}.json`);
-  showToast('Export Complete', 'Bookmarks exported as JSON.', 'success');
-  exportModal.hide();
+  showToast('File Saved', 'Bookmarks exported as JSON.', 'success');
 }
 function exportAsCsv(){
-  const header = 'Category,Name,URL';
+  const header = 'Category,Name,URL,Favorite';
   const rows = bookmarks.map(b =>
-    [b.category, b.name, b.url].map(csvEscape).join(',')
+    [b.category, b.name, b.url, b.favorite ? 'Yes' : 'No'].map(csvEscape).join(',')
   );
   const csv = [header, ...rows].join('\r\n');
   const blob = new Blob([csv], { type: 'text/csv' });
   triggerDownload(blob, `bookmarks-${dateStamp()}.csv`);
-  showToast('Export Complete', 'Bookmarks exported as CSV.', 'success');
-  exportModal.hide();
+  showToast('File Saved', 'Bookmarks exported as CSV.', 'success');
 }
 function csvEscape(val){
   const s = String(val ?? '');
@@ -1062,42 +1370,12 @@ function dateStamp(){
   const d = new Date();
   return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
 }
-
 function handleImportFile(file){
   const reader = new FileReader();
   reader.onload = (e) => {
-    try{
-      let importedBookmarks = [];
-      if (file.name.toLowerCase().endsWith('.json')){
-        const parsed = JSON.parse(e.target.result);
-        importedBookmarks = Array.isArray(parsed) ? parsed : (parsed.bookmarks || []);
-        if (parsed.categories) {
-          parsed.categories.forEach(c => findOrCreateCategory(c.name));
-        }
-      } else {
-        importedBookmarks = parseCsv(e.target.result);
-      }
-      importedBookmarks = importedBookmarks
-        .filter(b => b.Name || b.name)
-        .map(b => ({
-          name: b.name || b.Name,
-          url: b.url || b.URL || b.Url,
-          category: b.category || b.Category || 'Personal'
-        }));
-
-      if (!importedBookmarks.length){
-        showToast('Import Error', 'No valid bookmarks found in file.', 'danger');
-        return;
-      }
-
-      pendingImportData = importedBookmarks;
-      document.getElementById('importCurrentCount').textContent = bookmarks.length;
-      document.getElementById('importNewCount').textContent = importedBookmarks.length;
-      importModal.show();
-    }catch(err){
-      console.error(err);
-      showToast('Import Error', 'Could not parse the selected file.', 'danger');
-    }
+    document.getElementById('importCodeArea').value = e.target.result;
+    switchSyncTab('import');
+    checkImportCode();
   };
   reader.readAsText(file);
 }
@@ -1132,35 +1410,6 @@ function splitCsvLine(line){
   return result;
 }
 
-function confirmImport(){
-  if (!pendingImportData) return;
-  showSpinner(true);
-  setTimeout(() => {
-    pendingImportData.forEach(imp => {
-      const catName = findOrCreateCategory(imp.category || 'Personal').name;
-      const existing = bookmarks.find(b =>
-        b.name.toLowerCase() === imp.name.toLowerCase() &&
-        b.url.toLowerCase() === (imp.url || '').toLowerCase()
-      );
-      if (existing){
-        existing.category = catName;
-        existing.modifiedDate = nowIso();
-      } else {
-        bookmarks.push({
-          id: uid('bm'), name: imp.name, url: imp.url || '', category: catName,
-          favorite: false, createdDate: nowIso(), modifiedDate: nowIso()
-        });
-      }
-    });
-    persistBookmarks(); persistCategories();
-    pendingImportData = null;
-    showSpinner(false);
-    importModal.hide();
-    renderAll();
-    showToast('Import Complete', 'Bookmarks were imported successfully.', 'success');
-  }, 350);
-}
-
 function showSpinner(show){
   document.getElementById('spinnerOverlay').style.display = show ? 'flex' : 'none';
 }
@@ -1177,7 +1426,6 @@ function renderDashboard(){
     bookmarks.filter(b => isWithinDays(b.createdDate, 7)).length;
 
   document.title = `Bookmark Dashboard (${bookmarks.length} Bookmarks)`;
-  document.getElementById('pageHeading').textContent = 'Bookmark Dashboard';
 }
 
 /* ============================================================
@@ -1205,15 +1453,29 @@ function renderQuickLaunch(){
 
   grid.innerHTML = list.map(b => `
     <div class="col-6 col-md-4 col-lg-3 col-xl-2">
-      <a href="${escapeHtml(b.url)}" target="_blank" rel="noopener noreferrer" class="quick-launch-btn" title="${escapeHtml(b.url)}">
-        <i class="bi ${b.favorite ? 'bi-star-fill' : 'bi-clock-history'}" style="color:var(--gold-500)"></i>
-        <div class="ql-text">
-          <div class="ql-name" title="${escapeHtml(b.name)}">${escapeHtml(b.name)}</div>
-          <div class="ql-url" title="${escapeHtml(b.url)}">${escapeHtml(b.url)}</div>
-        </div>
-      </a>
+      <div class="ql-item">
+        <button type="button" class="ql-star ${b.favorite ? 'is-on' : ''}" data-ql-fav="${escapeHtml(b.id)}"
+                title="${b.favorite ? 'Remove from favorites' : 'Add to favorites'}"
+                aria-pressed="${b.favorite ? 'true' : 'false'}" aria-label="Toggle favorite for ${escapeHtml(b.name)}">
+          <i class="bi ${b.favorite ? 'bi-star-fill' : 'bi-star'}"></i>
+        </button>
+        <a href="${escapeHtml(b.url)}" target="_blank" rel="noopener noreferrer" class="quick-launch-btn" title="${escapeHtml(b.url)}">
+          <div class="ql-text">
+            <div class="ql-name" title="${escapeHtml(b.name)}">${escapeHtml(b.name)}</div>
+            <div class="ql-url" title="${escapeHtml(b.url)}">${escapeHtml(b.url)}</div>
+          </div>
+        </a>
+      </div>
     </div>
   `).join('');
+
+  grid.querySelectorAll('[data-ql-fav]').forEach(btn => {
+    btn.addEventListener('click', (ev) => {
+      ev.preventDefault();
+      ev.stopPropagation();
+      toggleFavorite(btn.dataset.qlFav);
+    });
+  });
 }
 
 /* ============================================================
@@ -1269,7 +1531,7 @@ function renderCategoriesAndBookmarks(){
 
   const catNames = Object.keys(grouped).sort((a,b) => a.localeCompare(b));
 
-  container.innerHTML = catNames.map((catName, idx) => {
+  container.innerHTML = catNames.map((catName) => {
     const items = grouped[catName];
     const color = getCategoryColor(catName);
     const collapseId = `collapse_${slugify(catName)}`;
@@ -1320,13 +1582,21 @@ function renderCategoriesAndBookmarks(){
       if (action === 'delete') requestDeleteBookmark(id);
       if (action === 'favorite') toggleFavorite(id);
     });
-    el.addEventListener('contextmenu', (ev) => {
-      ev.preventDefault(); ev.stopPropagation();
-      showContextMenu(ev.clientX, ev.clientY, id);
-    });
   });
 
+  // whole row opens the bookmark
   container.querySelectorAll('.bookmark-card').forEach(card => {
+    card.addEventListener('click', (ev) => {
+      if (ev.target.closest('button, a')) return;   // let buttons and the Open link do their own job
+      openUrl(card.dataset.url);
+    });
+    card.addEventListener('keydown', (ev) => {
+      if (ev.target !== card) return;
+      if (ev.key === 'Enter' || ev.key === ' '){
+        ev.preventDefault();
+        openUrl(card.dataset.url);
+      }
+    });
     card.addEventListener('contextmenu', (ev) => {
       ev.preventDefault();
       showContextMenu(ev.clientX, ev.clientY, card.dataset.id);
@@ -1336,8 +1606,9 @@ function renderCategoriesAndBookmarks(){
 
 function renderBookmarkCard(b){
   return `
-  <div class="bookmark-card" data-id="${b.id}">
-    <button class="btn-icon ${b.favorite ? 'fav-on' : ''}" data-action="favorite" data-id="${b.id}"
+  <div class="bookmark-card" data-id="${escapeHtml(b.id)}" data-url="${escapeHtml(b.url)}"
+       role="link" tabindex="0" aria-label="Open ${escapeHtml(b.name)}">
+    <button class="btn-icon ${b.favorite ? 'fav-on' : ''}" data-action="favorite" data-id="${escapeHtml(b.id)}"
             title="${b.favorite ? 'Remove favorite' : 'Mark favorite'}" aria-label="Toggle favorite">
       <i class="bi ${b.favorite ? 'bi-star-fill' : 'bi-star'}"></i>
     </button>
@@ -1349,10 +1620,10 @@ function renderBookmarkCard(b){
       <a href="${escapeHtml(b.url)}" target="_blank" rel="noopener noreferrer" class="btn btn-open">
         Open <i class="bi bi-box-arrow-up-right ms-1"></i>
       </a>
-      <button class="btn-icon" data-action="edit" data-id="${b.id}" title="Edit" aria-label="Edit bookmark">
+      <button class="btn-icon" data-action="edit" data-id="${escapeHtml(b.id)}" title="Edit" aria-label="Edit bookmark">
         <i class="bi bi-pencil"></i>
       </button>
-      <button class="btn-icon" data-action="delete" data-id="${b.id}" title="Delete" aria-label="Delete bookmark">
+      <button class="btn-icon" data-action="delete" data-id="${escapeHtml(b.id)}" title="Delete" aria-label="Delete bookmark">
         <i class="bi bi-trash"></i>
       </button>
     </div>
@@ -1370,6 +1641,7 @@ function renderAll(){
   renderDashboard();
   renderQuickLaunch();
   renderCategoriesAndBookmarks();
+  syncHeaderHeight();
 }
 
 /* ============================================================
@@ -1397,6 +1669,12 @@ function wireEvents(){
   });
 
   document.getElementById('searchInput').addEventListener('input', debounce(renderCategoriesAndBookmarks, 120));
+  document.getElementById('btnClearSearch').addEventListener('click', () => {
+    const input = document.getElementById('searchInput');
+    input.value = '';
+    input.focus();
+    renderCategoriesAndBookmarks();
+  });
   document.getElementById('sortSelect').addEventListener('change', () => {
     settings.lastSort = document.getElementById('sortSelect').value;
     persistSettings();
@@ -1406,22 +1684,41 @@ function wireEvents(){
   document.getElementById('btnTheme').addEventListener('click', toggleTheme);
   document.getElementById('btnShortcuts').addEventListener('click', () => shortcutsModal.show());
 
-  document.getElementById('btnExport').addEventListener('click', () => exportModal.show());
+  /* Backup & restore */
+  document.getElementById('btnSync').addEventListener('click', () => openSyncModal('export'));
+  document.querySelectorAll('.sync-tab').forEach(btn => {
+    btn.addEventListener('click', () => {
+      switchSyncTab(btn.dataset.syncTab);
+      if (btn.dataset.syncTab === 'export') refreshExportCode();
+    });
+  });
+  document.getElementById('btnCopyCode').addEventListener('click', copyExportCode);
+  document.getElementById('btnShareCode').addEventListener('click', shareExportCode);
   document.getElementById('btnExportJson').addEventListener('click', exportAsJson);
   document.getElementById('btnExportCsv').addEventListener('click', exportAsCsv);
-
-  document.getElementById('btnImport').addEventListener('click', () => document.getElementById('fileImportInput').click());
+  document.getElementById('btnPasteCode').addEventListener('click', pasteImportCode);
+  document.getElementById('btnCheckCode').addEventListener('click', checkImportCode);
+  document.getElementById('btnApplyImport').addEventListener('click', applyImport);
+  document.getElementById('importMode').addEventListener('change', () => {
+    if (pendingImportData) checkImportCode();
+  });
+  document.getElementById('importCodeArea').addEventListener('input', () => {
+    pendingImportData = null;
+    document.getElementById('importPreview').classList.add('d-none');
+    document.getElementById('btnApplyImport').disabled = true;
+  });
+  document.getElementById('btnImportFile').addEventListener('click', () => document.getElementById('fileImportInput').click());
   document.getElementById('fileImportInput').addEventListener('change', (e) => {
     const file = e.target.files[0];
     if (file) handleImportFile(file);
     e.target.value = '';
   });
-  document.getElementById('btnConfirmImport').addEventListener('click', confirmImport);
+  if (navigator.share) document.getElementById('btnShareCode').classList.remove('d-none');
 
   // Context menu actions
   document.getElementById('ctxOpen').addEventListener('click', () => {
     const bm = bookmarks.find(b => b.id === ctxTargetBookmarkId);
-    if (bm) window.open(bm.url, '_blank', 'noopener,noreferrer');
+    if (bm) openUrl(bm.url);
     hideContextMenu();
   });
   document.getElementById('ctxCopy').addEventListener('click', async () => {
@@ -1444,18 +1741,23 @@ function wireEvents(){
     if (!e.target.closest('#ctxMenu')) hideContextMenu();
   });
   window.addEventListener('scroll', hideContextMenu, true);
-  window.addEventListener('resize', hideContextMenu);
+  window.addEventListener('resize', () => { hideContextMenu(); syncHeaderHeight(); });
 
   // Keyboard shortcuts
   document.addEventListener('keydown', (e) => {
     const ctrl = e.ctrlKey || e.metaKey;
     if (ctrl && e.key.toLowerCase() === 'n'){ e.preventDefault(); openAddBookmarkModal(); }
     else if (ctrl && e.key.toLowerCase() === 'f'){ e.preventDefault(); document.getElementById('searchInput').focus(); }
-    else if (ctrl && e.key.toLowerCase() === 'e'){ e.preventDefault(); exportModal.show(); }
-    else if (ctrl && e.key.toLowerCase() === 'i'){ e.preventDefault(); document.getElementById('fileImportInput').click(); }
+    else if (ctrl && e.key.toLowerCase() === 'e'){ e.preventDefault(); openSyncModal('export'); }
+    else if (ctrl && e.key.toLowerCase() === 'i'){ e.preventDefault(); openSyncModal('import'); }
     else if (ctrl && e.key.toLowerCase() === 'd'){ e.preventDefault(); toggleTheme(); }
     else if (e.key === 'Escape'){ hideContextMenu(); }
   });
+
+  // Keep the sticky toolbar glued to the real header height
+  if (window.ResizeObserver){
+    new ResizeObserver(syncHeaderHeight).observe(document.getElementById('appHeader'));
+  }
 }
 
 /* ============================================================
@@ -1494,6 +1796,7 @@ function init(){
 
   wireEvents();
   renderAll();
+  window.addEventListener('load', syncHeaderHeight);
 }
 
 document.addEventListener('DOMContentLoaded', init);
