@@ -1,0 +1,1900 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SpellSmith — Learn &amp; Remember Difficult Spellings</title>
+<meta name="description" content="Offline spelling trainer: break, connect, write, recall. Spaced repetition, practice modes and progress tracking. No account, no server.">
+<style>
+/* =========================================================================
+   SpellSmith — design tokens
+   Palette: ink / slate / rule / mist / brass (gold) / jade (teal)
+   ========================================================================= */
+:root{
+  --ink:#071a1d; --slate:#0e282d; --slate-2:#123239; --rule:#1d454b;
+  --mist:#dfeeec; --muted:#8fb0b0;
+  --brass:#d9a441; --brass-soft:rgba(217,164,65,.14);
+  --jade:#34a896; --jade-soft:rgba(52,168,150,.14);
+  --ok:#4cb782; --ok-soft:rgba(76,183,130,.14);
+  --err:#e2685f; --err-soft:rgba(226,104,95,.15);
+  --warn:#e0a33e;
+  --shadow:0 10px 30px rgba(0,0,0,.35);
+  --r:14px; --r-sm:9px;
+  --sans:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+  --serif:"Iowan Old Style","Palatino Linotype",Palatino,Georgia,serif;
+  --mono:ui-monospace,SFMono-Regular,Menlo,Consolas,"Liberation Mono",monospace;
+}
+html[data-theme="light"]{
+  --ink:#eef3f2; --slate:#ffffff; --slate-2:#f3f8f7; --rule:#d3e1de;
+  --mist:#0c2529; --muted:#5c7679;
+  --brass:#9a6f13; --brass-soft:rgba(154,111,19,.12);
+  --jade:#12796f; --jade-soft:rgba(18,121,111,.12);
+  --ok:#1e8a5a; --ok-soft:rgba(30,138,90,.12);
+  --err:#c0392f; --err-soft:rgba(192,57,47,.12);
+  --warn:#a9761a;
+  --shadow:0 8px 24px rgba(12,37,41,.10);
+}
+*,*::before,*::after{box-sizing:border-box}
+html,body{height:100%}
+body{
+  margin:0; background:var(--ink); color:var(--mist);
+  font-family:var(--sans); font-size:15px; line-height:1.55;
+  -webkit-text-size-adjust:100%;
+}
+h1,h2,h3,h4{font-family:var(--serif); font-weight:600; margin:0; letter-spacing:.2px}
+h1{font-size:1.5rem} h2{font-size:1.2rem} h3{font-size:1.02rem}
+p{margin:0 0 .6rem}
+a{color:var(--brass)}
+:focus-visible{outline:2px solid var(--brass); outline-offset:2px; border-radius:4px}
+.sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;border:0}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+
+/* ---------- layout ---------- */
+.app{display:grid; grid-template-columns:246px 1fr; min-height:100%}
+.sidebar{
+  background:var(--slate); border-right:1px solid var(--rule);
+  padding:20px 14px; position:sticky; top:0; height:100vh; overflow:auto;
+}
+.brand{display:flex; align-items:center; gap:10px; padding:0 8px 18px}
+.brand-mark{
+  width:34px;height:34px;border-radius:9px;display:grid;place-items:center;
+  background:var(--brass-soft); border:1px solid var(--brass);
+  color:var(--brass); font-family:var(--mono); font-weight:700; font-size:15px;
+}
+.brand-name{font-family:var(--serif); font-size:1.12rem; line-height:1.1}
+.brand-sub{font-size:.72rem; color:var(--muted); letter-spacing:.10em; text-transform:uppercase}
+.nav{display:flex; flex-direction:column; gap:2px}
+.nav button{
+  display:flex; align-items:center; gap:10px; width:100%; text-align:left;
+  background:none; border:0; color:var(--muted); font:inherit; cursor:pointer;
+  padding:9px 10px; border-radius:var(--r-sm);
+}
+.nav button:hover{background:var(--slate-2); color:var(--mist)}
+.nav button[aria-current="page"]{background:var(--brass-soft); color:var(--mist); box-shadow:inset 2px 0 0 var(--brass)}
+.nav .ico{width:20px; text-align:center; font-size:14px}
+.nav .pill{margin-left:auto; font-size:.7rem; font-family:var(--mono); background:var(--err); color:#fff; border-radius:20px; padding:1px 7px}
+.nav .pill[hidden]{display:none}
+.side-foot{margin-top:18px; padding:10px; border-top:1px solid var(--rule); color:var(--muted); font-size:.74rem}
+
+.main{min-width:0; padding:22px 26px 90px; max-width:1180px}
+.topbar{display:flex; align-items:center; gap:12px; flex-wrap:wrap; margin-bottom:20px}
+.topbar .grow{flex:1}
+.chip{
+  display:inline-flex; align-items:center; gap:6px; font-size:.78rem;
+  border:1px solid var(--rule); background:var(--slate); color:var(--muted);
+  padding:5px 10px; border-radius:20px;
+}
+.chip strong{color:var(--mist); font-family:var(--mono)}
+.eyebrow{font-size:.7rem; letter-spacing:.14em; text-transform:uppercase; color:var(--brass); margin-bottom:2px}
+
+.view{display:none} .view.active{display:block}
+
+/* ---------- cards / grids ---------- */
+.card{background:var(--slate); border:1px solid var(--rule); border-radius:var(--r); padding:16px}
+.grid{display:grid; gap:14px}
+.grid-4{grid-template-columns:repeat(4,1fr)}
+.grid-3{grid-template-columns:repeat(3,1fr)}
+.grid-2{grid-template-columns:repeat(2,1fr)}
+.stat{display:flex; flex-direction:column; gap:2px}
+.stat .k{font-size:.74rem; letter-spacing:.08em; text-transform:uppercase; color:var(--muted)}
+.stat .v{font-family:var(--mono); font-size:1.75rem; line-height:1.2}
+.stat .s{font-size:.78rem; color:var(--muted)}
+.stat.due .v{color:var(--brass)} .stat.master .v{color:var(--ok)} .stat.over .v{color:var(--err)}
+.section-head{display:flex; align-items:baseline; gap:12px; margin:26px 0 12px}
+.section-head .grow{flex:1}
+
+/* ---------- buttons ---------- */
+.btn{
+  display:inline-flex; align-items:center; justify-content:center; gap:8px;
+  font:inherit; font-weight:600; cursor:pointer;
+  background:var(--slate-2); color:var(--mist); border:1px solid var(--rule);
+  padding:9px 15px; border-radius:var(--r-sm); transition:transform .08s ease, background .15s ease;
+}
+.btn:hover{background:var(--rule)}
+.btn:active{transform:translateY(1px)}
+.btn-primary{background:var(--brass); border-color:var(--brass); color:#221703}
+.btn-primary:hover{filter:brightness(1.07); background:var(--brass)}
+.btn-jade{background:var(--jade); border-color:var(--jade); color:#04211e}
+.btn-jade:hover{filter:brightness(1.07); background:var(--jade)}
+.btn-ghost{background:transparent}
+.btn-danger{color:var(--err); border-color:var(--err)}
+.btn-danger:hover{background:var(--err-soft)}
+.btn-sm{padding:5px 10px; font-size:.8rem; font-weight:500}
+.btn[disabled]{opacity:.45; cursor:not-allowed}
+.btn-row{display:flex; gap:10px; flex-wrap:wrap}
+
+/* ---------- forms ---------- */
+label.field{display:block; margin-bottom:12px}
+label.field > span{display:block; font-size:.78rem; color:var(--muted); margin-bottom:5px}
+input[type=text],input[type=search],input[type=number],select,textarea{
+  width:100%; font:inherit; color:var(--mist); background:var(--ink);
+  border:1px solid var(--rule); border-radius:var(--r-sm); padding:9px 11px;
+}
+textarea{min-height:72px; resize:vertical}
+input::placeholder,textarea::placeholder{color:var(--muted); opacity:.7}
+.hint{font-size:.76rem; color:var(--muted)}
+.answer-input{
+  font-family:var(--mono); font-size:1.15rem; letter-spacing:.16em; text-align:center; text-transform:uppercase;
+}
+
+/* ---------- signature: letter tiles ---------- */
+.tiles{display:flex; flex-wrap:wrap; gap:6px; justify-content:center; margin:14px 0}
+.tile{
+  min-width:38px; height:46px; display:grid; place-items:center;
+  font-family:var(--mono); font-size:1.15rem; text-transform:uppercase;
+  background:var(--slate-2); border:1px solid var(--rule); border-radius:8px;
+}
+.tile.ok{border-color:var(--ok); color:var(--ok); background:var(--ok-soft)}
+.tile.bad{border-color:var(--err); color:var(--err); background:var(--err-soft)}
+.tile.miss{border-style:dashed; border-color:var(--brass); color:var(--brass); background:var(--brass-soft)}
+.tile.blank{color:var(--muted)}
+.tile.chunkend{box-shadow:3px 0 0 -1px var(--brass)}
+.tile-input{
+  min-width:38px;height:46px;text-align:center;font-family:var(--mono);font-size:1.1rem;
+  text-transform:uppercase;padding:0;background:var(--ink);border:1px solid var(--brass);border-radius:8px;color:var(--mist)
+}
+.bigword{font-family:var(--mono); font-size:1.6rem; letter-spacing:.1em; text-transform:uppercase; text-align:center; word-break:break-word}
+.breakdown{font-family:var(--mono); color:var(--brass); text-align:center; letter-spacing:.06em}
+
+/* ---------- stage / session ---------- */
+.stage{max-width:660px; margin:0 auto}
+.stage-card{background:var(--slate); border:1px solid var(--rule); border-radius:var(--r); padding:22px; text-align:center}
+.stage-meta{display:flex; justify-content:space-between; font-size:.78rem; color:var(--muted); margin-bottom:10px}
+.mnemonic{
+  border-left:3px solid var(--brass); background:var(--brass-soft);
+  padding:10px 14px; border-radius:0 var(--r-sm) var(--r-sm) 0; text-align:left; font-style:italic;
+}
+.meaning{text-align:left; color:var(--muted)}
+.meaning b{color:var(--mist); font-style:normal}
+.feedback{border-radius:var(--r-sm); padding:12px 14px; margin-top:14px; text-align:left}
+.feedback.good{background:var(--ok-soft); border:1px solid var(--ok)}
+.feedback.bad{background:var(--err-soft); border:1px solid var(--err)}
+.feedback h3{margin-bottom:4px}
+.progressbar{height:6px; background:var(--slate-2); border-radius:6px; overflow:hidden; border:1px solid var(--rule)}
+.progressbar i{display:block; height:100%; background:var(--brass)}
+
+/* ---------- table ---------- */
+.toolbar{display:flex; gap:10px; flex-wrap:wrap; align-items:center; margin-bottom:12px}
+.toolbar input[type=search]{max-width:280px}
+.filters{display:flex; gap:6px; flex-wrap:wrap}
+.filters button{
+  font:inherit; font-size:.8rem; cursor:pointer; padding:5px 11px; border-radius:20px;
+  background:transparent; border:1px solid var(--rule); color:var(--muted);
+}
+.filters button[aria-pressed="true"]{background:var(--brass-soft); border-color:var(--brass); color:var(--mist)}
+.table-wrap{overflow-x:auto; border:1px solid var(--rule); border-radius:var(--r); background:var(--slate)}
+table{width:100%; border-collapse:collapse; font-size:.88rem; min-width:760px}
+th,td{padding:10px 12px; text-align:left; border-bottom:1px solid var(--rule); vertical-align:middle}
+th{font-size:.72rem; letter-spacing:.09em; text-transform:uppercase; color:var(--muted); font-weight:600}
+tbody tr:last-child td{border-bottom:0}
+tbody tr:hover{background:var(--slate-2)}
+td.word{font-family:var(--mono); text-transform:uppercase; letter-spacing:.05em; white-space:nowrap}
+.badge{font-size:.72rem; padding:2px 9px; border-radius:20px; border:1px solid var(--rule); color:var(--muted); white-space:nowrap}
+.badge.New{color:var(--jade); border-color:var(--jade); background:var(--jade-soft)}
+.badge.Learning{color:var(--warn); border-color:var(--warn)}
+.badge.Reviewing{color:var(--brass); border-color:var(--brass); background:var(--brass-soft)}
+.badge.Mastered{color:var(--ok); border-color:var(--ok); background:var(--ok-soft)}
+.badge.overdue{color:var(--err); border-color:var(--err); background:var(--err-soft)}
+.row-actions{display:flex; gap:5px; flex-wrap:wrap}
+.levelbar{display:flex; gap:3px}
+.levelbar i{width:9px; height:9px; border-radius:2px; background:var(--rule)}
+.levelbar i.on{background:var(--brass)}
+
+/* ---------- charts ---------- */
+.donut{
+  width:132px; height:132px; border-radius:50%; display:grid; place-items:center; margin:0 auto;
+  background:conic-gradient(var(--brass) calc(var(--p)*1%), var(--slate-2) 0);
+}
+.donut span{
+  width:96px;height:96px;border-radius:50%;background:var(--slate);display:grid;place-items:center;
+  font-family:var(--mono); font-size:1.4rem;
+}
+.bars{display:flex; align-items:flex-end; gap:5px; height:120px; padding-top:8px}
+.bars .b{flex:1; display:flex; flex-direction:column; justify-content:flex-end; align-items:center; gap:5px; min-width:0}
+.bars .b i{width:100%; background:var(--jade); border-radius:4px 4px 0 0; min-height:2px; display:block}
+.bars .b i.zero{background:var(--rule)}
+.bars .b em{font-size:.62rem; color:var(--muted); font-style:normal; white-space:nowrap}
+.hbar{margin-bottom:10px}
+.hbar .lab{display:flex; justify-content:space-between; font-size:.8rem; margin-bottom:4px}
+.hbar .track{height:9px; background:var(--slate-2); border-radius:6px; overflow:hidden}
+.hbar .track i{display:block; height:100%; border-radius:6px}
+
+/* ---------- misc ---------- */
+.banner{
+  display:flex; gap:14px; align-items:center; flex-wrap:wrap;
+  border:1px solid var(--brass); background:var(--brass-soft);
+  border-radius:var(--r); padding:14px 16px; margin-bottom:18px;
+}
+.banner .grow{flex:1; min-width:200px}
+.empty{text-align:center; color:var(--muted); padding:34px 16px}
+.empty h3{color:var(--mist); margin-bottom:6px}
+.list-reset{list-style:none; padding:0; margin:0}
+.kv{display:flex; justify-content:space-between; gap:12px; padding:7px 0; border-bottom:1px solid var(--rule); font-size:.88rem}
+.kv:last-child{border-bottom:0}
+.kv span{color:var(--muted)}
+.kv b{font-family:var(--mono); font-weight:500}
+.modes{display:grid; gap:12px; grid-template-columns:repeat(4,1fr)}
+.mode{
+  text-align:left; cursor:pointer; background:var(--slate); border:1px solid var(--rule);
+  border-radius:var(--r); padding:16px; color:inherit; font:inherit;
+}
+.mode:hover{border-color:var(--brass)}
+.mode b{display:block; font-family:var(--serif); font-size:1rem; margin-bottom:4px}
+.mode span{font-size:.8rem; color:var(--muted)}
+.choices{display:grid; gap:8px; margin-top:14px}
+.choice{
+  font:inherit; font-family:var(--mono); font-size:1rem; text-transform:uppercase; letter-spacing:.06em;
+  cursor:pointer; background:var(--slate-2); border:1px solid var(--rule); color:var(--mist);
+  padding:12px; border-radius:var(--r-sm); text-align:center;
+}
+.choice:hover{border-color:var(--brass)}
+.choice.ok{border-color:var(--ok); background:var(--ok-soft)}
+.choice.bad{border-color:var(--err); background:var(--err-soft)}
+
+/* ---------- modal + toast ---------- */
+.backdrop{
+  position:fixed; inset:0; background:rgba(3,12,14,.66); display:none;
+  align-items:flex-start; justify-content:center; padding:24px 14px; overflow:auto; z-index:60;
+}
+.backdrop.open{display:flex}
+.modal{
+  background:var(--slate); border:1px solid var(--rule); border-radius:var(--r);
+  box-shadow:var(--shadow); width:100%; max-width:620px; padding:20px;
+}
+.modal.small{max-width:420px}
+.modal-head{display:flex; align-items:center; gap:12px; margin-bottom:14px}
+.modal-head .grow{flex:1}
+.iconbtn{background:none;border:1px solid var(--rule);color:var(--muted);border-radius:8px;cursor:pointer;width:32px;height:32px;font-size:16px;line-height:1}
+.iconbtn:hover{color:var(--mist); background:var(--slate-2)}
+.toast-wrap{position:fixed; left:50%; bottom:18px; transform:translateX(-50%); z-index:80; display:flex; flex-direction:column; gap:8px; align-items:center; pointer-events:none}
+.toast{
+  background:var(--slate-2); border:1px solid var(--rule); border-left:3px solid var(--brass);
+  color:var(--mist); padding:10px 16px; border-radius:var(--r-sm); box-shadow:var(--shadow); font-size:.88rem;
+}
+.toast.ok{border-left-color:var(--ok)} .toast.err{border-left-color:var(--err)}
+
+/* ---------- mobile nav ---------- */
+.mobilenav{
+  display:none; position:fixed; left:0; right:0; bottom:0; z-index:50;
+  background:var(--slate); border-top:1px solid var(--rule); padding:6px 4px;
+  overflow-x:auto; -webkit-overflow-scrolling:touch;
+}
+.mobilenav .inner{display:flex; gap:2px; min-width:max-content; margin:0 auto}
+.mobilenav button{
+  background:none; border:0; color:var(--muted); font:inherit; font-size:.68rem; cursor:pointer;
+  display:flex; flex-direction:column; align-items:center; gap:2px; padding:6px 12px; border-radius:var(--r-sm); position:relative;
+}
+.mobilenav button .ico{font-size:15px}
+.mobilenav button[aria-current="page"]{color:var(--brass); background:var(--brass-soft)}
+.mobilenav .pill{position:absolute; top:0; right:4px; background:var(--err); color:#fff; font-size:.6rem; border-radius:20px; padding:0 5px}
+.mobilenav .pill[hidden]{display:none}
+
+@media (max-width:980px){
+  .grid-4{grid-template-columns:repeat(2,1fr)}
+  .grid-3{grid-template-columns:1fr 1fr}
+  .modes{grid-template-columns:repeat(2,1fr)}
+}
+@media (max-width:760px){
+  .app{grid-template-columns:1fr}
+  .sidebar{display:none}
+  .mobilenav{display:block}
+  .main{padding:16px 14px 96px}
+  .grid-2,.grid-3{grid-template-columns:1fr}
+  .stage-card{padding:16px}
+  .bigword{font-size:1.3rem}
+}
+</style>
+</head>
+<body>
+<div class="app">
+  <!-- ============ sidebar ============ -->
+  <aside class="sidebar">
+    <div class="brand">
+      <div class="brand-mark" aria-hidden="true">Sp</div>
+      <div>
+        <div class="brand-name">SpellSmith</div>
+        <div class="brand-sub">Break · Connect · Write · Recall</div>
+      </div>
+    </div>
+    <nav class="nav" id="sideNav" aria-label="Sections"></nav>
+    <div class="side-foot">
+      Everything stays in this browser. Export a backup from Settings before clearing site data.
+    </div>
+  </aside>
+
+  <!-- ============ main ============ -->
+  <main class="main" id="main">
+    <div class="topbar">
+      <div class="grow">
+        <div class="eyebrow" id="viewEyebrow">Overview</div>
+        <h1 id="viewTitle">Dashboard</h1>
+      </div>
+      <span class="chip" id="streakChip" title="Consecutive days practised">🔥 <strong>0</strong> day streak</span>
+      <button class="btn btn-sm" id="themeBtn" title="Switch theme">◐ Theme</button>
+      <button class="btn btn-sm btn-primary" id="addWordBtn">+ Add word</button>
+    </div>
+
+    <!-- Dashboard -->
+    <section class="view active" id="view-dashboard" tabindex="-1">
+      <div id="dashBanner"></div>
+      <div class="grid grid-4" id="dashCards"></div>
+      <div class="section-head"><h2 class="grow">Progress</h2></div>
+      <div class="grid grid-3" id="dashProgress"></div>
+      <div class="section-head"><h2 class="grow">Next up</h2></div>
+      <div class="grid grid-2" id="dashNext"></div>
+    </section>
+
+    <!-- My Words -->
+    <section class="view" id="view-words" tabindex="-1">
+      <div class="toolbar">
+        <label class="sr-only" for="wordSearch">Search words</label>
+        <input type="search" id="wordSearch" placeholder="Search word, meaning or mnemonic…">
+        <div class="filters" id="wordFilters" role="group" aria-label="Filter words"></div>
+        <span class="grow"></span>
+        <span class="chip" id="wordCount">0 words</span>
+      </div>
+      <div class="table-wrap">
+        <table id="wordTable">
+          <caption class="sr-only">Saved words with level, accuracy and next review</caption>
+          <thead><tr>
+            <th scope="col">Word</th><th scope="col">Meaning</th><th scope="col">Level</th>
+            <th scope="col">Accuracy</th><th scope="col">Next review</th><th scope="col">Status</th>
+            <th scope="col">Actions</th>
+          </tr></thead>
+          <tbody id="wordRows"></tbody>
+        </table>
+      </div>
+      <div id="wordEmpty"></div>
+    </section>
+
+    <!-- Learn -->
+    <section class="view" id="view-learn" tabindex="-1"><div class="stage" id="learnStage"></div></section>
+
+    <!-- Review -->
+    <section class="view" id="view-review" tabindex="-1"><div class="stage" id="reviewStage"></div></section>
+
+    <!-- Practice -->
+    <section class="view" id="view-practice" tabindex="-1"><div id="practiceHost"></div></section>
+
+    <!-- Statistics -->
+    <section class="view" id="view-stats" tabindex="-1"><div id="statsHost"></div></section>
+
+    <!-- Settings -->
+    <section class="view" id="view-settings" tabindex="-1"><div id="settingsHost"></div></section>
+  </main>
+</div>
+
+<nav class="mobilenav" id="mobileNav" aria-label="Sections"><div class="inner"></div></nav>
+
+<!-- word add/edit dialog -->
+<div class="backdrop" id="wordBackdrop">
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="wordDlgTitle" id="wordModal">
+    <div class="modal-head">
+      <h2 class="grow" id="wordDlgTitle">Add word</h2>
+      <button class="iconbtn" id="wordDlgClose" aria-label="Close">✕</button>
+    </div>
+    <div id="wordDlgBody"></div>
+  </div>
+</div>
+
+<!-- generic confirm dialog -->
+<div class="backdrop" id="confirmBackdrop">
+  <div class="modal small" role="alertdialog" aria-modal="true" aria-labelledby="confirmTitle" aria-describedby="confirmMsg">
+    <div class="modal-head"><h2 class="grow" id="confirmTitle">Confirm</h2></div>
+    <p id="confirmMsg"></p>
+    <div class="btn-row" style="justify-content:flex-end;margin-top:14px">
+      <button class="btn" id="confirmNo">Cancel</button>
+      <button class="btn btn-danger" id="confirmYes">Delete</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast-wrap" id="toasts" aria-live="polite" aria-atomic="true"></div>
+
+<script>
+/* =========================================================================
+   SpellSmith — single-file app
+   Sections: Utils · Store · SRS · Analysis · UI shell · Views · Init
+   ========================================================================= */
+(function () {
+"use strict";
+
+/* ------------------------------------------------------------------ Utils */
+var Utils = {
+  uid: function () { return Date.now().toString(36) + Math.random().toString(36).slice(2, 8); },
+  esc: function (s) {
+    return String(s == null ? "" : s).replace(/[&<>"']/g, function (c) {
+      return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c];
+    });
+  },
+  dayKey: function (d) {
+    d = d ? new Date(d) : new Date();
+    return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0");
+  },
+  startOfDay: function (d) { d = d ? new Date(d) : new Date(); d.setHours(0, 0, 0, 0); return d.getTime(); },
+  endOfDay: function (d) { d = d ? new Date(d) : new Date(); d.setHours(23, 59, 59, 999); return d.getTime(); },
+  addDays: function (ts, n) { var d = new Date(ts); d.setDate(d.getDate() + n); return d.getTime(); },
+  fmtDate: function (ts) {
+    if (!ts) return "—";
+    var d = new Date(ts), now = Date.now();
+    var sameDay = Utils.dayKey(d) === Utils.dayKey(now);
+    var opts = { day: "2-digit", month: "short" };
+    if (d.getFullYear() !== new Date().getFullYear()) opts.year = "numeric";
+    var time = String(d.getHours()).padStart(2, "0") + ":" + String(d.getMinutes()).padStart(2, "0");
+    if (sameDay) return "Today " + time;
+    if (Utils.dayKey(d) === Utils.dayKey(Utils.addDays(now, 1))) return "Tomorrow " + time;
+    if (ts < now) return "Overdue · " + d.toLocaleDateString(undefined, opts);
+    return d.toLocaleDateString(undefined, opts) + " " + time;
+  },
+  fmtGap: function (mins) {
+    if (mins < 60) return mins + " min";
+    if (mins < 1440) return Math.round(mins / 60) + " hr";
+    if (mins < 10080) return Math.round(mins / 1440) + " day";
+    if (mins < 43200) return Math.round(mins / 10080) + " week";
+    return Math.round(mins / 43200) + " month";
+  },
+  pct: function (a, b) { return b ? Math.round((a / b) * 100) : 0; },
+  shuffle: function (arr) {
+    var a = arr.slice();
+    for (var i = a.length - 1; i > 0; i--) { var j = Math.floor(Math.random() * (i + 1)); var t = a[i]; a[i] = a[j]; a[j] = t; }
+    return a;
+  },
+  clean: function (s) { return String(s || "").trim().toUpperCase(); }
+};
+
+/* ------------------------------------------------------------------ Seed */
+var SEED = [
+  { word: "Miscellaneous", pronunciation: "mis-uh-LAY-nee-us", meaning: "Various or unrelated things that do not belong to one category.", exampleSentence: "The miscellaneous expenses were recorded separately.", breakdown: "MIS + CELL + A + NEOUS", mnemonic: "MISsing a CELL is NEOUS.", commonMistake: "Mescillanious" },
+  { word: "Necessary", pronunciation: "NESS-uh-ser-ee", meaning: "Needed in order to achieve something; required.", exampleSentence: "Bring only the necessary documents to the meeting.", breakdown: "NE + CES + SARY", mnemonic: "A shirt needs 1 Collar (C) and 2 Sleeves (SS).", commonMistake: "Neccessary" },
+  { word: "Definitely", pronunciation: "DEF-uh-nit-lee", meaning: "Without doubt; certainly.", exampleSentence: "I will definitely finish the report today.", breakdown: "DE + FINITE + LY", mnemonic: "There is a FINITE inside deFINITEly — no A anywhere.", commonMistake: "Definately" },
+  { word: "Separate", pronunciation: "SEP-uh-rayt", meaning: "Set apart; not joined or touching.", exampleSentence: "Keep the two invoices separate.", breakdown: "SE + PA + RATE", mnemonic: "There is A RAT in sepARATe.", commonMistake: "Seperate" },
+  { word: "Accommodation", pronunciation: "uh-kom-uh-DAY-shun", meaning: "A place to live, stay or work in.", exampleSentence: "The company arranged accommodation for the visiting team.", breakdown: "AC + COM + MO + DATION", mnemonic: "Big enough for 2 Cs and 2 Ms to stay in.", commonMistake: "Acomodation" },
+  { word: "Embarrass", pronunciation: "im-BAIR-us", meaning: "To make someone feel awkward or ashamed.", exampleSentence: "I did not want to embarrass him in front of the client.", breakdown: "EM + BARR + ASS", mnemonic: "2 Rs and 2 Ss — Really Red, Super Shy.", commonMistake: "Embarass" },
+  { word: "Maintenance", pronunciation: "MAIN-tuh-nuns", meaning: "The work of keeping something in good working order.", exampleSentence: "Server maintenance is scheduled for Friday night.", breakdown: "MAIN + TEN + ANCE", mnemonic: "You mainTAIN it, but you write mainTENance — TEN in the middle.", commonMistake: "Maintainance" },
+  { word: "Entrepreneur", pronunciation: "on-truh-pruh-NUR", meaning: "A person who sets up and runs a business, taking on the risk.", exampleSentence: "The entrepreneur launched her app after two years of testing.", breakdown: "ENTRE + PRE + NEUR", mnemonic: "ENTER the PRE-NEUR club when you start a business.", commonMistake: "Entreprenur" },
+  { word: "Recommendation", pronunciation: "rek-uh-men-DAY-shun", meaning: "A suggestion that someone or something is good or suitable.", exampleSentence: "His recommendation helped me get the interview.", breakdown: "RE + COMMEND + ATION", mnemonic: "1 C, 2 Ms — you reCOMMEND it.", commonMistake: "Reccommendation" },
+  { word: "Privilege", pronunciation: "PRIV-uh-lij", meaning: "A special right or advantage given to one person or group.", exampleSentence: "Access to the admin panel is a privilege, not a default.", breakdown: "PRIVI + LEGE", mnemonic: "No D in privilege — it is I-L-E-G-E, a PRIVate LEGend.", commonMistake: "Priviledge" }
+];
+
+/* ------------------------------------------------------------------ Store */
+var KEY = "spellsmith.data.v1";
+
+var DEFAULTS = {
+  version: 1,
+  words: [],
+  settings: {
+    intervals: [10, 1440, 4320, 10080, 43200], // minutes for levels 0..4
+    dailyGoal: 10,
+    theme: "dark",
+    notifications: false,
+    seeded: false
+  },
+  stats: { totalReviews: 0, correct: 0, incorrect: 0, sessions: 0 },
+  streak: { current: 0, longest: 0, lastActive: null, days: {} }
+};
+
+var Store = {
+  data: null,
+  load: function () {
+    var raw = null;
+    try { raw = localStorage.getItem(KEY); } catch (e) { raw = null; }
+    var d = null;
+    if (raw) { try { d = JSON.parse(raw); } catch (e) { d = null; } }
+    if (!d || typeof d !== "object") d = JSON.parse(JSON.stringify(DEFAULTS));
+    d.words = Array.isArray(d.words) ? d.words : [];
+    d.settings = Object.assign({}, DEFAULTS.settings, d.settings || {});
+    d.stats = Object.assign({}, DEFAULTS.stats, d.stats || {});
+    d.streak = Object.assign({}, DEFAULTS.streak, d.streak || {});
+    d.streak.days = d.streak.days || {};
+    if (!Array.isArray(d.settings.intervals) || d.settings.intervals.length !== 5) {
+      d.settings.intervals = DEFAULTS.settings.intervals.slice();
+    }
+    Store.data = d;
+    if (!d.settings.seeded && d.words.length === 0) { Store.seed(); }
+    return d;
+  },
+  save: function () {
+    try { localStorage.setItem(KEY, JSON.stringify(Store.data)); }
+    catch (e) { UI.toast("Could not save — browser storage may be full or blocked.", "err"); }
+  },
+  seed: function () {
+    SEED.forEach(function (s) { Store.data.words.push(Words.make(s)); });
+    Store.data.settings.seeded = true;
+    Store.save();
+  },
+  reset: function () {
+    Store.data = JSON.parse(JSON.stringify(DEFAULTS));
+    Store.save();
+  }
+};
+
+/* ------------------------------------------------------------------ Words */
+var Words = {
+  make: function (src) {
+    return {
+      id: Utils.uid(),
+      word: (src.word || "").trim(),
+      pronunciation: (src.pronunciation || "").trim(),
+      meaning: (src.meaning || "").trim(),
+      exampleSentence: (src.exampleSentence || "").trim(),
+      breakdown: (src.breakdown || "").trim(),
+      mnemonic: (src.mnemonic || "").trim(),
+      commonMistake: (src.commonMistake || "").trim(),
+      notes: (src.notes || "").trim(),
+      createdDate: Date.now(),
+      lastReviewedDate: null,
+      nextReviewDate: null,
+      reviewLevel: 0,
+      correctCount: 0,
+      incorrectCount: 0,
+      totalAttempts: 0,
+      status: "New"
+    };
+  },
+  all: function () { return Store.data.words; },
+  byId: function (id) { return Store.data.words.filter(function (w) { return w.id === id; })[0] || null; },
+  add: function (src) { var w = Words.make(src); Store.data.words.push(w); Store.save(); return w; },
+  update: function (id, src) {
+    var w = Words.byId(id); if (!w) return null;
+    ["word", "pronunciation", "meaning", "exampleSentence", "breakdown", "mnemonic", "commonMistake", "notes"]
+      .forEach(function (k) { if (src[k] !== undefined) w[k] = String(src[k]).trim(); });
+    Store.save(); return w;
+  },
+  remove: function (id) {
+    Store.data.words = Store.data.words.filter(function (w) { return w.id !== id; });
+    Store.save();
+  },
+  accuracy: function (w) { return Utils.pct(w.correctCount, w.totalAttempts); },
+  isDue: function (w) { return w.status !== "Mastered" && w.nextReviewDate != null && w.nextReviewDate <= Date.now(); },
+  isOverdue: function (w) { return w.status !== "Mastered" && w.nextReviewDate != null && w.nextReviewDate < Utils.startOfDay(); },
+  isDueToday: function (w) {
+    return w.status !== "Mastered" && w.nextReviewDate != null &&
+      w.nextReviewDate >= Utils.startOfDay() && w.nextReviewDate <= Utils.endOfDay();
+  },
+  due: function () { return Words.all().filter(Words.isDue); },
+  news: function () { return Words.all().filter(function (w) { return w.status === "New"; }); },
+  byStatus: function (s) { return Words.all().filter(function (w) { return w.status === s; }); }
+};
+
+/* -------------------------------------------------------------------- SRS */
+var SRS = {
+  intervals: function () { return Store.data.settings.intervals; },
+  statusFor: function (level) {
+    if (level >= 5) return "Mastered";
+    if (level >= 2) return "Reviewing";
+    return "Learning";
+  },
+  schedule: function (w, level) {
+    w.reviewLevel = Math.max(0, Math.min(5, level));
+    w.status = SRS.statusFor(w.reviewLevel);
+    if (w.reviewLevel >= 5) { w.nextReviewDate = null; }
+    else { w.nextReviewDate = Date.now() + SRS.intervals()[w.reviewLevel] * 60000; }
+  },
+  /* Records one graded attempt and moves the word along the ladder. */
+  answer: function (w, isCorrect, opts) {
+    opts = opts || {};
+    w.totalAttempts++;
+    w.lastReviewedDate = Date.now();
+    if (isCorrect) w.correctCount++; else w.incorrectCount++;
+
+    Store.data.stats.totalReviews++;
+    if (isCorrect) Store.data.stats.correct++; else Store.data.stats.incorrect++;
+
+    if (opts.reschedule !== false) {
+      if (isCorrect) {
+        SRS.schedule(w, w.status === "New" ? 0 : w.reviewLevel + 1);
+      } else {
+        SRS.schedule(w, Math.max(0, w.reviewLevel - 1));
+      }
+    }
+    Streak.touch();
+    Store.save();
+  }
+};
+
+/* ----------------------------------------------------------------- Streak */
+var Streak = {
+  touch: function () {
+    var s = Store.data.streak, today = Utils.dayKey();
+    s.days[today] = (s.days[today] || 0) + 1;
+    if (s.lastActive === today) { Store.save(); return; }
+    var yesterday = Utils.dayKey(Utils.addDays(Date.now(), -1));
+    s.current = (s.lastActive === yesterday) ? s.current + 1 : 1;
+    s.lastActive = today;
+    if (s.current > s.longest) s.longest = s.current;
+    Store.save();
+  },
+  current: function () {
+    var s = Store.data.streak, today = Utils.dayKey();
+    var yesterday = Utils.dayKey(Utils.addDays(Date.now(), -1));
+    if (s.lastActive === today || s.lastActive === yesterday) return s.current;
+    return 0;
+  },
+  todayCount: function () { return Store.data.streak.days[Utils.dayKey()] || 0; },
+  last: function (n) {
+    var out = [];
+    for (var i = n - 1; i >= 0; i--) {
+      var ts = Utils.addDays(Date.now(), -i), k = Utils.dayKey(ts);
+      out.push({ key: k, ts: ts, count: Store.data.streak.days[k] || 0 });
+    }
+    return out;
+  }
+};
+
+/* --------------------------------------------------- Spelling analysis */
+var Analysis = {
+  /* Levenshtein alignment -> ops: match | sub | ins (extra) | del (missing) */
+  ops: function (correct, answer) {
+    var a = Utils.clean(correct), b = Utils.clean(answer);
+    var n = a.length, m = b.length, i, j;
+    var d = [];
+    for (i = 0; i <= n; i++) { d[i] = [i]; }
+    for (j = 0; j <= m; j++) { d[0][j] = j; }
+    for (i = 1; i <= n; i++) {
+      for (j = 1; j <= m; j++) {
+        var cost = a[i - 1] === b[j - 1] ? 0 : 1;
+        d[i][j] = Math.min(d[i - 1][j] + 1, d[i][j - 1] + 1, d[i - 1][j - 1] + cost);
+      }
+    }
+    var ops = []; i = n; j = m;
+    while (i > 0 || j > 0) {
+      if (i > 0 && j > 0 && d[i][j] === d[i - 1][j - 1] + (a[i - 1] === b[j - 1] ? 0 : 1)) {
+        ops.push({ type: a[i - 1] === b[j - 1] ? "match" : "sub", c: a[i - 1], a: b[j - 1], ci: i - 1, ai: j - 1 });
+        i--; j--;
+      } else if (j > 0 && d[i][j] === d[i][j - 1] + 1) {
+        ops.push({ type: "ins", a: b[j - 1], ai: j - 1, ci: i });   // extra letter typed
+        j--;
+      } else {
+        ops.push({ type: "del", c: a[i - 1], ci: i - 1, ai: j });   // letter missing
+        i--;
+      }
+    }
+    return ops.reverse();
+  },
+
+  /* Human-readable explanation of the first differences. */
+  message: function (correct, answer) {
+    var ops = Analysis.ops(correct, answer);
+    var bad = ops.filter(function (o) { return o.type !== "match"; });
+    if (!bad.length) return { ok: true, text: "Spot on — letter for letter." };
+
+    var text;
+    if (bad.length === 1) {
+      var o = bad[0];
+      if (o.type === "ins") text = 'You added an extra "' + o.a + '".';
+      else if (o.type === "del") text = 'You missed the letter "' + o.c + '".';
+      else text = 'You typed "' + o.a + '" where it should be "' + o.c + '".';
+    } else if (bad.length === 2 && bad[0].type === "sub" && bad[1].type === "sub" &&
+               bad[0].c === bad[1].a && bad[1].c === bad[0].a) {
+      text = 'Two letters are swapped — "' + bad[0].c + '" and "' + bad[1].c + '" are the other way round.';
+    } else if (bad.every(function (x) { return x.type === "ins"; })) {
+      text = "You added " + bad.length + " extra letters.";
+    } else if (bad.every(function (x) { return x.type === "del"; })) {
+      text = "You missed " + bad.length + " letters.";
+    } else {
+      text = "There are " + bad.length + " differences — compare the two rows below.";
+    }
+    return { ok: false, text: text, ops: ops, bad: bad };
+  },
+
+  /* "NECESSARY has 1 C and 2 S" style count tip. */
+  countTip: function (correct, bad) {
+    var w = Utils.clean(correct);
+    var letters = [], absent = [];
+    (bad || []).forEach(function (o) {
+      [o.c, o.a].forEach(function (ch) {
+        if (!ch) return;
+        if (w.indexOf(ch) > -1) { if (letters.indexOf(ch) < 0) letters.push(ch); }
+        else if (absent.indexOf(ch) < 0) absent.push(ch);
+      });
+    });
+    // add any doubled letter in the word — that is usually the real trap
+    for (var i = 1; i < w.length; i++) {
+      if (w[i] === w[i - 1] && letters.indexOf(w[i]) < 0) letters.push(w[i]);
+    }
+    var parts = letters.slice(0, 3).map(function (ch) {
+      return (w.split(ch).length - 1) + " " + ch;
+    });
+    absent.slice(0, 2).forEach(function (ch) { parts.push("no " + ch); });
+    if (!parts.length) return "";
+    return "Memory tip: " + w + " has " + parts.join(" + ") + ".";
+  },
+
+  /* Tiles for the answer (what the user typed) and for the correct word. */
+  tilesHtml: function (correct, answer) {
+    var ops = Analysis.ops(correct, answer);
+    var ansHtml = "", corHtml = "";
+    ops.forEach(function (o) {
+      if (o.type === "match") {
+        ansHtml += '<span class="tile ok">' + Utils.esc(o.a) + "</span>";
+        corHtml += '<span class="tile ok">' + Utils.esc(o.c) + "</span>";
+      } else if (o.type === "sub") {
+        ansHtml += '<span class="tile bad">' + Utils.esc(o.a) + "</span>";
+        corHtml += '<span class="tile miss">' + Utils.esc(o.c) + "</span>";
+      } else if (o.type === "ins") {
+        ansHtml += '<span class="tile bad">' + Utils.esc(o.a) + "</span>";
+        corHtml += '<span class="tile blank">·</span>';
+      } else {
+        ansHtml += '<span class="tile blank">·</span>';
+        corHtml += '<span class="tile miss">' + Utils.esc(o.c) + "</span>";
+      }
+    });
+    return { answer: ansHtml, correct: corHtml };
+  },
+
+  /* Plain tiles, with a gold divider at each chunk boundary from the breakdown. */
+  wordTiles: function (word, breakdown) {
+    var w = Utils.clean(word), marks = {};
+    if (breakdown) {
+      var pos = 0;
+      breakdown.split(/[+\-·/|]/).forEach(function (chunk) {
+        var c = Utils.clean(chunk).replace(/[^A-Z]/g, "");
+        if (!c) return;
+        pos += c.length;
+        if (pos > 0 && pos < w.length) marks[pos - 1] = true;
+      });
+    }
+    return w.split("").map(function (ch, i) {
+      return '<span class="tile' + (marks[i] ? " chunkend" : "") + '">' + Utils.esc(ch) + "</span>";
+    }).join("");
+  },
+
+  /* Plausible wrong spellings for multiple choice. */
+  distractors: function (w) {
+    var word = Utils.clean(w.word), out = [];
+    var push = function (s) {
+      s = Utils.clean(s);
+      if (s && s !== word && out.indexOf(s) < 0) out.push(s);
+    };
+    if (w.commonMistake) push(w.commonMistake);
+
+    var i;
+    for (i = 1; i < word.length; i++) {              // remove one half of a double
+      if (word[i] === word[i - 1]) push(word.slice(0, i) + word.slice(i + 1));
+    }
+    for (i = 1; i < word.length - 1; i++) {          // double a single consonant
+      if (!"AEIOU".includes(word[i]) && word[i] !== word[i - 1] && word[i] !== word[i + 1]) {
+        push(word.slice(0, i + 1) + word[i] + word.slice(i + 1));
+      }
+    }
+    push(word.replace("IE", "EI"));
+    push(word.replace("ANCE", "ENCE"));
+    push(word.replace("ENCE", "ANCE"));
+    push(word.replace("ABLE", "IBLE"));
+    for (i = 1; i < word.length - 1; i++) {          // swap two neighbours
+      push(word.slice(0, i) + word[i + 1] + word[i] + word.slice(i + 2));
+    }
+    return Utils.shuffle(out).slice(0, 3);
+  }
+};
+
+/* -------------------------------------------------------------- UI shell */
+var UI = {
+  toast: function (msg, kind) {
+    var host = document.getElementById("toasts");
+    var el = document.createElement("div");
+    el.className = "toast " + (kind || "");
+    el.textContent = msg;
+    host.appendChild(el);
+    setTimeout(function () { el.remove(); }, 3200);
+  },
+  confirm: function (opts) {
+    return new Promise(function (resolve) {
+      var bd = document.getElementById("confirmBackdrop");
+      document.getElementById("confirmTitle").textContent = opts.title || "Confirm";
+      document.getElementById("confirmMsg").textContent = opts.message || "";
+      var yes = document.getElementById("confirmYes"), no = document.getElementById("confirmNo");
+      yes.textContent = opts.confirmLabel || "Delete";
+      yes.className = "btn " + (opts.danger === false ? "btn-primary" : "btn-danger");
+      var close = function (val) {
+        bd.classList.remove("open");
+        yes.removeEventListener("click", onYes); no.removeEventListener("click", onNo);
+        document.removeEventListener("keydown", onKey);
+        resolve(val);
+      };
+      var onYes = function () { close(true); }, onNo = function () { close(false); };
+      var onKey = function (e) { if (e.key === "Escape") close(false); };
+      yes.addEventListener("click", onYes); no.addEventListener("click", onNo);
+      document.addEventListener("keydown", onKey);
+      bd.classList.add("open");
+      yes.focus();
+    });
+  },
+  openModal: function (title, html) {
+    document.getElementById("wordDlgTitle").textContent = title;
+    document.getElementById("wordDlgBody").innerHTML = html;
+    document.getElementById("wordBackdrop").classList.add("open");
+    var first = document.querySelector("#wordDlgBody input, #wordDlgBody textarea, #wordDlgBody button");
+    if (first) first.focus();
+  },
+  closeModal: function () { document.getElementById("wordBackdrop").classList.remove("open"); }
+};
+
+/* ------------------------------------------------------------- Navigation */
+var NAV = [
+  { id: "dashboard", label: "Dashboard", ico: "◧", eyebrow: "Overview", title: "Dashboard" },
+  { id: "words", label: "My Words", ico: "≡", eyebrow: "Library", title: "My Words" },
+  { id: "learn", label: "Learn", ico: "✦", eyebrow: "New words", title: "Learning session" },
+  { id: "review", label: "Review", ico: "↻", eyebrow: "Spaced repetition", title: "Review", badge: true },
+  { id: "practice", label: "Practice", ico: "◆", eyebrow: "Drills", title: "Practice modes" },
+  { id: "stats", label: "Statistics", ico: "▤", eyebrow: "Progress", title: "Statistics" },
+  { id: "settings", label: "Settings", ico: "⚙", eyebrow: "Preferences", title: "Settings" }
+];
+
+var App = {
+  current: "dashboard",
+  buildNav: function () {
+    var side = document.getElementById("sideNav");
+    var mob = document.querySelector("#mobileNav .inner");
+    side.innerHTML = ""; mob.innerHTML = "";
+    NAV.forEach(function (n) {
+      var b = document.createElement("button");
+      b.type = "button"; b.dataset.view = n.id;
+      b.innerHTML = '<span class="ico" aria-hidden="true">' + n.ico + "</span><span>" + n.label + "</span>" +
+        (n.badge ? '<span class="pill" data-due hidden>0</span>' : "");
+      b.addEventListener("click", function () { App.go(n.id); });
+      side.appendChild(b);
+
+      var m = document.createElement("button");
+      m.type = "button"; m.dataset.view = n.id;
+      m.innerHTML = '<span class="ico" aria-hidden="true">' + n.ico + "</span><span>" + n.label + "</span>" +
+        (n.badge ? '<span class="pill" data-due hidden>0</span>' : "");
+      m.addEventListener("click", function () { App.go(n.id); });
+      mob.appendChild(m);
+    });
+  },
+  go: function (id) {
+    var n = NAV.filter(function (x) { return x.id === id; })[0] || NAV[0];
+    App.current = n.id;
+    document.querySelectorAll(".view").forEach(function (v) { v.classList.remove("active"); });
+    var view = document.getElementById("view-" + n.id);
+    view.classList.add("active");
+    document.getElementById("viewTitle").textContent = n.title;
+    document.getElementById("viewEyebrow").textContent = n.eyebrow;
+    document.querySelectorAll("[data-view]").forEach(function (b) {
+      if (b.dataset.view === n.id) b.setAttribute("aria-current", "page");
+      else b.removeAttribute("aria-current");
+    });
+    App.render(n.id);
+    window.scrollTo({ top: 0, behavior: "auto" });
+    view.focus();
+  },
+  render: function (id) {
+    if (id === "dashboard") Dashboard.render();
+    if (id === "words") Library.render();
+    if (id === "learn") Learn.render();
+    if (id === "review") Review.render();
+    if (id === "practice") Practice.render();
+    if (id === "stats") Stats.render();
+    if (id === "settings") Settings.render();
+    App.refreshChrome();
+  },
+  refreshChrome: function () {
+    var due = Words.due().length;
+    document.querySelectorAll("[data-due]").forEach(function (p) {
+      p.textContent = due; p.hidden = due === 0;
+    });
+    var s = Streak.current();
+    document.getElementById("streakChip").innerHTML =
+      "🔥 <strong>" + s + "</strong> day streak";
+  },
+  applyTheme: function () {
+    var t = Store.data.settings.theme;
+    var eff = t;
+    if (t === "system") {
+      eff = window.matchMedia && window.matchMedia("(prefers-color-scheme: light)").matches ? "light" : "dark";
+    }
+    document.documentElement.setAttribute("data-theme", eff);
+  }
+};
+
+/* ------------------------------------------------------------- Dashboard */
+var Dashboard = {
+  render: function () {
+    var all = Words.all();
+    var due = Words.due(), overdue = all.filter(Words.isOverdue), dueToday = all.filter(Words.isDueToday);
+    var mastered = Words.byStatus("Mastered"), learning = Words.byStatus("Learning").concat(Words.byStatus("Reviewing"));
+    var st = Store.data.stats, goal = Store.data.settings.dailyGoal;
+
+    var banner = document.getElementById("dashBanner");
+    if (due.length) {
+      banner.innerHTML =
+        '<div class="banner"><div class="grow"><h2>🔔 ' + due.length + ' word' + (due.length > 1 ? "s" : "") +
+        ' waiting for review</h2><div class="hint">' + overdue.length + ' overdue · ' + dueToday.length +
+        ' scheduled today</div></div><button class="btn btn-primary" data-go="review">Review now</button></div>';
+    } else if (Words.news().length) {
+      banner.innerHTML =
+        '<div class="banner"><div class="grow"><h2>Nothing due right now</h2><div class="hint">' +
+        Words.news().length + ' new word' + (Words.news().length > 1 ? "s" : "") +
+        ' are waiting to be learned.</div></div><button class="btn btn-primary" data-go="learn">Start learning</button></div>';
+    } else {
+      banner.innerHTML = "";
+    }
+
+    document.getElementById("dashCards").innerHTML = [
+      Dashboard.card("New words", Words.news().length, "Not learned yet", ""),
+      Dashboard.card("Due for review", due.length, overdue.length + " overdue · " + dueToday.length + " today", "due"),
+      Dashboard.card("Mastered", mastered.length, "Level 5 — long-term memory", "master"),
+      Dashboard.card("Currently learning", learning.length, "In the repetition ladder", "")
+    ].join("");
+
+    var acc = Utils.pct(st.correct, st.totalReviews);
+    var doneToday = Streak.todayCount();
+    document.getElementById("dashProgress").innerHTML =
+      '<div class="card"><div class="stat"><span class="k">Overall accuracy</span><span class="v">' + acc +
+      '%</span><span class="s">' + st.correct + " correct of " + st.totalReviews + ' attempts</span></div>' +
+      '<div class="progressbar" style="margin-top:10px"><i style="width:' + acc + '%"></i></div></div>' +
+
+      '<div class="card"><div class="stat"><span class="k">Today\u2019s goal</span><span class="v">' + doneToday + " / " + goal +
+      '</span><span class="s">practice attempts today</span></div>' +
+      '<div class="progressbar" style="margin-top:10px"><i style="width:' + Math.min(100, Utils.pct(doneToday, goal)) + '%"></i></div></div>' +
+
+      '<div class="card"><div class="stat"><span class="k">Streak</span><span class="v">' + Streak.current() +
+      ' 🔥</span><span class="s">longest: ' + Store.data.streak.longest + " days · " + st.sessions + ' sessions</span></div>' +
+      '<div class="progressbar" style="margin-top:10px"><i style="width:' + Math.min(100, Streak.current() * 10) + '%"></i></div></div>';
+
+    var next = all.filter(function (w) { return w.nextReviewDate; })
+      .sort(function (a, b) { return a.nextReviewDate - b.nextReviewDate; }).slice(0, 6);
+    var recent = all.slice().sort(function (a, b) { return b.createdDate - a.createdDate; }).slice(0, 6);
+
+    document.getElementById("dashNext").innerHTML =
+      '<div class="card"><h3>Review queue</h3>' +
+      (next.length
+        ? '<ul class="list-reset" style="margin-top:8px">' + next.map(function (w) {
+            return '<li class="kv"><b>' + Utils.esc(w.word.toUpperCase()) + "</b><span>" + Utils.fmtDate(w.nextReviewDate) + "</span></li>";
+          }).join("") + "</ul>"
+        : '<p class="hint" style="margin-top:8px">No words scheduled. Learn a few first.</p>') + "</div>" +
+
+      '<div class="card"><h3>Recently added</h3>' +
+      (recent.length
+        ? '<ul class="list-reset" style="margin-top:8px">' + recent.map(function (w) {
+            return '<li class="kv"><b>' + Utils.esc(w.word.toUpperCase()) + '</b><span class="badge ' + w.status + '">' + w.status + "</span></li>";
+          }).join("") + "</ul>"
+        : '<p class="hint" style="margin-top:8px">Your library is empty. Add your first word.</p>') + "</div>";
+  },
+  card: function (k, v, s, cls) {
+    return '<div class="card"><div class="stat ' + cls + '"><span class="k">' + k + '</span><span class="v">' +
+      v + '</span><span class="s">' + s + "</span></div></div>";
+  }
+};
+
+/* --------------------------------------------------------------- Library */
+var Library = {
+  filter: "All",
+  query: "",
+  FILTERS: ["All", "New", "Learning", "Reviewing", "Mastered", "Due today", "Overdue"],
+  render: function () {
+    var host = document.getElementById("wordFilters");
+    if (!host.children.length) {
+      Library.FILTERS.forEach(function (f) {
+        var b = document.createElement("button");
+        b.type = "button"; b.textContent = f;
+        b.setAttribute("aria-pressed", f === Library.filter);
+        b.addEventListener("click", function () { Library.filter = f; Library.render(); });
+        host.appendChild(b);
+      });
+    } else {
+      Array.prototype.forEach.call(host.children, function (b) {
+        b.setAttribute("aria-pressed", b.textContent === Library.filter);
+      });
+    }
+
+    var rows = Library.list();
+    document.getElementById("wordCount").textContent = rows.length + " of " + Words.all().length + " words";
+    var tbody = document.getElementById("wordRows");
+    tbody.innerHTML = rows.map(function (w) {
+      var acc = Words.accuracy(w);
+      var lvl = "";
+      for (var i = 0; i < 5; i++) lvl += '<i class="' + (i < w.reviewLevel ? "on" : "") + '"></i>';
+      var over = Words.isOverdue(w);
+      return "<tr>" +
+        '<td class="word">' + Utils.esc(w.word) + "</td>" +
+        "<td>" + Utils.esc((w.meaning || "—").slice(0, 70)) + "</td>" +
+        '<td><span class="levelbar" title="Level ' + w.reviewLevel + ' of 5">' + lvl + "</span></td>" +
+        "<td>" + (w.totalAttempts ? acc + "%" : "—") + '<div class="hint">' + w.correctCount + "/" + w.totalAttempts + "</div></td>" +
+        '<td' + (over ? ' style="color:var(--err)"' : "") + ">" + Utils.fmtDate(w.nextReviewDate) + "</td>" +
+        '<td><span class="badge ' + w.status + '">' + w.status + "</span></td>" +
+        '<td><div class="row-actions">' +
+        '<button class="btn btn-sm" data-act="view" data-id="' + w.id + '">View</button>' +
+        '<button class="btn btn-sm" data-act="edit" data-id="' + w.id + '">Edit</button>' +
+        '<button class="btn btn-sm" data-act="practice" data-id="' + w.id + '">Practice</button>' +
+        '<button class="btn btn-sm btn-danger" data-act="delete" data-id="' + w.id + '">Delete</button>' +
+        "</div></td></tr>";
+    }).join("");
+
+    document.getElementById("wordEmpty").innerHTML = rows.length ? "" :
+      '<div class="empty"><h3>No words match</h3><p>' +
+      (Words.all().length ? "Try a different filter or clear the search box." : "Add your first word to get started.") +
+      '</p><button class="btn btn-primary" data-add>+ Add word</button></div>';
+  },
+  list: function () {
+    var q = Library.query.trim().toLowerCase();
+    return Words.all().filter(function (w) {
+      var f = Library.filter, keep;
+      if (f === "All") keep = true;
+      else if (f === "Due today") keep = Words.isDueToday(w) || Words.isDue(w);
+      else if (f === "Overdue") keep = Words.isOverdue(w);
+      else keep = w.status === f;
+      if (!keep) return false;
+      if (!q) return true;
+      return (w.word + " " + w.meaning + " " + w.mnemonic + " " + w.breakdown + " " + w.notes).toLowerCase().indexOf(q) > -1;
+    }).sort(function (a, b) { return a.word.toLowerCase() < b.word.toLowerCase() ? -1 : 1; });
+  },
+
+  /* ---- add / edit form ---- */
+  form: function (w) {
+    w = w || {};
+    var f = function (name, label, val, ph, ta) {
+      return '<label class="field"><span>' + label + "</span>" +
+        (ta ? '<textarea id="f_' + name + '" placeholder="' + ph + '">' + Utils.esc(val || "") + "</textarea>"
+            : '<input type="text" id="f_' + name + '" value="' + Utils.esc(val || "") + '" placeholder="' + ph + '">') +
+        "</label>";
+    };
+    return '<form id="wordForm" novalidate>' +
+      f("word", "Word *", w.word, "Miscellaneous") +
+      '<div class="grid grid-2">' +
+      f("pronunciation", "Pronunciation", w.pronunciation, "mis-uh-LAY-nee-us") +
+      f("commonMistake", "Common mistake", w.commonMistake, "Mescillanious") +
+      "</div>" +
+      f("meaning", "Meaning", w.meaning, "Various or unrelated things.", true) +
+      f("exampleSentence", "Example sentence", w.exampleSentence, "The miscellaneous expenses were recorded separately.", true) +
+      f("breakdown", "Word breakdown (BREAK)", w.breakdown, "MIS + CELL + A + NEOUS") +
+      f("mnemonic", "Memory trick (CONNECT)", w.mnemonic, "MISsing a CELL is NEOUS.", true) +
+      f("notes", "Personal notes", w.notes, "Anything that helps you remember.", true) +
+      '<div class="btn-row" style="justify-content:flex-end">' +
+      '<button type="button" class="btn" data-close>Cancel</button>' +
+      '<button type="submit" class="btn btn-primary">' + (w.id ? "Save changes" : "Add word") + "</button></div></form>";
+  },
+  openForm: function (id) {
+    var w = id ? Words.byId(id) : null;
+    UI.openModal(w ? "Edit word" : "Add word", Library.form(w));
+    var form = document.getElementById("wordForm");
+    form.addEventListener("submit", function (e) {
+      e.preventDefault();
+      var get = function (n) { var el = document.getElementById("f_" + n); return el ? el.value : ""; };
+      var word = get("word").trim();
+      if (!word) { UI.toast("Enter the word first.", "err"); document.getElementById("f_word").focus(); return; }
+      var payload = {
+        word: word, pronunciation: get("pronunciation"), meaning: get("meaning"),
+        exampleSentence: get("exampleSentence"), breakdown: get("breakdown"),
+        mnemonic: get("mnemonic"), commonMistake: get("commonMistake"), notes: get("notes")
+      };
+      if (w) { Words.update(w.id, payload); UI.toast("Saved " + word + ".", "ok"); }
+      else { Words.add(payload); UI.toast("Added " + word + ".", "ok"); }
+      UI.closeModal();
+      App.render(App.current);
+    });
+  },
+  openView: function (id) {
+    var w = Words.byId(id); if (!w) return;
+    var html =
+      '<div class="tiles">' + Analysis.wordTiles(w.word, w.breakdown) + "</div>" +
+      (w.pronunciation ? '<p class="hint" style="text-align:center">' + Utils.esc(w.pronunciation) + "</p>" : "") +
+      (w.breakdown ? '<p class="breakdown">' + Utils.esc(w.breakdown) + "</p>" : "") +
+      (w.mnemonic ? '<p class="mnemonic">' + Utils.esc(w.mnemonic) + "</p>" : "") +
+      '<div style="margin-top:14px">' +
+      (w.meaning ? '<p class="meaning"><b>Meaning:</b> ' + Utils.esc(w.meaning) + "</p>" : "") +
+      (w.exampleSentence ? '<p class="meaning"><b>Example:</b> ' + Utils.esc(w.exampleSentence) + "</p>" : "") +
+      (w.commonMistake ? '<p class="meaning"><b>Watch out for:</b> ' + Utils.esc(w.commonMistake) + "</p>" : "") +
+      (w.notes ? '<p class="meaning"><b>Notes:</b> ' + Utils.esc(w.notes) + "</p>" : "") +
+      "</div>" +
+      '<div class="card" style="margin-top:14px">' +
+      '<div class="kv"><span>Status</span><b>' + w.status + " · level " + w.reviewLevel + "/5</b></div>" +
+      '<div class="kv"><span>Accuracy</span><b>' + Words.accuracy(w) + "% (" + w.correctCount + "/" + w.totalAttempts + ")</b></div>" +
+      '<div class="kv"><span>Next review</span><b>' + Utils.fmtDate(w.nextReviewDate) + "</b></div>" +
+      '<div class="kv"><span>Last reviewed</span><b>' + Utils.fmtDate(w.lastReviewedDate) + "</b></div>" +
+      "</div>" +
+      '<div class="btn-row" style="justify-content:flex-end;margin-top:14px">' +
+      '<button class="btn" data-close>Close</button>' +
+      '<button class="btn" data-act="edit" data-id="' + w.id + '">Edit</button>' +
+      '<button class="btn btn-primary" data-act="practice" data-id="' + w.id + '">Practice this word</button></div>';
+    UI.openModal(w.word, html);
+  },
+  del: function (id) {
+    var w = Words.byId(id); if (!w) return;
+    UI.confirm({ title: "Delete word", message: 'Delete "' + w.word + '" and its progress? This cannot be undone.' })
+      .then(function (yes) {
+        if (!yes) return;
+        Words.remove(id);
+        UI.toast("Deleted " + w.word + ".");
+        App.render(App.current);
+      });
+  }
+};
+
+/* ------------------------------------------------------- shared feedback */
+function feedbackHtml(w, answer, isCorrect) {
+  if (isCorrect) {
+    return '<div class="feedback good"><h3>🎉 Correct — excellent work.</h3>' +
+      '<p class="hint">' + Utils.esc(w.word.toUpperCase()) + " moves to level " + w.reviewLevel +
+      ". Next review " + Utils.fmtDate(w.nextReviewDate) + ".</p></div>";
+  }
+  var res = Analysis.message(w.word, answer);
+  var t = Analysis.tilesHtml(w.word, answer);
+  var tip = Analysis.countTip(w.word, res.bad);
+  return '<div class="feedback bad"><h3>Not quite. Let\u2019s look at the difficult part.</h3>' +
+    "<p>" + Utils.esc(res.text) + "</p>" +
+    '<p class="hint" style="margin:10px 0 2px">Your answer</p><div class="tiles" style="justify-content:flex-start">' + t.answer + "</div>" +
+    '<p class="hint" style="margin:6px 0 2px">Correct spelling</p><div class="tiles" style="justify-content:flex-start">' + t.correct + "</div>" +
+    (tip ? '<p style="margin-top:8px"><b>' + Utils.esc(tip) + "</b></p>" : "") +
+    (w.mnemonic ? '<p class="mnemonic" style="margin-top:10px">' + Utils.esc(w.mnemonic) + "</p>" : "") +
+    (w.breakdown ? '<p class="breakdown" style="text-align:left;margin-top:8px">' + Utils.esc(w.breakdown) + "</p>" : "") +
+    "</div>";
+}
+
+function answerForm(labelText, id) {
+  return '<form id="' + id + '" autocomplete="off">' +
+    '<label class="field"><span>' + labelText + "</span>" +
+    '<input type="text" class="answer-input" id="' + id + '_in" autocapitalize="characters" autocorrect="off" spellcheck="false" placeholder="type the spelling"></label>' +
+    '<div class="btn-row" style="justify-content:center"><button class="btn btn-primary" type="submit">Check answer</button></div></form>';
+}
+
+/* ------------------------------------------------------------------ Learn */
+var Learn = {
+  queue: [], index: 0, stage: "start", answered: 0, right: 0,
+  render: function () {
+    var host = document.getElementById("learnStage");
+    if (Learn.stage === "start") return Learn.renderStart(host);
+    if (Learn.stage === "done") return Learn.renderDone(host);
+    var w = Learn.queue[Learn.index];
+    if (!w) { Learn.stage = "done"; return Learn.render(); }
+    if (Learn.stage === "learn") return Learn.renderLearn(host, w);
+    if (Learn.stage === "recall") return Learn.renderRecall(host, w);
+    if (Learn.stage === "result") return Learn.renderResult(host, w);
+  },
+  renderStart: function (host) {
+    var news = Words.news(), goal = Store.data.settings.dailyGoal;
+    if (!news.length) {
+      host.innerHTML = '<div class="empty"><h3>No new words waiting</h3>' +
+        "<p>Every word in your library has been introduced. Add more words, or head to Review.</p>" +
+        '<div class="btn-row" style="justify-content:center"><button class="btn btn-primary" data-add>+ Add word</button>' +
+        '<button class="btn" data-go="review">Go to review</button></div></div>';
+      return;
+    }
+    host.innerHTML = '<div class="stage-card"><div class="eyebrow">Step 1 → 4</div>' +
+      "<h2>Break · Connect · Write · Recall</h2>" +
+      '<p class="hint" style="margin-top:8px">' + news.length + " new word" + (news.length > 1 ? "s" : "") +
+      " available. This session takes up to " + Math.min(news.length, goal) + ", your daily goal.</p>" +
+      '<div class="btn-row" style="justify-content:center;margin-top:14px">' +
+      '<button class="btn btn-primary" id="learnStart">Start learning</button></div></div>';
+    document.getElementById("learnStart").addEventListener("click", function () {
+      Learn.queue = Utils.shuffle(Words.news()).slice(0, Store.data.settings.dailyGoal);
+      Learn.index = 0; Learn.answered = 0; Learn.right = 0; Learn.stage = "learn";
+      Store.data.stats.sessions++; Store.save();
+      Learn.render();
+    });
+  },
+  head: function (w) {
+    return '<div class="stage-meta"><span>Word ' + (Learn.index + 1) + " of " + Learn.queue.length + "</span>" +
+      "<span>" + Utils.esc(w.pronunciation || "") + "</span></div>" +
+      '<div class="progressbar" style="margin-bottom:14px"><i style="width:' +
+      Utils.pct(Learn.index, Learn.queue.length) + '%"></i></div>';
+  },
+  renderLearn: function (host, w) {
+    host.innerHTML = '<div class="stage-card">' + Learn.head(w) +
+      '<div class="eyebrow">Stage 1 — Learn</div>' +
+      '<div class="tiles">' + Analysis.wordTiles(w.word, w.breakdown) + "</div>" +
+      (w.breakdown ? '<p class="breakdown">' + Utils.esc(w.breakdown) + "</p>" : "") +
+      (w.mnemonic ? '<p class="mnemonic" style="margin-top:12px">' + Utils.esc(w.mnemonic) + "</p>" : "") +
+      '<div style="margin-top:12px">' +
+      (w.meaning ? '<p class="meaning"><b>Meaning:</b> ' + Utils.esc(w.meaning) + "</p>" : "") +
+      (w.exampleSentence ? '<p class="meaning"><b>Example:</b> ' + Utils.esc(w.exampleSentence) + "</p>" : "") +
+      (w.commonMistake ? '<p class="meaning"><b>Common mistake:</b> ' + Utils.esc(w.commonMistake) + "</p>" : "") +
+      "</div>" +
+      '<div class="btn-row" style="justify-content:center;margin-top:16px">' +
+      '<button class="btn btn-primary" id="learnedBtn">I\u2019ve learned this</button>' +
+      '<button class="btn btn-ghost" id="skipBtn">Skip for now</button></div></div>';
+    document.getElementById("learnedBtn").addEventListener("click", function () {
+      Learn.stage = "recall"; Learn.render();
+    });
+    document.getElementById("skipBtn").addEventListener("click", function () {
+      Learn.index++; Learn.stage = "learn"; Learn.render();
+    });
+  },
+  renderRecall: function (host, w) {
+    host.innerHTML = '<div class="stage-card">' + Learn.head(w) +
+      '<div class="eyebrow">Stage 2 — Cover &amp; write</div>' +
+      "<h2>Can you remember the spelling?</h2>" +
+      (w.meaning ? '<p class="hint" style="margin-top:6px">' + Utils.esc(w.meaning) + "</p>" : "") +
+      '<div style="max-width:420px;margin:16px auto 0">' + answerForm("Type the word from memory", "learnAns") + "</div>" +
+      '<div class="btn-row" style="justify-content:center;margin-top:6px">' +
+      '<button class="btn btn-sm btn-ghost" id="peekBtn">Show the word again</button></div></div>';
+    var input = document.getElementById("learnAns_in");
+    input.focus();
+    document.getElementById("learnAns").addEventListener("submit", function (e) {
+      e.preventDefault();
+      var val = input.value.trim();
+      if (!val) { UI.toast("Type your answer first.", "err"); return; }
+      Learn.lastAnswer = val;
+      var ok = Utils.clean(val) === Utils.clean(w.word);
+      SRS.answer(w, ok);
+      Learn.answered++; if (ok) Learn.right++;
+      Learn.stage = "result"; Learn.render();
+    });
+    document.getElementById("peekBtn").addEventListener("click", function () {
+      Learn.stage = "learn"; Learn.render();
+    });
+  },
+  renderResult: function (host, w) {
+    var ok = Utils.clean(Learn.lastAnswer) === Utils.clean(w.word);
+    host.innerHTML = '<div class="stage-card">' + Learn.head(w) +
+      '<div class="bigword">' + Utils.esc(w.word) + "</div>" +
+      feedbackHtml(w, Learn.lastAnswer, ok) +
+      '<div class="btn-row" style="justify-content:center;margin-top:16px">' +
+      (ok ? "" : '<button class="btn" id="retryBtn">Try again</button>') +
+      '<button class="btn btn-primary" id="nextBtn">' +
+      (Learn.index + 1 >= Learn.queue.length ? "Finish session" : "Next word") + "</button></div></div>";
+    if (!ok) document.getElementById("retryBtn").addEventListener("click", function () {
+      Learn.stage = "recall"; Learn.render();
+    });
+    document.getElementById("nextBtn").addEventListener("click", function () {
+      Learn.index++;
+      Learn.stage = Learn.index >= Learn.queue.length ? "done" : "learn";
+      Learn.render(); App.refreshChrome();
+    });
+  },
+  renderDone: function (host) {
+    var acc = Utils.pct(Learn.right, Learn.answered);
+    host.innerHTML = '<div class="stage-card"><div class="eyebrow">Session complete</div>' +
+      "<h2>" + Learn.answered + " word" + (Learn.answered === 1 ? "" : "s") + " practised · " + acc + "% correct</h2>" +
+      '<p class="hint" style="margin-top:8px">First reviews are scheduled in ' +
+      Utils.fmtGap(Store.data.settings.intervals[0]) + ". Come back when they are due.</p>" +
+      '<div class="btn-row" style="justify-content:center;margin-top:14px">' +
+      '<button class="btn btn-primary" id="againBtn">Learn more words</button>' +
+      '<button class="btn" data-go="dashboard">Back to dashboard</button></div></div>';
+    document.getElementById("againBtn").addEventListener("click", function () {
+      Learn.stage = "start"; Learn.render();
+    });
+  }
+};
+
+/* ----------------------------------------------------------------- Review */
+var Review = {
+  queue: [], index: 0, stage: "start", answered: 0, right: 0, lastAnswer: "", hint: false,
+  render: function () {
+    var host = document.getElementById("reviewStage");
+    if (Review.stage === "start") return Review.renderStart(host);
+    if (Review.stage === "done") return Review.renderDone(host);
+    var w = Review.queue[Review.index];
+    if (!w) { Review.stage = "done"; return Review.render(); }
+    if (Review.stage === "ask") return Review.renderAsk(host, w);
+    if (Review.stage === "result") return Review.renderResult(host, w);
+  },
+  renderStart: function (host) {
+    var due = Words.due();
+    if (!due.length) {
+      var next = Words.all().filter(function (w) { return w.nextReviewDate; })
+        .sort(function (a, b) { return a.nextReviewDate - b.nextReviewDate; })[0];
+      host.innerHTML = '<div class="empty"><h3>Nothing due right now</h3><p>' +
+        (next ? "Your next word is due " + Utils.fmtDate(next.nextReviewDate) + "."
+              : "Learn some words first — reviews get scheduled automatically.") + "</p>" +
+        '<div class="btn-row" style="justify-content:center"><button class="btn btn-primary" data-go="learn">Learn new words</button>' +
+        '<button class="btn" data-go="practice">Free practice</button></div></div>';
+      return;
+    }
+    var overdue = due.filter(Words.isOverdue).length;
+    host.innerHTML = '<div class="stage-card"><div class="eyebrow">Spaced repetition</div>' +
+      "<h2>" + due.length + " word" + (due.length > 1 ? "s" : "") + " due</h2>" +
+      '<p class="hint" style="margin-top:8px">' + overdue + " overdue · " + (due.length - overdue) + " scheduled for today</p>" +
+      '<div class="btn-row" style="justify-content:center;margin-top:14px">' +
+      '<button class="btn btn-primary" id="revStart">Start review</button></div></div>';
+    document.getElementById("revStart").addEventListener("click", function () {
+      Review.queue = Utils.shuffle(Words.due());
+      Review.index = 0; Review.answered = 0; Review.right = 0; Review.stage = "ask"; Review.hint = false;
+      Store.data.stats.sessions++; Store.save();
+      Review.render();
+    });
+  },
+  head: function () {
+    return '<div class="stage-meta"><span>Word ' + (Review.index + 1) + " of " + Review.queue.length + "</span>" +
+      "<span>" + Review.right + " correct</span></div>" +
+      '<div class="progressbar" style="margin-bottom:14px"><i style="width:' +
+      Utils.pct(Review.index, Review.queue.length) + '%"></i></div>';
+  },
+  renderAsk: function (host, w) {
+    host.innerHTML = '<div class="stage-card">' + Review.head() +
+      '<div class="eyebrow">Recall · level ' + w.reviewLevel + "</div>" +
+      "<h2>" + Utils.esc(w.meaning || "Spell the word") + "</h2>" +
+      (w.pronunciation ? '<p class="hint">' + Utils.esc(w.pronunciation) + "</p>" : "") +
+      (Review.hint && w.breakdown ? '<p class="breakdown" style="margin-top:10px">' + Utils.esc(w.breakdown) + "</p>" : "") +
+      (Review.hint && w.mnemonic ? '<p class="mnemonic" style="margin-top:8px">' + Utils.esc(w.mnemonic) + "</p>" : "") +
+      '<div style="max-width:420px;margin:16px auto 0">' + answerForm("Spelling", "revAns") + "</div>" +
+      (Review.hint ? "" : '<div class="btn-row" style="justify-content:center;margin-top:6px">' +
+        '<button class="btn btn-sm btn-ghost" id="hintBtn">Show the memory trick</button></div>') +
+      "</div>";
+    var input = document.getElementById("revAns_in");
+    input.focus();
+    document.getElementById("revAns").addEventListener("submit", function (e) {
+      e.preventDefault();
+      var val = input.value.trim();
+      if (!val) { UI.toast("Type your answer first.", "err"); return; }
+      Review.lastAnswer = val;
+      var ok = Utils.clean(val) === Utils.clean(w.word);
+      SRS.answer(w, ok);
+      Review.answered++; if (ok) Review.right++;
+      Review.stage = "result"; Review.render();
+    });
+    if (!Review.hint) document.getElementById("hintBtn").addEventListener("click", function () {
+      Review.hint = true; Review.render();
+    });
+  },
+  renderResult: function (host, w) {
+    var ok = Utils.clean(Review.lastAnswer) === Utils.clean(w.word);
+    host.innerHTML = '<div class="stage-card">' + Review.head() +
+      '<div class="bigword">' + Utils.esc(w.word) + "</div>" +
+      (w.status === "Mastered" ? '<p class="hint">Mastered — it has left the review ladder.</p>' : "") +
+      feedbackHtml(w, Review.lastAnswer, ok) +
+      '<div class="btn-row" style="justify-content:center;margin-top:16px">' +
+      '<button class="btn btn-primary" id="revNext">' +
+      (Review.index + 1 >= Review.queue.length ? "Finish review" : "Next word") + "</button></div></div>";
+    document.getElementById("revNext").addEventListener("click", function () {
+      Review.index++; Review.hint = false;
+      Review.stage = Review.index >= Review.queue.length ? "done" : "ask";
+      Review.render(); App.refreshChrome();
+    });
+  },
+  renderDone: function (host) {
+    var acc = Utils.pct(Review.right, Review.answered);
+    var left = Words.due().length;
+    host.innerHTML = '<div class="stage-card"><div class="eyebrow">Review complete</div>' +
+      "<h2>" + Review.right + " of " + Review.answered + " correct · " + acc + "%</h2>" +
+      '<p class="hint" style="margin-top:8px">' +
+      (left ? left + " word" + (left > 1 ? "s are" : " is") + " still due." : "Nothing else is due right now.") + "</p>" +
+      '<div class="btn-row" style="justify-content:center;margin-top:14px">' +
+      (left ? '<button class="btn btn-primary" id="revMore">Keep reviewing</button>' : "") +
+      '<button class="btn" data-go="dashboard">Back to dashboard</button></div></div>';
+    if (left) document.getElementById("revMore").addEventListener("click", function () {
+      Review.stage = "start"; Review.render();
+    });
+  }
+};
+
+/* --------------------------------------------------------------- Practice */
+var Practice = {
+  mode: null, queue: [], index: 0, right: 0, answered: 0, focusId: null, lastAnswer: "", phase: "ask",
+  MODES: [
+    { id: "spelling", name: "Spelling test", desc: "See the meaning, type the word." },
+    { id: "missing", name: "Missing letters", desc: "Fill the gaps in the word." },
+    { id: "choice", name: "Multiple choice", desc: "Pick the correct spelling of four." },
+    { id: "memory", name: "Memory challenge", desc: "See it for 4 seconds, then type it." }
+  ],
+  start: function (mode, focusId) {
+    var pool = focusId ? [Words.byId(focusId)].filter(Boolean) : Utils.shuffle(Words.all()).slice(0, 10);
+    if (!pool.length) { UI.toast("Add some words first.", "err"); return; }
+    Practice.mode = mode; Practice.focusId = focusId || null; Practice.queue = pool;
+    Practice.index = 0; Practice.right = 0; Practice.answered = 0; Practice.phase = "ask";
+    Store.data.stats.sessions++; Store.save();
+    App.go("practice");
+  },
+  render: function () {
+    var host = document.getElementById("practiceHost");
+    if (!Practice.mode) return Practice.renderPicker(host);
+    var w = Practice.queue[Practice.index];
+    if (!w) return Practice.renderDone(host);
+    if (Practice.phase === "result") return Practice.renderResult(host, w);
+    if (Practice.mode === "spelling") return Practice.renderSpelling(host, w);
+    if (Practice.mode === "missing") return Practice.renderMissing(host, w);
+    if (Practice.mode === "choice") return Practice.renderChoice(host, w);
+    if (Practice.mode === "memory") return Practice.renderMemory(host, w);
+  },
+  renderPicker: function (host) {
+    host.innerHTML = '<p class="hint">Free practice does not change your review schedule — it only records accuracy and keeps your streak alive.</p>' +
+      '<div class="modes" style="margin-top:14px">' + Practice.MODES.map(function (m) {
+        return '<button class="mode" data-mode="' + m.id + '"><b>' + m.name + "</b><span>" + m.desc + "</span></button>";
+      }).join("") + "</div>" +
+      (Words.all().length ? "" : '<div class="empty"><h3>No words yet</h3><p>Add a word to unlock practice.</p>' +
+        '<button class="btn btn-primary" data-add>+ Add word</button></div>');
+    host.querySelectorAll("[data-mode]").forEach(function (b) {
+      b.addEventListener("click", function () { Practice.start(b.dataset.mode); });
+    });
+  },
+  head: function () {
+    var m = Practice.MODES.filter(function (x) { return x.id === Practice.mode; })[0];
+    return '<div class="stage-meta"><span>' + m.name + " · " + (Practice.index + 1) + " of " + Practice.queue.length + "</span>" +
+      '<button class="btn btn-sm btn-ghost" data-practice-exit type="button">Change mode</button>' +
+      "<span>" + Practice.right + " correct</span></div>" +
+      '<div class="progressbar" style="margin-bottom:14px"><i style="width:' +
+      Utils.pct(Practice.index, Practice.queue.length) + '%"></i></div>';
+  },
+  grade: function (w, answerText, ok) {
+    Practice.lastAnswer = answerText;
+    Practice.answered++; if (ok) Practice.right++;
+    SRS.answer(w, ok, { reschedule: false });
+    Practice.phase = "result";
+    Practice.render(); App.refreshChrome();
+  },
+  wrap: function (inner) { return '<div class="stage"><div class="stage-card">' + Practice.head() + inner + "</div></div>"; },
+
+  renderSpelling: function (host, w) {
+    host.innerHTML = Practice.wrap(
+      "<h2>" + Utils.esc(w.meaning || "Spell the word") + "</h2>" +
+      (w.pronunciation ? '<p class="hint">' + Utils.esc(w.pronunciation) + "</p>" : "") +
+      '<div style="max-width:420px;margin:16px auto 0">' + answerForm("Your spelling", "prAns") + "</div>");
+    var input = document.getElementById("prAns_in"); input.focus();
+    document.getElementById("prAns").addEventListener("submit", function (e) {
+      e.preventDefault();
+      if (!input.value.trim()) { UI.toast("Type your answer first.", "err"); return; }
+      Practice.grade(w, input.value.trim(), Utils.clean(input.value) === Utils.clean(w.word));
+    });
+  },
+  renderMissing: function (host, w) {
+    var word = Utils.clean(w.word), n = word.length;
+    var hideCount = Math.max(1, Math.round(n * 0.35));
+    var idx = Utils.shuffle(word.split("").map(function (_, i) { return i; })).slice(0, hideCount);
+    var hidden = {}; idx.forEach(function (i) { hidden[i] = true; });
+    var tiles = word.split("").map(function (ch, i) {
+      return hidden[i]
+        ? '<input class="tile-input" data-i="' + i + '" maxlength="1" aria-label="Letter ' + (i + 1) + '">'
+        : '<span class="tile">' + Utils.esc(ch) + "</span>";
+    }).join("");
+    host.innerHTML = Practice.wrap(
+      "<h2>Fill in the missing letters</h2>" +
+      (w.meaning ? '<p class="hint">' + Utils.esc(w.meaning) + "</p>" : "") +
+      '<form id="misForm"><div class="tiles">' + tiles + "</div>" +
+      '<div class="btn-row" style="justify-content:center;margin-top:10px">' +
+      '<button class="btn btn-primary" type="submit">Check answer</button></div></form>');
+    var inputs = host.querySelectorAll(".tile-input");
+    inputs.forEach(function (el, k) {
+      el.addEventListener("input", function () {
+        el.value = el.value.replace(/[^a-zA-Z]/g, "").toUpperCase();
+        if (el.value && inputs[k + 1]) inputs[k + 1].focus();
+      });
+      el.addEventListener("keydown", function (e) {
+        if (e.key === "Backspace" && !el.value && inputs[k - 1]) inputs[k - 1].focus();
+      });
+    });
+    if (inputs[0]) inputs[0].focus();
+    document.getElementById("misForm").addEventListener("submit", function (e) {
+      e.preventDefault();
+      var built = word.split("");
+      inputs.forEach(function (el) { built[+el.dataset.i] = el.value || "_"; });
+      var answer = built.join("");
+      Practice.grade(w, answer, answer === word);
+    });
+  },
+  renderChoice: function (host, w) {
+    var opts = Utils.shuffle(Analysis.distractors(w).concat([Utils.clean(w.word)]));
+    host.innerHTML = Practice.wrap(
+      "<h2>Which spelling is correct?</h2>" +
+      (w.meaning ? '<p class="hint">' + Utils.esc(w.meaning) + "</p>" : "") +
+      '<div class="choices">' + opts.map(function (o) {
+        return '<button class="choice" data-opt="' + Utils.esc(o) + '">' + Utils.esc(o) + "</button>";
+      }).join("") + "</div>");
+    host.querySelectorAll(".choice").forEach(function (b) {
+      b.addEventListener("click", function () {
+        var ok = b.dataset.opt === Utils.clean(w.word);
+        b.classList.add(ok ? "ok" : "bad");
+        setTimeout(function () { Practice.grade(w, b.dataset.opt, ok); }, 350);
+      });
+    });
+  },
+  renderMemory: function (host, w) {
+    var secs = 4;
+    host.innerHTML = Practice.wrap(
+      '<div class="eyebrow">Look carefully</div>' +
+      '<div class="tiles">' + Analysis.wordTiles(w.word, w.breakdown) + "</div>" +
+      '<p class="hint" id="memCount">Hiding in ' + secs + "…</p>");
+    var timer = setInterval(function () {
+      secs--;
+      var el = document.getElementById("memCount");
+      if (!el) { clearInterval(timer); return; }          // user navigated away
+      if (secs > 0) { el.textContent = "Hiding in " + secs + "…"; return; }
+      clearInterval(timer);
+      host.innerHTML = Practice.wrap(
+        "<h2>Type it from memory</h2>" +
+        '<div style="max-width:420px;margin:16px auto 0">' + answerForm("The word", "memAns") + "</div>");
+      var input = document.getElementById("memAns_in"); input.focus();
+      document.getElementById("memAns").addEventListener("submit", function (e) {
+        e.preventDefault();
+        if (!input.value.trim()) { UI.toast("Type your answer first.", "err"); return; }
+        Practice.grade(w, input.value.trim(), Utils.clean(input.value) === Utils.clean(w.word));
+      });
+    }, 1000);
+  },
+  renderResult: function (host, w) {
+    var ok = Utils.clean(Practice.lastAnswer) === Utils.clean(w.word);
+    host.innerHTML = Practice.wrap(
+      '<div class="bigword">' + Utils.esc(w.word) + "</div>" +
+      feedbackHtml(w, Practice.lastAnswer, ok) +
+      '<div class="btn-row" style="justify-content:center;margin-top:16px">' +
+      '<button class="btn btn-primary" id="prNext">' +
+      (Practice.index + 1 >= Practice.queue.length ? "Finish" : "Next word") + "</button>" +
+      '<button class="btn" id="prQuit">End practice</button></div>');
+    document.getElementById("prNext").addEventListener("click", function () {
+      Practice.index++; Practice.phase = "ask"; Practice.render();
+    });
+    document.getElementById("prQuit").addEventListener("click", function () {
+      Practice.index = Practice.queue.length; Practice.render();
+    });
+  },
+  renderDone: function (host) {
+    var acc = Utils.pct(Practice.right, Practice.answered);
+    host.innerHTML = '<div class="stage"><div class="stage-card"><div class="eyebrow">Practice complete</div>' +
+      "<h2>" + Practice.right + " of " + Practice.answered + " correct · " + acc + "%</h2>" +
+      '<p class="hint" style="margin-top:8px">Review dates were not changed — use Review for scheduled recall.</p>' +
+      '<div class="btn-row" style="justify-content:center;margin-top:14px">' +
+      '<button class="btn btn-primary" id="prAgain">Choose another mode</button>' +
+      '<button class="btn" data-go="dashboard">Back to dashboard</button></div></div></div>';
+    document.getElementById("prAgain").addEventListener("click", function () {
+      Practice.mode = null; Practice.render();
+    });
+  }
+};
+
+/* ------------------------------------------------------------ Statistics */
+var Stats = {
+  render: function () {
+    var st = Store.data.stats, all = Words.all();
+    var mastered = Words.byStatus("Mastered").length,
+        learning = Words.byStatus("Learning").length,
+        reviewing = Words.byStatus("Reviewing").length,
+        news = Words.byStatus("New").length,
+        due = Words.due().length;
+    var acc = Utils.pct(st.correct, st.totalReviews);
+    var days = Streak.last(14);
+    var max = Math.max.apply(null, days.map(function (d) { return d.count; }).concat([1]));
+
+    var bar = function (label, val, total, color) {
+      return '<div class="hbar"><div class="lab"><span>' + label + "</span><span>" + val + "</span></div>" +
+        '<div class="track"><i style="width:' + Utils.pct(val, total || 1) + "%;background:" + color + '"></i></div></div>';
+    };
+
+    document.getElementById("statsHost").innerHTML =
+      '<div class="grid grid-3">' +
+      '<div class="card" style="text-align:center"><h3 style="margin-bottom:10px">Accuracy</h3>' +
+      '<div class="donut" style="--p:' + acc + '" role="img" aria-label="Accuracy ' + acc + ' percent"><span>' + acc + "%</span></div>" +
+      '<p class="hint" style="margin-top:10px">' + st.correct + " correct · " + st.incorrect + " incorrect</p></div>" +
+
+      '<div class="card"><h3>Library</h3><div style="margin-top:10px">' +
+      bar("Mastered", mastered, all.length, "var(--ok)") +
+      bar("Reviewing", reviewing, all.length, "var(--brass)") +
+      bar("Learning", learning, all.length, "var(--warn)") +
+      bar("New", news, all.length, "var(--jade)") +
+      "</div></div>" +
+
+      '<div class="card"><h3>Totals</h3><div style="margin-top:8px">' +
+      '<div class="kv"><span>Words in library</span><b>' + all.length + "</b></div>" +
+      '<div class="kv"><span>Total reviews</span><b>' + st.totalReviews + "</b></div>" +
+      '<div class="kv"><span>Practice sessions</span><b>' + st.sessions + "</b></div>" +
+      '<div class="kv"><span>Due for review</span><b>' + due + "</b></div>" +
+      '<div class="kv"><span>Current streak</span><b>' + Streak.current() + " days</b></div>" +
+      '<div class="kv"><span>Longest streak</span><b>' + Store.data.streak.longest + " days</b></div>" +
+      "</div></div></div>" +
+
+      '<div class="section-head"><h2 class="grow">Last 14 days</h2>' +
+      '<span class="hint">' + days.reduce(function (a, d) { return a + d.count; }, 0) + " attempts</span></div>" +
+      '<div class="card"><div class="bars">' + days.map(function (d) {
+        var h = d.count ? Math.max(6, Math.round((d.count / max) * 100)) : 2;
+        return '<div class="b" title="' + d.key + ": " + d.count + ' attempts">' +
+          '<i class="' + (d.count ? "" : "zero") + '" style="height:' + h + '%"></i>' +
+          "<em>" + d.key.slice(8) + "</em></div>";
+      }).join("") + "</div></div>" +
+
+      '<div class="section-head"><h2 class="grow">Hardest words</h2></div>' +
+      '<div class="card">' + Stats.hardest(all) + "</div>";
+  },
+  hardest: function (all) {
+    var list = all.filter(function (w) { return w.totalAttempts > 0; })
+      .sort(function (a, b) { return Words.accuracy(a) - Words.accuracy(b) || b.incorrectCount - a.incorrectCount; })
+      .slice(0, 8);
+    if (!list.length) return '<p class="hint">No attempts recorded yet. Finish a review or practice session first.</p>';
+    return list.map(function (w) {
+      return '<div class="kv"><b>' + Utils.esc(w.word.toUpperCase()) + "</b><span>" + Words.accuracy(w) +
+        "% · " + w.incorrectCount + " misses</span></div>";
+    }).join("");
+  }
+};
+
+/* -------------------------------------------------------------- Settings */
+var Settings = {
+  LEVELS: ["Level 0 → first look", "Level 1", "Level 2", "Level 3", "Level 4 → then mastered"],
+  render: function () {
+    var s = Store.data.settings;
+    document.getElementById("settingsHost").innerHTML =
+      '<div class="grid grid-2">' +
+      '<div class="card"><h3>Review schedule</h3>' +
+      '<p class="hint" style="margin:6px 0 12px">Minutes to wait at each level. A correct answer moves up one level, a wrong answer drops one.</p>' +
+      '<div id="intervalFields">' + s.intervals.map(function (v, i) {
+        return '<label class="field"><span>' + Settings.LEVELS[i] + " — currently " + Utils.fmtGap(v) + "</span>" +
+          '<input type="number" min="1" step="1" data-lv="' + i + '" value="' + v + '"></label>';
+      }).join("") + "</div>" +
+      '<div class="btn-row"><button class="btn btn-primary" id="saveIntervals">Save schedule</button>' +
+      '<button class="btn" id="resetIntervals">Restore defaults</button></div></div>' +
+
+      '<div class="card"><h3>Session</h3>' +
+      '<label class="field" style="margin-top:10px"><span>Daily goal — new words per learning session</span>' +
+      '<select id="goalSel">' + [5, 10, 20].map(function (g) {
+        return '<option value="' + g + '"' + (s.dailyGoal === g ? " selected" : "") + ">" + g + " words/day</option>";
+      }).join("") + "</select></label>" +
+      '<label class="field"><span>Theme</span><select id="themeSel">' +
+      ["dark", "light", "system"].map(function (t) {
+        return '<option value="' + t + '"' + (s.theme === t ? " selected" : "") + ">" + t[0].toUpperCase() + t.slice(1) + "</option>";
+      }).join("") + "</select></label>" +
+      '<label class="field"><span>Browser reminders</span>' +
+      '<button class="btn" id="notifBtn" type="button">' +
+      (s.notifications ? "Reminders on — turn off" : "Turn on review reminders") + "</button></label>" +
+      '<p class="hint">Optional. The browser must stay open; SpellSmith checks for due words every few minutes.</p>' +
+      "</div></div>";
+
+    // second row: data
+    document.getElementById("settingsHost").insertAdjacentHTML("beforeend",
+      '<div class="section-head"><h2 class="grow">Your data</h2></div>' +
+      '<div class="grid grid-2">' +
+      '<div class="card"><h3>Backup</h3>' +
+      '<p class="hint" style="margin:6px 0 12px">Everything lives in this browser only. Export before clearing site data or switching device.</p>' +
+      '<div class="btn-row"><button class="btn btn-primary" id="exportBtn">Export JSON</button>' +
+      '<button class="btn" id="importBtn">Import JSON</button>' +
+      '<input type="file" id="importFile" accept="application/json,.json" hidden></div></div>' +
+      '<div class="card"><h3>Danger zone</h3>' +
+      '<p class="hint" style="margin:6px 0 12px">Sample words can be restored at any time. Deleting all data cannot be undone.</p>' +
+      '<div class="btn-row"><button class="btn" id="restoreSamples">Restore sample words</button>' +
+      '<button class="btn btn-danger" id="wipeBtn">Delete all data</button></div></div></div>');
+
+    Settings.wire();
+  },
+  wire: function () {
+    document.getElementById("saveIntervals").addEventListener("click", function () {
+      var vals = [], bad = false;
+      document.querySelectorAll("#intervalFields input").forEach(function (el) {
+        var v = parseInt(el.value, 10);
+        if (!v || v < 1) bad = true;
+        vals.push(v);
+      });
+      if (bad || vals.length !== 5) { UI.toast("Every level needs a whole number of minutes.", "err"); return; }
+      Store.data.settings.intervals = vals; Store.save();
+      UI.toast("Schedule saved.", "ok"); Settings.render();
+    });
+    document.getElementById("resetIntervals").addEventListener("click", function () {
+      Store.data.settings.intervals = DEFAULTS.settings.intervals.slice(); Store.save();
+      UI.toast("Default schedule restored.", "ok"); Settings.render();
+    });
+    document.getElementById("goalSel").addEventListener("change", function (e) {
+      Store.data.settings.dailyGoal = parseInt(e.target.value, 10) || 10; Store.save();
+      UI.toast("Daily goal updated.", "ok");
+    });
+    document.getElementById("themeSel").addEventListener("change", function (e) {
+      Store.data.settings.theme = e.target.value; Store.save(); App.applyTheme();
+    });
+    document.getElementById("notifBtn").addEventListener("click", function () { Notify.toggle(); });
+
+    document.getElementById("exportBtn").addEventListener("click", Backup.exportJson);
+    document.getElementById("importBtn").addEventListener("click", function () {
+      document.getElementById("importFile").click();
+    });
+    document.getElementById("importFile").addEventListener("change", function (e) {
+      if (e.target.files && e.target.files[0]) Backup.importJson(e.target.files[0]);
+      e.target.value = "";
+    });
+    document.getElementById("restoreSamples").addEventListener("click", function () {
+      var existing = {};
+      Words.all().forEach(function (w) { existing[Utils.clean(w.word)] = true; });
+      var added = 0;
+      SEED.forEach(function (s) {
+        if (!existing[Utils.clean(s.word)]) { Store.data.words.push(Words.make(s)); added++; }
+      });
+      Store.save();
+      UI.toast(added ? added + " sample words restored." : "All sample words are already in your library.", "ok");
+      App.refreshChrome();
+    });
+    document.getElementById("wipeBtn").addEventListener("click", function () {
+      UI.confirm({
+        title: "Delete all data",
+        message: "This removes every word, all progress, statistics and settings from this browser. Export a backup first if you might want it back.",
+        confirmLabel: "Delete everything"
+      }).then(function (yes) {
+        if (!yes) return;
+        Store.reset(); Store.load(); App.applyTheme();
+        UI.toast("All data deleted. Sample words reloaded.");
+        App.go("dashboard");
+      });
+    });
+  }
+};
+
+/* ---------------------------------------------------------------- Backup */
+var Backup = {
+  exportJson: function () {
+    var blob = new Blob([JSON.stringify(Store.data, null, 2)], { type: "application/json" });
+    var a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = "spellsmith-backup-" + Utils.dayKey() + ".json";
+    document.body.appendChild(a); a.click();
+    setTimeout(function () { URL.revokeObjectURL(a.href); a.remove(); }, 0);
+    UI.toast("Backup downloaded.", "ok");
+  },
+  validate: function (d) {
+    if (!d || typeof d !== "object" || Array.isArray(d)) return "The file is not a SpellSmith backup object.";
+    if (!Array.isArray(d.words)) return "The file has no words array.";
+    for (var i = 0; i < d.words.length; i++) {
+      var w = d.words[i];
+      if (!w || typeof w !== "object" || typeof w.word !== "string" || !w.word.trim()) {
+        return "Word " + (i + 1) + " is missing a valid word field.";
+      }
+    }
+    return null;
+  },
+  importJson: function (file) {
+    var reader = new FileReader();
+    reader.onload = function () {
+      var parsed;
+      try { parsed = JSON.parse(reader.result); }
+      catch (e) { UI.toast("That file is not valid JSON.", "err"); return; }
+      var err = Backup.validate(parsed);
+      if (err) { UI.toast("Import stopped: " + err, "err"); return; }
+      UI.confirm({
+        title: "Replace current data",
+        message: "Importing " + parsed.words.length + " words will replace everything currently stored in this browser.",
+        confirmLabel: "Replace data"
+      }).then(function (yes) {
+        if (!yes) return;
+        // normalise every word so older or partial backups still work
+        var clean = parsed.words.map(function (w) {
+          var base = Words.make(w);
+          return Object.assign(base, {
+            id: w.id || base.id,
+            createdDate: w.createdDate || base.createdDate,
+            lastReviewedDate: w.lastReviewedDate || null,
+            nextReviewDate: w.nextReviewDate || null,
+            reviewLevel: Number(w.reviewLevel) || 0,
+            correctCount: Number(w.correctCount) || 0,
+            incorrectCount: Number(w.incorrectCount) || 0,
+            totalAttempts: Number(w.totalAttempts) || 0,
+            status: ["New", "Learning", "Reviewing", "Mastered"].indexOf(w.status) > -1 ? w.status : "New"
+          });
+        });
+        Store.data = {
+          version: 1,
+          words: clean,
+          settings: Object.assign({}, DEFAULTS.settings, parsed.settings || {}, { seeded: true }),
+          stats: Object.assign({}, DEFAULTS.stats, parsed.stats || {}),
+          streak: Object.assign({}, DEFAULTS.streak, parsed.streak || {})
+        };
+        Store.data.streak.days = Store.data.streak.days || {};
+        Store.save(); App.applyTheme();
+        UI.toast(clean.length + " words imported.", "ok");
+        App.go("dashboard");
+      });
+    };
+    reader.onerror = function () { UI.toast("Could not read that file.", "err"); };
+    reader.readAsText(file);
+  }
+};
+
+/* --------------------------------------------------------- Notifications */
+var Notify = {
+  lastFired: 0,
+  supported: function () { return typeof window.Notification !== "undefined"; },
+  toggle: function () {
+    if (!Notify.supported()) { UI.toast("This browser does not support notifications.", "err"); return; }
+    if (Store.data.settings.notifications) {
+      Store.data.settings.notifications = false; Store.save();
+      UI.toast("Reminders turned off."); Settings.render(); return;
+    }
+    Notification.requestPermission().then(function (p) {
+      if (p === "granted") {
+        Store.data.settings.notifications = true; Store.save();
+        UI.toast("Reminders on.", "ok");
+      } else {
+        UI.toast("Permission denied — reminders stay off.", "err");
+      }
+      Settings.render();
+    });
+  },
+  check: function () {
+    if (!Store.data.settings.notifications || !Notify.supported()) return;
+    if (Notification.permission !== "granted") return;
+    var due = Words.due().length;
+    if (!due) return;
+    if (Date.now() - Notify.lastFired < 30 * 60000) return;   // at most once every 30 min
+    Notify.lastFired = Date.now();
+    try {
+      new Notification("SpellSmith", { body: due + " word" + (due > 1 ? "s are" : " is") + " ready for review." });
+    } catch (e) { /* some browsers block constructor use */ }
+  }
+};
+
+/* ------------------------------------------------------------------ Init */
+function wireGlobal() {
+  // one delegated handler for every data-* control rendered by views
+  document.addEventListener("click", function (e) {
+    var go = e.target.closest("[data-go]");
+    if (go) { App.go(go.dataset.go); return; }
+
+    var add = e.target.closest("[data-add]");
+    if (add) { UI.closeModal(); Library.openForm(null); return; }
+
+    var close = e.target.closest("[data-close]");
+    if (close) { UI.closeModal(); return; }
+
+    if (e.target.closest("[data-practice-exit]")) {
+      Practice.mode = null; Practice.queue = []; Practice.index = 0; Practice.phase = "ask";
+      Practice.render();
+      return;
+    }
+
+    var act = e.target.closest("[data-act]");
+    if (act) {
+      var id = act.dataset.id;
+      if (act.dataset.act === "view") { Library.openView(id); }
+      if (act.dataset.act === "edit") { UI.closeModal(); Library.openForm(id); }
+      if (act.dataset.act === "delete") { Library.del(id); }
+      if (act.dataset.act === "practice") {
+        UI.closeModal();
+        Practice.mode = null;
+        Practice.start("spelling", id);
+      }
+      return;
+    }
+  });
+
+  document.getElementById("addWordBtn").addEventListener("click", function () { Library.openForm(null); });
+  document.getElementById("wordDlgClose").addEventListener("click", UI.closeModal);
+  document.getElementById("wordBackdrop").addEventListener("mousedown", function (e) {
+    if (e.target === e.currentTarget) UI.closeModal();
+  });
+  document.addEventListener("keydown", function (e) {
+    if (e.key === "Escape") UI.closeModal();
+  });
+
+  var search = document.getElementById("wordSearch");
+  search.addEventListener("input", function () { Library.query = search.value; Library.render(); });
+
+  document.getElementById("themeBtn").addEventListener("click", function () {
+    var order = ["dark", "light", "system"];
+    var i = order.indexOf(Store.data.settings.theme);
+    Store.data.settings.theme = order[(i + 1) % order.length];
+    Store.save(); App.applyTheme();
+    UI.toast("Theme: " + Store.data.settings.theme);
+    if (App.current === "settings") Settings.render();
+  });
+
+  if (window.matchMedia) {
+    var mq = window.matchMedia("(prefers-color-scheme: light)");
+    var onScheme = function () { if (Store.data.settings.theme === "system") App.applyTheme(); };
+    if (mq.addEventListener) mq.addEventListener("change", onScheme);
+    else if (mq.addListener) mq.addListener(onScheme);
+  }
+
+  // due words appear over time (10-minute first review) — keep the UI honest
+  setInterval(function () {
+    App.refreshChrome();
+    if (App.current === "dashboard") Dashboard.render();
+    if (App.current === "review" && Review.stage === "start") Review.render();
+    Notify.check();
+  }, 60000);
+}
+
+function init() {
+  Store.load();
+  App.applyTheme();
+  App.buildNav();
+  wireGlobal();
+  App.go("dashboard");
+  setTimeout(Notify.check, 4000);
+}
+
+document.addEventListener("DOMContentLoaded", init);
+})();
+</script>
+</body>
+</html>
