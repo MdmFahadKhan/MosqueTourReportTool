@@ -159,6 +159,15 @@ html[data-theme="light"] .btn-primary{color:#FFFFFF}
 .toggle input:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
 .toggle:has(input:checked){color:var(--text)}
 
+.btn-bulk{padding:10px 20px;font-size:13px}
+.btn:disabled,.btn[disabled]{opacity:.45;cursor:not-allowed}
+.btn:disabled:hover{border-color:var(--line)}
+th.col-select,td.col-select{width:40px;padding-right:0}
+td.col-select input,th.col-select input{
+  width:15px;height:15px;accent-color:var(--teal);cursor:pointer;margin:0;vertical-align:middle;
+}
+tr.selected td{background:var(--teal-soft)!important}
+
 /* ============================================================
    MESSAGES
    ============================================================ */
@@ -286,7 +295,7 @@ tbody tr.remarks-row:last-child td{border-bottom:0}
   tr.remarks-row.no-remarks{display:none}
   body.hide-remarks tr.remarks-row{display:none!important}
   tr{page-break-inside:avoid}
-  .remarks-input,.col-action,td.action{display:none!important}
+  .remarks-input,.col-action,td.action,.col-select{display:none!important}
   .remarks-label{color:#444;font-size:8px;margin-bottom:2px}
   .remarks-print{display:block;white-space:pre-wrap;font-size:10px;color:#000}
 }
@@ -316,7 +325,7 @@ tbody tr.remarks-row:last-child td{border-bottom:0}
   <!-- ============ INPUT ============ -->
   <section class="panel input-panel no-print">
     <div class="panel-head"><h2>Paste the shift report</h2></div>
-    <p class="hint">Paste the report exactly as written. Lines that are not recognised fields are ignored.</p>
+    <p class="hint">Paste one report or several at once. A new record starts each time <strong>Date</strong> appears again. <strong>Remarks</strong> is optional and fills the remarks box in the table. Other unrecognised lines are ignored.</p>
     <textarea id="reportInput" spellcheck="false" aria-label="Daily tour activity report text" placeholder="Date: 07-Aug-2026
 Shift Start: 04:00 PM
 Shift End: 08:00 PM
@@ -324,6 +333,16 @@ Number of Volunteers: 7
 Number of Visitors: 36
 Discussions/Dialogues: 12
 Brochures Distributed: 46
+New Muslims: 0
+Remarks: Visitor asked for a follow-up session
+
+Date: 08-Aug-2026
+Shift Start: 04:00 PM
+Shift End: 08:00 PM
+Number of Volunteers: 5
+Number of Visitors: 22
+Discussions/Dialogues: 9
+Brochures Distributed: 30
 New Muslims: 0"></textarea>
     <div class="actions">
       <button type="button" class="btn btn-primary" id="btnInsert">Insert</button>
@@ -353,12 +372,16 @@ New Muslims: 0"></textarea>
         <button type="button" class="btn" id="btnCsv">Export CSV</button>
         <button type="button" class="btn" id="btnPdf">Export PDF</button>
         <button type="button" class="btn" id="btnImg">Export image</button>
+        <button type="button" class="btn btn-danger btn-bulk" id="btnDeleteSel" disabled>Delete selected</button>
       </div>
     </div>
     <div class="table-scroll">
       <table id="reportTable">
         <thead>
           <tr>
+            <th class="col-select no-print">
+              <input type="checkbox" id="chkAll" aria-label="Select all records">
+            </th>
             <th>SNO</th>
             <th>Date</th>
             <th>Shift Start</th>
@@ -420,7 +443,14 @@ New Muslims: 0"></textarea>
   var LABEL_MAP = {};
   FIELDS.forEach(function (f) { LABEL_MAP[normalizeLabel(f.label)] = f; });
 
+  // Optional: recognised on input, but never required for a valid record
+  var OPTIONAL_FIELDS = [
+    { key: "remarks", label: "Remarks", numeric: false, optional: true }
+  ];
+  OPTIONAL_FIELDS.forEach(function (f) { LABEL_MAP[normalizeLabel(f.label)] = f; });
+
   var records = [];
+  var selected = {};      // id -> true, for bulk delete
 
   /* ==========================================================
      DOM
@@ -433,6 +463,8 @@ New Muslims: 0"></textarea>
     pdf:        document.getElementById("btnPdf"),
     img:        document.getElementById("btnImg"),
     chkRemarks: document.getElementById("chkRemarks"),
+    chkAll:     document.getElementById("chkAll"),
+    deleteSel:  document.getElementById("btnDeleteSel"),
     message:    document.getElementById("message"),
     tbody:      document.getElementById("tableBody"),
     empty:      document.getElementById("emptyState"),
@@ -508,27 +540,54 @@ New Muslims: 0"></textarea>
   }
 
   /* ==========================================================
-     PARSING
+     PARSING - one paste may contain several reports.
+     A new block starts whenever a label repeats (normally "Date").
      ========================================================== */
-  function parseReport(text) {
-    var parsed = {};
+  function parseReports(text) {
+    var blocks = [];
+    var current = null;
+    var inRemarks = false;
     var lines = String(text).split(/\r\n|\r|\n/);
 
     lines.forEach(function (line) {
-      if (!line || line.indexOf(":") === -1) { return; }
+      var trimmed = line.trim();
+
+      if (!trimmed) { inRemarks = false; return; }   // blank line closes a remarks block
 
       var colon = line.indexOf(":");
-      var rawLabel = line.slice(0, colon);
-      var rawValue = line.slice(colon + 1);
+      var field = colon === -1 ? null : LABEL_MAP[normalizeLabel(line.slice(0, colon))];
 
-      var field = LABEL_MAP[normalizeLabel(rawLabel)];
-      if (!field) { return; }
-      if (Object.prototype.hasOwnProperty.call(parsed, field.key)) { return; }
+      if (!field) {
+        // free text directly under a Remarks line continues that remark
+        if (inRemarks && current) {
+          current.remarks = current.remarks ? current.remarks + "\n" + trimmed : trimmed;
+        }
+        return;                                      // otherwise ignored
+      }
 
-      parsed[field.key] = rawValue.trim();
+      var value = line.slice(colon + 1).trim();
+
+      if (field.optional) {
+        if (!current) { current = {}; blocks.push(current); }
+        // repeated Remarks lines append rather than starting a new record
+        current.remarks = current.remarks && value
+          ? current.remarks + "\n" + value
+          : (value || current.remarks || "");
+        inRemarks = true;
+        return;
+      }
+
+      inRemarks = false;
+
+      if (!current || Object.prototype.hasOwnProperty.call(current, field.key)) {
+        current = {};                                // repeated label -> next record
+        blocks.push(current);
+      }
+
+      current[field.key] = value;
     });
 
-    return parsed;
+    return blocks;
   }
 
   /* ==========================================================
@@ -536,7 +595,11 @@ New Muslims: 0"></textarea>
      ========================================================== */
   function validateReport(parsed) {
     var errors = [];
-    var record = { id: makeId(), sno: 0, remarks: "" };
+    var record = {
+      id: makeId(),
+      sno: 0,
+      remarks: typeof parsed.remarks === "string" ? parsed.remarks.trim() : ""
+    };
 
     FIELDS.forEach(function (f) {
       var raw = parsed[f.key];
@@ -643,9 +706,14 @@ New Muslims: 0"></textarea>
     var frag = document.createDocumentFragment();
 
     records.forEach(function (r) {
+      var isSel = selected[r.id] === true;
       var tr = document.createElement("tr");
-      tr.className = "record-row";
+      tr.className = "record-row" + (isSel ? " selected" : "");
       tr.innerHTML =
+        '<td class="col-select no-print">' +
+          '<input type="checkbox" data-select="' + r.id + '"' + (isSel ? " checked" : "") +
+          ' aria-label="Select record ' + r.sno + '">' +
+        '</td>' +
         '<td class="sno">' + r.sno + '</td>' +
         '<td class="date">' + escapeHtml(r.date) + '</td>' +
         '<td class="date">' + escapeHtml(r.shiftStart) + '</td>' +
@@ -661,10 +729,10 @@ New Muslims: 0"></textarea>
       frag.appendChild(tr);
 
       var rr = document.createElement("tr");
-      rr.className = "remarks-row" + (r.remarks.trim() ? "" : " no-remarks");
+      rr.className = "remarks-row" + (r.remarks.trim() ? "" : " no-remarks") + (isSel ? " selected" : "");
       rr.setAttribute("data-row", r.id);
       rr.innerHTML =
-        '<td colspan="10">' +
+        '<td colspan="11">' +
           '<span class="remarks-label">Remarks \u2014 record ' + r.sno + '</span>' +
           '<textarea class="remarks-input" rows="2" data-id="' + r.id + '" ' +
           'placeholder="Add remarks for this shift">' + escapeHtml(r.remarks) + '</textarea>' +
@@ -677,6 +745,62 @@ New Muslims: 0"></textarea>
 
     var boxes = el.tbody.querySelectorAll(".remarks-input");
     for (var i = 0; i < boxes.length; i++) { autoGrow(boxes[i]); }
+
+    updateSelectionUI();
+  }
+
+  /* ==========================================================
+     SELECTION
+     ========================================================== */
+  function selectedIds() {
+    var ids = [];
+    records.forEach(function (r) { if (selected[r.id]) { ids.push(r.id); } });
+    return ids;
+  }
+
+  function pruneSelection() {
+    var live = {};
+    records.forEach(function (r) { if (selected[r.id]) { live[r.id] = true; } });
+    selected = live;
+  }
+
+  function updateSelectionUI() {
+    pruneSelection();
+    var count = selectedIds().length;
+    var total = records.length;
+
+    el.deleteSel.disabled = count === 0;
+    el.deleteSel.textContent = count ? "Delete selected (" + count + ")" : "Delete selected";
+
+    el.chkAll.disabled = total === 0;
+    el.chkAll.checked = total > 0 && count === total;
+    el.chkAll.indeterminate = count > 0 && count < total;
+  }
+
+  function markRow(id, on) {
+    var box = el.tbody.querySelector('[data-select="' + id + '"]');
+    if (!box) { return; }
+    box.checked = !!on;
+    var row = box.parentNode.parentNode;
+    var next = row.nextElementSibling;
+    if (on) { row.classList.add("selected"); } else { row.classList.remove("selected"); }
+    if (next && next.classList.contains("remarks-row")) {
+      if (on) { next.classList.add("selected"); } else { next.classList.remove("selected"); }
+    }
+  }
+
+  function setSelected(id, on) {
+    if (on) { selected[id] = true; } else { delete selected[id]; }
+    markRow(id, on);
+    updateSelectionUI();
+  }
+
+  function toggleAll(on) {
+    records.forEach(function (r) {
+      if (on) { selected[r.id] = true; } else { delete selected[r.id]; }
+      markRow(r.id, on);
+    });
+    updateSelectionUI();
   }
 
   function computeTotals() {
@@ -705,47 +829,90 @@ New Muslims: 0"></textarea>
   /* ==========================================================
      ACTIONS
      ========================================================== */
-  function addRecord() {
+  function addRecords() {
     hideMessage();
 
     var text = el.input.value;
 
     if (!text.trim()) {
-      showMessage("error", "Nothing to insert", ["Paste a daily tour activity report into the box above."]);
+      showMessage("error", "Nothing to insert", ["Paste one or more daily tour activity reports into the box above."]);
       el.input.focus();
       return;
     }
 
-    var parsed = parseReport(text);
-    var result = validateReport(parsed);
+    var blocks = parseReports(text);
 
-    if (result.errors.length) {
-      showMessage("error", "Correct the following before inserting:", result.errors);
+    if (!blocks.length) {
+      showMessage("error", "No report found", [
+        "None of the pasted lines matched a recognised field label.",
+        "Each line should look like: Date: 07-Aug-2026"
+      ]);
       return;
     }
 
-    records.push(result.record);
+    var errors = [];
+    var ready = [];
+    var many = blocks.length > 1;
+
+    blocks.forEach(function (block, i) {
+      var result = validateReport(block);
+      if (result.errors.length) {
+        var prefix = many ? "Report " + (i + 1) + ": " : "";
+        result.errors.forEach(function (msg) { errors.push(prefix + msg); });
+      } else {
+        ready.push(result.record);
+      }
+    });
+
+    // all-or-nothing: nothing is inserted while any block is incomplete
+    if (errors.length) {
+      showMessage("error",
+        many ? "Correct the following before inserting (" + blocks.length + " reports found, none inserted):"
+             : "Correct the following before inserting:",
+        errors);
+      return;
+    }
+
+    var firstSno = records.length + 1;
+    ready.forEach(function (r) { records.push(r); });
+
     renumberRecords();
     saveRecords();
     renderTable();
     updateSummary();
 
     el.input.value = "";
-    showMessage("success", "Record " + result.record.sno + " inserted for " + result.record.date + ".", []);
+
+    if (ready.length === 1) {
+      showMessage("success", "Record " + firstSno + " inserted for " + ready[0].date + ".", []);
+    } else {
+      showMessage("success",
+        ready.length + " records inserted (SNO " + firstSno + "\u2013" + (firstSno + ready.length - 1) + ").", []);
+    }
     el.input.focus();
   }
 
-  function deleteRecord(id) {
-    var index = -1;
-    records.forEach(function (r, i) { if (r.id === id) { index = i; } });
-    if (index === -1) { return; }
+  function deleteRecords(ids) {
+    if (!ids || !ids.length) { return; }
 
-    records.splice(index, 1);
+    var kill = {};
+    ids.forEach(function (id) { kill[id] = true; });
+
+    var before = records.length;
+    records = records.filter(function (r) { return !kill[r.id]; });
+    var removed = before - records.length;
+    if (!removed) { return; }
+
+    ids.forEach(function (id) { delete selected[id]; });
+
     renumberRecords();
     saveRecords();
     renderTable();
     updateSummary();
-    showMessage("success", "Record deleted. Serial numbers updated.", []);
+
+    showMessage("success",
+      removed === 1 ? "Record deleted. Serial numbers updated."
+                    : removed + " records deleted. Serial numbers updated.", []);
   }
 
   function updateRemarks(id, value) {
@@ -1104,16 +1271,31 @@ New Muslims: 0"></textarea>
   /* ==========================================================
      CONFIRM MODAL
      ========================================================== */
-  var pendingDeleteId = null;
+  var pendingDeleteIds = [];
 
-  function openConfirm(id) {
-    pendingDeleteId = id;
+  function openConfirm(ids) {
+    pendingDeleteIds = ids;
+
+    var title = document.getElementById("confirmTitle");
+    var body = document.getElementById("confirmBody");
+
+    if (ids.length === 1) {
+      title.textContent = "Delete this record?";
+      body.textContent = "Are you sure you want to delete this record? This cannot be undone.";
+      el.confirmOk.textContent = "Delete";
+    } else {
+      title.textContent = "Delete " + ids.length + " records?";
+      body.textContent = "Are you sure you want to delete the " + ids.length +
+                         " selected records? This cannot be undone.";
+      el.confirmOk.textContent = "Delete " + ids.length;
+    }
+
     el.overlay.hidden = false;
     el.confirmOk.focus();
   }
 
   function closeConfirm() {
-    pendingDeleteId = null;
+    pendingDeleteIds = [];
     el.overlay.hidden = true;
   }
 
@@ -1161,7 +1343,7 @@ New Muslims: 0"></textarea>
      EVENTS
      ========================================================== */
   el.insert.addEventListener("click", function () {
-    try { addRecord(); }
+    try { addRecords(); }
     catch (e) { showMessage("error", "Something went wrong while inserting", ["Check the report format and try again."]); }
   });
 
@@ -1187,7 +1369,23 @@ New Muslims: 0"></textarea>
 
   el.tbody.addEventListener("click", function (e) {
     var btn = e.target.closest ? e.target.closest("[data-delete]") : null;
-    if (btn) { openConfirm(btn.getAttribute("data-delete")); }
+    if (btn) { openConfirm([btn.getAttribute("data-delete")]); }
+  });
+
+  el.tbody.addEventListener("change", function (e) {
+    var box = e.target;
+    if (box && box.hasAttribute && box.hasAttribute("data-select")) {
+      setSelected(box.getAttribute("data-select"), box.checked);
+    }
+  });
+
+  el.chkAll.addEventListener("change", function () {
+    toggleAll(el.chkAll.checked);
+  });
+
+  el.deleteSel.addEventListener("click", function () {
+    var ids = selectedIds();
+    if (ids.length) { openConfirm(ids); }
   });
 
   el.tbody.addEventListener("input", function (e) {
@@ -1206,9 +1404,9 @@ New Muslims: 0"></textarea>
   });
 
   el.confirmOk.addEventListener("click", function () {
-    var id = pendingDeleteId;
+    var ids = pendingDeleteIds;
     closeConfirm();
-    if (id) { deleteRecord(id); }
+    deleteRecords(ids);
   });
   el.confirmNo.addEventListener("click", closeConfirm);
   el.overlay.addEventListener("click", function (e) {
@@ -1219,7 +1417,7 @@ New Muslims: 0"></textarea>
   });
 
   el.input.addEventListener("keydown", function (e) {
-    if ((e.ctrlKey || e.metaKey) && e.key === "Enter") { e.preventDefault(); addRecord(); }
+    if ((e.ctrlKey || e.metaKey) && e.key === "Enter") { e.preventDefault(); addRecords(); }
   });
 
   el.themeDark.addEventListener("click", function () { applyTheme("dark"); });
