@@ -1,0 +1,1249 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Daily Tour Activity Report</title>
+<style>
+/* ============================================================
+   THEME TOKENS
+   ============================================================ */
+:root{
+  --font-display: "Iowan Old Style","Palatino Linotype",Palatino,Georgia,serif;
+  --font-ui: -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+  --font-num: ui-monospace,"SF Mono","Cascadia Mono","Segoe UI Mono",Consolas,monospace;
+  --radius: 10px;
+  --maxw: 1240px;
+}
+html[data-theme="dark"]{
+  --bg:#08191B;
+  --bg-grad:#0C2225;
+  --surface:#0F272A;
+  --surface-2:#133033;
+  --line:#1E464B;
+  --line-soft:#173A3E;
+  --text:#E4F0EE;
+  --text-dim:#8FADAC;
+  --teal:#2AA79B;
+  --teal-soft:#17494A;
+  --gold:#D9AE55;
+  --danger:#E0736B;
+  --ok:#4DBE9A;
+  --input-bg:#0A1E21;
+  --shadow:0 1px 0 rgba(255,255,255,.03), 0 12px 32px rgba(0,0,0,.35);
+}
+html[data-theme="light"]{
+  --bg:#F2F6F4;
+  --bg-grad:#E8F0ED;
+  --surface:#FFFFFF;
+  --surface-2:#F5FAF8;
+  --line:#CBDCD8;
+  --line-soft:#DFEAE7;
+  --text:#10292B;
+  --text-dim:#5A7573;
+  --teal:#0E6B66;
+  --teal-soft:#D6EBE8;
+  --gold:#9A7420;
+  --danger:#B5443C;
+  --ok:#1E7F63;
+  --input-bg:#FFFFFF;
+  --shadow:0 1px 2px rgba(16,41,43,.06), 0 10px 24px rgba(16,41,43,.07);
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{
+  font-family:var(--font-ui);
+  background:linear-gradient(180deg,var(--bg-grad) 0%,var(--bg) 340px) no-repeat,var(--bg);
+  color:var(--text);
+  font-size:15px;
+  line-height:1.5;
+  -webkit-text-size-adjust:100%;
+  padding:0 0 64px;
+}
+.wrap{max-width:var(--maxw);margin:0 auto;padding:0 20px}
+
+/* ============================================================
+   MASTHEAD
+   ============================================================ */
+.masthead{
+  border-bottom:1px solid var(--line);
+  padding:26px 0 20px;
+  margin-bottom:28px;
+  display:flex;align-items:flex-end;justify-content:space-between;gap:20px;flex-wrap:wrap;
+}
+.masthead h1{
+  font-family:var(--font-display);
+  font-size:29px;font-weight:600;letter-spacing:.01em;
+  margin:0;line-height:1.15;
+}
+.masthead .rule{
+  display:block;width:56px;height:3px;background:var(--gold);margin-bottom:12px;border-radius:2px;
+}
+.masthead .sub{
+  font-size:12px;letter-spacing:.16em;text-transform:uppercase;color:var(--text-dim);margin-top:8px;
+}
+.theme-switch{
+  display:inline-flex;align-items:center;gap:0;
+  border:1px solid var(--line);border-radius:999px;padding:3px;background:var(--surface);
+}
+.theme-switch button{
+  font:inherit;font-size:12px;letter-spacing:.06em;text-transform:uppercase;
+  border:0;background:transparent;color:var(--text-dim);
+  padding:6px 14px;border-radius:999px;cursor:pointer;
+}
+.theme-switch button[aria-pressed="true"]{
+  background:var(--teal-soft);color:var(--text);font-weight:600;
+}
+.theme-switch button:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
+
+/* ============================================================
+   PANELS
+   ============================================================ */
+.panel{
+  background:var(--surface);
+  border:1px solid var(--line);
+  border-radius:var(--radius);
+  box-shadow:var(--shadow);
+  padding:22px;
+  margin-bottom:26px;
+}
+.panel-head{
+  display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap;
+  margin-bottom:14px;
+}
+.panel-head h2{
+  font-size:12px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;
+  color:var(--text-dim);margin:0;
+}
+.hint{font-size:13px;color:var(--text-dim);margin:0 0 12px}
+
+textarea{
+  width:100%;
+  font-family:var(--font-num);font-size:13.5px;line-height:1.7;
+  color:var(--text);background:var(--input-bg);
+  border:1px solid var(--line);border-radius:8px;
+  padding:14px 16px;
+}
+#reportInput{min-height:230px;resize:vertical}
+textarea::placeholder{color:var(--text-dim);opacity:.7}
+textarea:focus{outline:none;border-color:var(--teal);box-shadow:0 0 0 3px var(--teal-soft)}
+
+.actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:14px}
+.btn{
+  font:inherit;font-size:13px;font-weight:600;letter-spacing:.04em;
+  padding:10px 20px;border-radius:8px;cursor:pointer;
+  border:1px solid var(--line);background:var(--surface-2);color:var(--text);
+}
+.btn:hover{border-color:var(--teal)}
+.btn:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
+.btn-primary{
+  background:var(--teal);border-color:var(--teal);
+  color:#04191A;text-transform:uppercase;letter-spacing:.1em;padding:11px 30px;
+}
+html[data-theme="light"] .btn-primary{color:#FFFFFF}
+.btn-primary:hover{filter:brightness(1.08)}
+.btn-danger{
+  background:transparent;border-color:var(--line);color:var(--danger);
+  padding:5px 12px;font-size:12px;
+}
+.btn-danger:hover{border-color:var(--danger)}
+
+.toggle{
+  display:inline-flex;align-items:center;gap:8px;cursor:pointer;
+  font-size:12.5px;color:var(--text-dim);
+  border:1px solid var(--line);border-radius:8px;background:var(--surface-2);
+  padding:10px 16px;user-select:none;
+}
+.toggle:hover{border-color:var(--teal);color:var(--text)}
+.toggle input{width:15px;height:15px;accent-color:var(--teal);cursor:pointer;margin:0}
+.toggle input:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
+.toggle:has(input:checked){color:var(--text)}
+
+/* ============================================================
+   MESSAGES
+   ============================================================ */
+.msg{
+  border-radius:8px;padding:12px 16px;margin-top:14px;font-size:13.5px;
+  border-left:3px solid var(--gold);background:var(--surface-2);
+}
+.msg[hidden]{display:none}
+.msg strong{display:block;margin-bottom:6px;font-size:13px}
+.msg ul{margin:0;padding-left:18px}
+.msg.error{border-left-color:var(--danger)}
+.msg.success{border-left-color:var(--ok)}
+
+/* ============================================================
+   TALLY BAND  (signature element)
+   ============================================================ */
+.tally{
+  display:grid;grid-template-columns:repeat(5,1fr);gap:0;
+  border:1px solid var(--line);border-radius:var(--radius);
+  background:var(--surface);box-shadow:var(--shadow);overflow:hidden;margin-bottom:26px;
+}
+.tally div{
+  padding:18px 16px 16px;border-right:1px solid var(--line-soft);
+  display:flex;flex-direction:column;gap:4px;
+}
+.tally div:last-child{border-right:0}
+.tally .k{
+  font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--text-dim);
+}
+.tally .v{
+  font-family:var(--font-num);font-size:30px;font-weight:600;
+  font-variant-numeric:tabular-nums;line-height:1.1;color:var(--text);
+}
+.tally .v::after{
+  content:"";display:block;width:26px;height:2px;background:var(--gold);margin-top:9px;border-radius:2px;
+}
+
+/* ============================================================
+   LEDGER TABLE
+   ============================================================ */
+.table-scroll{overflow-x:auto;border:1px solid var(--line);border-radius:var(--radius);background:var(--surface)}
+table{border-collapse:collapse;width:100%;min-width:900px;font-size:13.5px}
+thead th{
+  text-align:left;font-size:10.5px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;
+  color:var(--text-dim);background:var(--surface-2);
+  padding:12px 12px;border-bottom:1px solid var(--line);white-space:nowrap;
+}
+tbody td{padding:10px 12px;vertical-align:middle}
+td.num,th.num{text-align:right;font-family:var(--font-num);font-variant-numeric:tabular-nums}
+td.sno{font-family:var(--font-num);color:var(--gold);font-weight:600;width:52px}
+td.date{white-space:nowrap;font-family:var(--font-num);font-size:13px}
+
+/* record row + its remarks row read as one block */
+tr.record-row td{padding-bottom:6px}
+tr.record-row:hover td,tr.record-row:hover + tr.remarks-row td{background:var(--surface-2)}
+tr.remarks-row td{padding:0 12px 12px;border-bottom:1px solid var(--line-soft)}
+tbody tr.remarks-row:last-child td{border-bottom:0}
+.remarks-label{
+  display:block;font-size:10px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;
+  color:var(--text-dim);margin-bottom:5px;
+}
+.remarks-input{
+  width:100%;min-height:42px;resize:none;overflow:hidden;
+  font-family:var(--font-ui);font-size:13px;line-height:1.55;
+  padding:9px 12px;border-radius:6px;border:1px solid var(--line-soft);
+}
+.remarks-print{display:none}
+.empty{padding:44px 20px;text-align:center;color:var(--text-dim);font-size:14px}
+.empty span{display:block;font-family:var(--font-display);font-size:18px;color:var(--text);margin-bottom:6px}
+
+/* ============================================================
+   MODAL
+   ============================================================ */
+.overlay{
+  position:fixed;inset:0;background:rgba(4,16,18,.62);
+  display:flex;align-items:center;justify-content:center;padding:20px;z-index:50;
+}
+.overlay[hidden]{display:none}
+.modal{
+  background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);
+  padding:24px;max-width:400px;width:100%;box-shadow:0 24px 60px rgba(0,0,0,.4);
+}
+.modal h3{margin:0 0 8px;font-family:var(--font-display);font-size:19px;font-weight:600}
+.modal p{margin:0 0 18px;font-size:13.5px;color:var(--text-dim)}
+.modal .actions{margin:0;justify-content:flex-end}
+
+.print-head{display:none}
+.foot{margin-top:26px;font-size:12px;color:var(--text-dim);text-align:center}
+
+/* ============================================================
+   RESPONSIVE
+   ============================================================ */
+@media (max-width:820px){
+  .tally{grid-template-columns:repeat(2,1fr)}
+  .tally div{border-bottom:1px solid var(--line-soft)}
+  .tally div:nth-child(2n){border-right:0}
+  .tally div:last-child{grid-column:1 / -1;border-bottom:0}
+  .tally .v{font-size:25px}
+  .masthead h1{font-size:23px}
+  .panel{padding:18px}
+}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+
+/* ============================================================
+   PRINT  ->  used for "Export PDF" (Save as PDF)
+   ============================================================ */
+@media print{
+  body{background:#fff;color:#000;padding:0;font-size:11px}
+  .wrap{max-width:none;padding:0}
+  .masthead,.no-print,.panel.input-panel,.overlay,.foot{display:none!important}
+  .print-head{display:block;margin-bottom:14px}
+  .print-head h1{font-family:var(--font-display);font-size:19px;margin:0 0 4px}
+  .print-head p{margin:0;font-size:10px;color:#444}
+  .panel,.tally,.table-scroll{border:1px solid #999;box-shadow:none;background:#fff;page-break-inside:auto}
+  .tally{display:flex;margin-bottom:14px}
+  .tally div{flex:1;border-right:1px solid #ccc;padding:8px 10px}
+  .tally .k{color:#444;font-size:8px}
+  .tally .v{font-size:16px;color:#000}
+  .tally .v::after{display:none}
+  table{min-width:0;font-size:10px;width:100%}
+  thead th{background:#eee;color:#000;border-bottom:1px solid #999;padding:6px}
+  tbody td{padding:5px 6px;color:#000;background:#fff!important}
+  tr.record-row td{padding-bottom:3px}
+  tr.remarks-row td{padding:0 6px 6px;border-bottom:1px solid #999}
+  tr.remarks-row.no-remarks{display:none}
+  body.hide-remarks tr.remarks-row{display:none!important}
+  tr{page-break-inside:avoid}
+  .remarks-input,.col-action,td.action{display:none!important}
+  .remarks-label{color:#444;font-size:8px;margin-bottom:2px}
+  .remarks-print{display:block;white-space:pre-wrap;font-size:10px;color:#000}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="masthead no-print">
+    <div>
+      <span class="rule"></span>
+      <h1>Daily Tour Activity Report</h1>
+      <div class="sub">Volunteer shift log &middot; stored on this device</div>
+    </div>
+    <div class="theme-switch" role="group" aria-label="Colour theme">
+      <button type="button" id="themeDark" aria-pressed="true">Dark</button>
+      <button type="button" id="themeLight" aria-pressed="false">Light</button>
+    </div>
+  </header>
+
+  <!-- print-only header -->
+  <div class="print-head">
+    <h1>Daily Tour Activity Report</h1>
+    <p id="printMeta"></p>
+  </div>
+
+  <!-- ============ INPUT ============ -->
+  <section class="panel input-panel no-print">
+    <div class="panel-head"><h2>Paste the shift report</h2></div>
+    <p class="hint">Paste the report exactly as written. Lines that are not recognised fields are ignored.</p>
+    <textarea id="reportInput" spellcheck="false" aria-label="Daily tour activity report text" placeholder="Date: 07-Aug-2026
+Shift Start: 04:00 PM
+Shift End: 08:00 PM
+Number of Volunteers: 7
+Number of Visitors: 36
+Discussions/Dialogues: 12
+Brochures Distributed: 46
+New Muslims: 0"></textarea>
+    <div class="actions">
+      <button type="button" class="btn btn-primary" id="btnInsert">Insert</button>
+      <button type="button" class="btn" id="btnClearInput">Clear input</button>
+    </div>
+    <div class="msg" id="message" hidden role="status" aria-live="polite"></div>
+  </section>
+
+  <!-- ============ SUMMARY ============ -->
+  <section class="tally" aria-label="Totals across all records">
+    <div><span class="k">Volunteers</span><span class="v" id="totVolunteers">0</span></div>
+    <div><span class="k">Visitors</span><span class="v" id="totVisitors">0</span></div>
+    <div><span class="k">Discussions</span><span class="v" id="totDiscussions">0</span></div>
+    <div><span class="k">Brochures</span><span class="v" id="totBrochures">0</span></div>
+    <div><span class="k">New Muslims</span><span class="v" id="totNewMuslims">0</span></div>
+  </section>
+
+  <!-- ============ RECORDS ============ -->
+  <section>
+    <div class="panel-head no-print">
+      <h2>Tour activity records <span id="recordCount" style="color:var(--gold)"></span></h2>
+      <div class="actions" style="margin-top:0">
+        <label class="toggle" for="chkRemarks">
+          <input type="checkbox" id="chkRemarks" checked>
+          Include remarks in exports
+        </label>
+        <button type="button" class="btn" id="btnCsv">Export CSV</button>
+        <button type="button" class="btn" id="btnPdf">Export PDF</button>
+        <button type="button" class="btn" id="btnImg">Export image</button>
+      </div>
+    </div>
+    <div class="table-scroll">
+      <table id="reportTable">
+        <thead>
+          <tr>
+            <th>SNO</th>
+            <th>Date</th>
+            <th>Shift Start</th>
+            <th>Shift End</th>
+            <th class="num">Volunteers</th>
+            <th class="num">Visitors</th>
+            <th class="num">Discussions</th>
+            <th class="num">Brochures</th>
+            <th class="num">New Muslims</th>
+            <th class="col-action no-print">Action</th>
+          </tr>
+        </thead>
+        <tbody id="tableBody"></tbody>
+      </table>
+      <div class="empty" id="emptyState">
+        <span>No records yet</span>
+        Paste a shift report above and select Insert.
+      </div>
+    </div>
+  </section>
+
+  <p class="foot no-print">Records are saved in this browser only. Export CSV regularly to keep a backup.</p>
+</div>
+
+<!-- ============ CONFIRM MODAL ============ -->
+<div class="overlay" id="confirmOverlay" hidden>
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="confirmTitle">
+    <h3 id="confirmTitle">Delete this record?</h3>
+    <p id="confirmBody">Are you sure you want to delete this record? This cannot be undone.</p>
+    <div class="actions">
+      <button type="button" class="btn" id="confirmCancel">Cancel</button>
+      <button type="button" class="btn btn-danger" id="confirmOk">Delete</button>
+    </div>
+  </div>
+</div>
+
+<script>
+(function () {
+  "use strict";
+
+  /* ==========================================================
+     CONFIG
+     ========================================================== */
+  var STORAGE_KEY = "dailyTourActivityReports";
+  var THEME_KEY   = "dailyTourActivityTheme";
+  var REMARKS_KEY = "dailyTourActivityIncludeRemarks";
+
+  var FIELDS = [
+    { key: "date",        label: "Date",                  numeric: false },
+    { key: "shiftStart",  label: "Shift Start",           numeric: false },
+    { key: "shiftEnd",    label: "Shift End",             numeric: false },
+    { key: "volunteers",  label: "Number of Volunteers",  numeric: true  },
+    { key: "visitors",    label: "Number of Visitors",    numeric: true  },
+    { key: "discussions", label: "Discussions/Dialogues", numeric: true  },
+    { key: "brochures",   label: "Brochures Distributed", numeric: true  },
+    { key: "newMuslims",  label: "New Muslims",           numeric: true  }
+  ];
+
+  var LABEL_MAP = {};
+  FIELDS.forEach(function (f) { LABEL_MAP[normalizeLabel(f.label)] = f; });
+
+  var records = [];
+
+  /* ==========================================================
+     DOM
+     ========================================================== */
+  var el = {
+    input:      document.getElementById("reportInput"),
+    insert:     document.getElementById("btnInsert"),
+    clearInput: document.getElementById("btnClearInput"),
+    csv:        document.getElementById("btnCsv"),
+    pdf:        document.getElementById("btnPdf"),
+    img:        document.getElementById("btnImg"),
+    chkRemarks: document.getElementById("chkRemarks"),
+    message:    document.getElementById("message"),
+    tbody:      document.getElementById("tableBody"),
+    empty:      document.getElementById("emptyState"),
+    count:      document.getElementById("recordCount"),
+    printMeta:  document.getElementById("printMeta"),
+    overlay:    document.getElementById("confirmOverlay"),
+    confirmOk:  document.getElementById("confirmOk"),
+    confirmNo:  document.getElementById("confirmCancel"),
+    themeDark:  document.getElementById("themeDark"),
+    themeLight: document.getElementById("themeLight"),
+    totals: {
+      volunteers:  document.getElementById("totVolunteers"),
+      visitors:    document.getElementById("totVisitors"),
+      discussions: document.getElementById("totDiscussions"),
+      brochures:   document.getElementById("totBrochures"),
+      newMuslims:  document.getElementById("totNewMuslims")
+    }
+  };
+
+  /* ==========================================================
+     HELPERS
+     ========================================================== */
+  function normalizeLabel(text) {
+    return String(text).replace(/\s+/g, " ").trim().toLowerCase();
+  }
+
+  function toInt(value) {
+    var cleaned = String(value).replace(/,/g, "").trim();
+    if (!/^\d+$/.test(cleaned)) { return null; }
+    var n = parseInt(cleaned, 10);
+    return isNaN(n) ? null : n;
+  }
+
+  function escapeHtml(text) {
+    return String(text)
+      .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;").replace(/'/g, "&#39;");
+  }
+
+  function showMessage(kind, title, lines) {
+    var html = "<strong>" + escapeHtml(title) + "</strong>";
+    if (lines && lines.length) {
+      html += "<ul>";
+      lines.forEach(function (l) { html += "<li>" + escapeHtml(l) + "</li>"; });
+      html += "</ul>";
+    }
+    el.message.className = "msg " + kind;
+    el.message.innerHTML = html;
+    el.message.hidden = false;
+  }
+
+  function hideMessage() { el.message.hidden = true; }
+
+  function makeId() {
+    return "r" + Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
+  }
+
+  function fileStamp() {
+    var d = new Date();
+    function p(n) { return n < 10 ? "0" + n : "" + n; }
+    return d.getFullYear() + p(d.getMonth() + 1) + p(d.getDate()) + "_" + p(d.getHours()) + p(d.getMinutes());
+  }
+
+  function downloadBlob(blob, filename) {
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement("a");
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    setTimeout(function () { URL.revokeObjectURL(url); }, 1500);
+  }
+
+  /* ==========================================================
+     PARSING
+     ========================================================== */
+  function parseReport(text) {
+    var parsed = {};
+    var lines = String(text).split(/\r\n|\r|\n/);
+
+    lines.forEach(function (line) {
+      if (!line || line.indexOf(":") === -1) { return; }
+
+      var colon = line.indexOf(":");
+      var rawLabel = line.slice(0, colon);
+      var rawValue = line.slice(colon + 1);
+
+      var field = LABEL_MAP[normalizeLabel(rawLabel)];
+      if (!field) { return; }
+      if (Object.prototype.hasOwnProperty.call(parsed, field.key)) { return; }
+
+      parsed[field.key] = rawValue.trim();
+    });
+
+    return parsed;
+  }
+
+  /* ==========================================================
+     VALIDATION
+     ========================================================== */
+  function validateReport(parsed) {
+    var errors = [];
+    var record = { id: makeId(), sno: 0, remarks: "" };
+
+    FIELDS.forEach(function (f) {
+      var raw = parsed[f.key];
+
+      if (raw === undefined || raw === "") {
+        errors.push(f.label + " is missing");
+        return;
+      }
+
+      if (f.numeric) {
+        var n = toInt(raw);
+        if (n === null) {
+          errors.push(f.label + " must be a whole number \u2014 found \u201C" + raw + "\u201D");
+          return;
+        }
+        record[f.key] = n;
+      } else {
+        record[f.key] = raw;
+      }
+    });
+
+    return { errors: errors, record: record };
+  }
+
+  /* ==========================================================
+     STORAGE
+     ========================================================== */
+  function loadRecords() {
+    var raw;
+    try {
+      raw = localStorage.getItem(STORAGE_KEY);
+    } catch (e) {
+      showMessage("error", "Storage is unavailable", ["Records cannot be saved in this browser. Export CSV before closing."]);
+      return [];
+    }
+
+    if (!raw) { return []; }
+
+    var data;
+    try {
+      data = JSON.parse(raw);
+    } catch (e) {
+      showMessage("error", "Saved data could not be read", ["The stored records were corrupted and have been reset."]);
+      saveRecords([]);
+      return [];
+    }
+
+    if (!Array.isArray(data)) {
+      showMessage("error", "Saved data could not be read", ["The stored records were in an unexpected format and have been reset."]);
+      saveRecords([]);
+      return [];
+    }
+
+    return data.filter(function (r) {
+      return r && typeof r === "object" && r.date && r.shiftStart && r.shiftEnd;
+    }).map(function (r) {
+      var out = { id: r.id || makeId(), sno: 0, remarks: typeof r.remarks === "string" ? r.remarks : "" };
+      FIELDS.forEach(function (f) {
+        if (f.numeric) {
+          var n = toInt(r[f.key]);
+          out[f.key] = n === null ? 0 : n;
+        } else {
+          out[f.key] = String(r[f.key] === undefined ? "" : r[f.key]);
+        }
+      });
+      return out;
+    });
+  }
+
+  function saveRecords(list) {
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(list === undefined ? records : list));
+      return true;
+    } catch (e) {
+      showMessage("error", "Records could not be saved", ["Browser storage is full or blocked. Export CSV to avoid losing data."]);
+      return false;
+    }
+  }
+
+  function renumberRecords() {
+    records.forEach(function (r, i) { r.sno = i + 1; });
+  }
+
+  /* ==========================================================
+     RENDER
+     ========================================================== */
+  function autoGrow(ta) {
+    ta.style.height = "auto";
+    ta.style.height = (ta.scrollHeight + 2) + "px";
+  }
+
+  function renderTable() {
+    el.tbody.innerHTML = "";
+
+    if (!records.length) {
+      el.empty.style.display = "block";
+      el.count.textContent = "";
+      return;
+    }
+
+    el.empty.style.display = "none";
+    el.count.textContent = "(" + records.length + ")";
+
+    var frag = document.createDocumentFragment();
+
+    records.forEach(function (r) {
+      var tr = document.createElement("tr");
+      tr.className = "record-row";
+      tr.innerHTML =
+        '<td class="sno">' + r.sno + '</td>' +
+        '<td class="date">' + escapeHtml(r.date) + '</td>' +
+        '<td class="date">' + escapeHtml(r.shiftStart) + '</td>' +
+        '<td class="date">' + escapeHtml(r.shiftEnd) + '</td>' +
+        '<td class="num">' + r.volunteers + '</td>' +
+        '<td class="num">' + r.visitors + '</td>' +
+        '<td class="num">' + r.discussions + '</td>' +
+        '<td class="num">' + r.brochures + '</td>' +
+        '<td class="num">' + r.newMuslims + '</td>' +
+        '<td class="action col-action no-print">' +
+          '<button type="button" class="btn btn-danger" data-delete="' + r.id + '">Delete</button>' +
+        '</td>';
+      frag.appendChild(tr);
+
+      var rr = document.createElement("tr");
+      rr.className = "remarks-row" + (r.remarks.trim() ? "" : " no-remarks");
+      rr.setAttribute("data-row", r.id);
+      rr.innerHTML =
+        '<td colspan="10">' +
+          '<span class="remarks-label">Remarks \u2014 record ' + r.sno + '</span>' +
+          '<textarea class="remarks-input" rows="2" data-id="' + r.id + '" ' +
+          'placeholder="Add remarks for this shift">' + escapeHtml(r.remarks) + '</textarea>' +
+          '<span class="remarks-print">' + escapeHtml(r.remarks) + '</span>' +
+        '</td>';
+      frag.appendChild(rr);
+    });
+
+    el.tbody.appendChild(frag);
+
+    var boxes = el.tbody.querySelectorAll(".remarks-input");
+    for (var i = 0; i < boxes.length; i++) { autoGrow(boxes[i]); }
+  }
+
+  function computeTotals() {
+    var totals = { volunteers: 0, visitors: 0, discussions: 0, brochures: 0, newMuslims: 0 };
+    records.forEach(function (r) {
+      totals.volunteers  += Number(r.volunteers)  || 0;
+      totals.visitors    += Number(r.visitors)    || 0;
+      totals.discussions += Number(r.discussions) || 0;
+      totals.brochures   += Number(r.brochures)   || 0;
+      totals.newMuslims  += Number(r.newMuslims)  || 0;
+    });
+    return totals;
+  }
+
+  function updateSummary() {
+    var totals = computeTotals();
+    Object.keys(totals).forEach(function (k) { el.totals[k].textContent = totals[k]; });
+  }
+
+  function refresh() {
+    renumberRecords();
+    renderTable();
+    updateSummary();
+  }
+
+  /* ==========================================================
+     ACTIONS
+     ========================================================== */
+  function addRecord() {
+    hideMessage();
+
+    var text = el.input.value;
+
+    if (!text.trim()) {
+      showMessage("error", "Nothing to insert", ["Paste a daily tour activity report into the box above."]);
+      el.input.focus();
+      return;
+    }
+
+    var parsed = parseReport(text);
+    var result = validateReport(parsed);
+
+    if (result.errors.length) {
+      showMessage("error", "Correct the following before inserting:", result.errors);
+      return;
+    }
+
+    records.push(result.record);
+    renumberRecords();
+    saveRecords();
+    renderTable();
+    updateSummary();
+
+    el.input.value = "";
+    showMessage("success", "Record " + result.record.sno + " inserted for " + result.record.date + ".", []);
+    el.input.focus();
+  }
+
+  function deleteRecord(id) {
+    var index = -1;
+    records.forEach(function (r, i) { if (r.id === id) { index = i; } });
+    if (index === -1) { return; }
+
+    records.splice(index, 1);
+    renumberRecords();
+    saveRecords();
+    renderTable();
+    updateSummary();
+    showMessage("success", "Record deleted. Serial numbers updated.", []);
+  }
+
+  function updateRemarks(id, value) {
+    records.forEach(function (r) { if (r.id === id) { r.remarks = value; } });
+    saveRecords();
+  }
+
+  /* ==========================================================
+     EXPORT - CSV
+     ========================================================== */
+  function csvCell(value) {
+    var s = String(value === undefined || value === null ? "" : value);
+    if (/[",\r\n]/.test(s)) { s = '"' + s.replace(/"/g, '""') + '"'; }
+    return s;
+  }
+
+  function exportCSV() {
+    if (!records.length) {
+      showMessage("error", "Nothing to export", ["Insert at least one record before exporting."]);
+      return;
+    }
+
+    var withRemarks = includeRemarks();
+
+    var header = ["SNO", "Date", "Shift Start", "Shift End", "Number of Volunteers",
+                  "Number of Visitors", "Discussions/Dialogues", "Brochures Distributed",
+                  "New Muslims"];
+    if (withRemarks) { header.push("Remarks"); }
+
+    var rows = [header.map(csvCell).join(",")];
+
+    records.forEach(function (r) {
+      var row = [r.sno, r.date, r.shiftStart, r.shiftEnd, r.volunteers, r.visitors,
+                 r.discussions, r.brochures, r.newMuslims];
+      if (withRemarks) { row.push(r.remarks); }
+      rows.push(row.map(csvCell).join(","));
+    });
+
+    var t = computeTotals();
+    var totalRow = ["", "TOTAL", "", "", t.volunteers, t.visitors, t.discussions, t.brochures, t.newMuslims];
+    if (withRemarks) { totalRow.push(""); }
+    rows.push("");
+    rows.push(totalRow.map(csvCell).join(","));
+
+    try {
+      var blob = new Blob(["\uFEFF" + rows.join("\r\n")], { type: "text/csv;charset=utf-8;" });
+      downloadBlob(blob, "DailyTourActivityReport_" + fileStamp() + ".csv");
+      showMessage("success", "CSV exported (" + records.length + " records).", []);
+    } catch (e) {
+      showMessage("error", "CSV export failed", ["This browser blocked the download. Try Export PDF instead."]);
+    }
+  }
+
+  /* ==========================================================
+     EXPORT - PDF (browser print dialog -> Save as PDF)
+     ========================================================== */
+  function setPrintMeta() {
+    el.printMeta.textContent =
+      "Records: " + records.length + "   |   Generated: " + new Date().toLocaleString();
+  }
+
+  function exportPDF() {
+    if (!records.length) {
+      showMessage("error", "Nothing to export", ["Insert at least one record before exporting."]);
+      return;
+    }
+    setPrintMeta();
+    hideMessage();
+    window.print();
+  }
+
+  /* ==========================================================
+     EXPORT - IMAGE (PNG drawn on canvas, no libraries)
+     ========================================================== */
+  var IMG = {
+    scale: 2,
+    pad: 44,
+    cellPadX: 14,
+    rowH: 34,
+    headH: 38,
+    remarkLineH: 19,
+    fontTitle: '600 27px "Iowan Old Style","Palatino Linotype",Georgia,serif',
+    fontMeta: '13px -apple-system,"Segoe UI",Roboto,Arial,sans-serif',
+    fontKey: '600 11px -apple-system,"Segoe UI",Roboto,Arial,sans-serif',
+    fontTally: '600 30px ui-monospace,Consolas,monospace',
+    fontHead: '700 11px -apple-system,"Segoe UI",Roboto,Arial,sans-serif',
+    fontCell: '13px ui-monospace,Consolas,monospace',
+    fontRemarkLabel: '700 10px -apple-system,"Segoe UI",Roboto,Arial,sans-serif',
+    fontRemark: '13px -apple-system,"Segoe UI",Roboto,Arial,sans-serif'
+  };
+
+  function themeColors() {
+    var cs = getComputedStyle(document.documentElement);
+    function v(name, fallback) {
+      var out = cs.getPropertyValue(name);
+      return out && out.trim() ? out.trim() : fallback;
+    }
+    return {
+      bg:      v("--surface", "#ffffff"),
+      band:    v("--surface-2", "#f5f5f5"),
+      text:    v("--text", "#111111"),
+      dim:     v("--text-dim", "#666666"),
+      line:    v("--line", "#cccccc"),
+      lineSoft:v("--line-soft", "#e2e2e2"),
+      gold:    v("--gold", "#9a7420")
+    };
+  }
+
+  function wrapLines(ctx, text, maxWidth) {
+    var out = [];
+    String(text).split(/\r\n|\r|\n/).forEach(function (para) {
+      var words = para.split(/\s+/).filter(Boolean);
+      if (!words.length) { out.push(""); return; }
+      var line = words[0];
+      for (var i = 1; i < words.length; i++) {
+        var test = line + " " + words[i];
+        if (ctx.measureText(test).width > maxWidth) { out.push(line); line = words[i]; }
+        else { line = test; }
+      }
+      out.push(line);
+    });
+    return out;
+  }
+
+  function exportImage() {
+    if (!records.length) {
+      showMessage("error", "Nothing to export", ["Insert at least one record before exporting."]);
+      return;
+    }
+
+    var C = themeColors();
+
+    var cols = [
+      { head: "SNO",         align: "left",  get: function (r) { return String(r.sno); } },
+      { head: "DATE",        align: "left",  get: function (r) { return r.date; } },
+      { head: "SHIFT START", align: "left",  get: function (r) { return r.shiftStart; } },
+      { head: "SHIFT END",   align: "left",  get: function (r) { return r.shiftEnd; } },
+      { head: "VOLUNTEERS",  align: "right", get: function (r) { return String(r.volunteers); } },
+      { head: "VISITORS",    align: "right", get: function (r) { return String(r.visitors); } },
+      { head: "DISCUSSIONS", align: "right", get: function (r) { return String(r.discussions); } },
+      { head: "BROCHURES",   align: "right", get: function (r) { return String(r.brochures); } },
+      { head: "NEW MUSLIMS", align: "right", get: function (r) { return String(r.newMuslims); } }
+    ];
+
+    // ---- measure pass -------------------------------------------------
+    var probe = document.createElement("canvas").getContext("2d");
+
+    cols.forEach(function (c) {
+      probe.font = IMG.fontHead;
+      var w = probe.measureText(c.head).width;
+      probe.font = IMG.fontCell;
+      records.forEach(function (r) {
+        w = Math.max(w, probe.measureText(c.get(r)).width);
+      });
+      c.w = Math.ceil(w) + IMG.cellPadX * 2;
+    });
+
+    var tableW = cols.reduce(function (a, c) { return a + c.w; }, 0);
+    tableW = Math.max(tableW, 880);
+
+    // distribute any slack into the Date column so the table fills the width
+    var slack = tableW - cols.reduce(function (a, c) { return a + c.w; }, 0);
+    if (slack > 0) { cols[1].w += slack; }
+
+    var remarkMaxW = tableW - IMG.cellPadX * 2;
+    probe.font = IMG.fontRemark;
+
+    var withRemarks = includeRemarks();
+
+    var blocks = records.map(function (r) {
+      var text = withRemarks ? String(r.remarks || "").trim() : "";
+      return { record: r, lines: text ? wrapLines(probe, text, remarkMaxW) : [] };
+    });
+
+    var tallyH = 96;
+    var headerH = 118;
+    var footerH = 46;
+
+    var bodyH = 0;
+    blocks.forEach(function (b) {
+      bodyH += IMG.rowH;
+      if (b.lines.length) { bodyH += 16 + 14 + b.lines.length * IMG.remarkLineH; }
+      bodyH += 8;
+    });
+
+    var totalW = tableW + IMG.pad * 2;
+    var totalH = headerH + tallyH + 26 + IMG.headH + bodyH + footerH + IMG.pad;
+
+    // ---- draw pass ----------------------------------------------------
+    var canvas = document.createElement("canvas");
+    canvas.width = totalW * IMG.scale;
+    canvas.height = totalH * IMG.scale;
+    var ctx = canvas.getContext("2d");
+    ctx.scale(IMG.scale, IMG.scale);
+    ctx.textBaseline = "middle";
+
+    ctx.fillStyle = C.bg;
+    ctx.fillRect(0, 0, totalW, totalH);
+
+    var x0 = IMG.pad;
+    var y = IMG.pad;
+
+    // title
+    ctx.fillStyle = C.gold;
+    ctx.fillRect(x0, y, 56, 3);
+    y += 22;
+    ctx.font = IMG.fontTitle;
+    ctx.fillStyle = C.text;
+    ctx.fillText("Daily Tour Activity Report", x0, y + 8);
+    y += 34;
+    ctx.font = IMG.fontMeta;
+    ctx.fillStyle = C.dim;
+    ctx.fillText("Records: " + records.length + "   |   Generated: " + new Date().toLocaleString(), x0, y + 8);
+    y += 40;
+
+    // tally band
+    var totals = computeTotals();
+    var tally = [
+      ["VOLUNTEERS", totals.volunteers],
+      ["VISITORS", totals.visitors],
+      ["DISCUSSIONS", totals.discussions],
+      ["BROCHURES", totals.brochures],
+      ["NEW MUSLIMS", totals.newMuslims]
+    ];
+    var cellW = tableW / tally.length;
+
+    ctx.fillStyle = C.band;
+    ctx.fillRect(x0, y, tableW, tallyH);
+    ctx.strokeStyle = C.line;
+    ctx.lineWidth = 1;
+    ctx.strokeRect(x0 + 0.5, y + 0.5, tableW - 1, tallyH - 1);
+
+    tally.forEach(function (t, i) {
+      var cx = x0 + i * cellW;
+      if (i > 0) {
+        ctx.strokeStyle = C.lineSoft;
+        ctx.beginPath();
+        ctx.moveTo(cx + 0.5, y + 1);
+        ctx.lineTo(cx + 0.5, y + tallyH - 1);
+        ctx.stroke();
+      }
+      ctx.font = IMG.fontKey;
+      ctx.fillStyle = C.dim;
+      ctx.textAlign = "left";
+      ctx.fillText(t[0], cx + 16, y + 22);
+      ctx.font = IMG.fontTally;
+      ctx.fillStyle = C.text;
+      ctx.fillText(String(t[1]), cx + 16, y + 54);
+      ctx.fillStyle = C.gold;
+      ctx.fillRect(cx + 16, y + 74, 26, 2);
+    });
+
+    y += tallyH + 26;
+
+    // table frame + header
+    var tableTop = y;
+    ctx.fillStyle = C.band;
+    ctx.fillRect(x0, y, tableW, IMG.headH);
+
+    ctx.font = IMG.fontHead;
+    ctx.fillStyle = C.dim;
+    var cx2 = x0;
+    cols.forEach(function (c) {
+      ctx.textAlign = c.align === "right" ? "right" : "left";
+      var tx = c.align === "right" ? cx2 + c.w - IMG.cellPadX : cx2 + IMG.cellPadX;
+      ctx.fillText(c.head, tx, y + IMG.headH / 2);
+      cx2 += c.w;
+    });
+
+    ctx.strokeStyle = C.line;
+    ctx.beginPath();
+    ctx.moveTo(x0, y + IMG.headH + 0.5);
+    ctx.lineTo(x0 + tableW, y + IMG.headH + 0.5);
+    ctx.stroke();
+
+    y += IMG.headH;
+
+    // rows
+    blocks.forEach(function (b) {
+      var r = b.record;
+      var rowTop = y;
+
+      ctx.font = IMG.fontCell;
+      var cx3 = x0;
+      cols.forEach(function (c, i) {
+        ctx.fillStyle = i === 0 ? C.gold : C.text;
+        ctx.textAlign = c.align === "right" ? "right" : "left";
+        var tx = c.align === "right" ? cx3 + c.w - IMG.cellPadX : cx3 + IMG.cellPadX;
+        ctx.fillText(c.get(r), tx, y + IMG.rowH / 2);
+        cx3 += c.w;
+      });
+      y += IMG.rowH;
+
+      if (b.lines.length) {
+        y += 6;
+        ctx.textAlign = "left";
+        ctx.font = IMG.fontRemarkLabel;
+        ctx.fillStyle = C.dim;
+        ctx.fillText("REMARKS", x0 + IMG.cellPadX, y + 6);
+        y += 18;
+        ctx.font = IMG.fontRemark;
+        ctx.fillStyle = C.text;
+        b.lines.forEach(function (ln) {
+          ctx.fillText(ln, x0 + IMG.cellPadX, y + IMG.remarkLineH / 2);
+          y += IMG.remarkLineH;
+        });
+        y += 6;
+      }
+
+      y += 8;
+
+      ctx.strokeStyle = C.lineSoft;
+      ctx.beginPath();
+      ctx.moveTo(x0, y + 0.5);
+      ctx.lineTo(x0 + tableW, y + 0.5);
+      ctx.stroke();
+      rowTop = rowTop; // keep row bounds explicit for future tweaks
+    });
+
+    // table outline
+    ctx.strokeStyle = C.line;
+    ctx.strokeRect(x0 + 0.5, tableTop + 0.5, tableW - 1, y - tableTop);
+
+    // footer
+    ctx.textAlign = "left";
+    ctx.font = IMG.fontMeta;
+    ctx.fillStyle = C.dim;
+    ctx.fillText("Generated from the Daily Tour Activity Report tool.", x0, y + 28);
+
+    // ---- save ---------------------------------------------------------
+    var filename = "DailyTourActivityReport_" + fileStamp() + ".png";
+    try {
+      if (canvas.toBlob) {
+        canvas.toBlob(function (blob) {
+          if (!blob) {
+            showMessage("error", "Image export failed", ["The browser could not create the image."]);
+            return;
+          }
+          downloadBlob(blob, filename);
+          showMessage("success", "Image exported (" + records.length + " records, PNG).", []);
+        }, "image/png");
+      } else {
+        var a = document.createElement("a");
+        a.href = canvas.toDataURL("image/png");
+        a.download = filename;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        showMessage("success", "Image exported (" + records.length + " records, PNG).", []);
+      }
+    } catch (e) {
+      showMessage("error", "Image export failed", ["The browser blocked the download. Try Export PDF instead."]);
+    }
+  }
+
+  /* ==========================================================
+     CONFIRM MODAL
+     ========================================================== */
+  var pendingDeleteId = null;
+
+  function openConfirm(id) {
+    pendingDeleteId = id;
+    el.overlay.hidden = false;
+    el.confirmOk.focus();
+  }
+
+  function closeConfirm() {
+    pendingDeleteId = null;
+    el.overlay.hidden = true;
+  }
+
+  /* ==========================================================
+     THEME
+     ========================================================== */
+  function applyTheme(theme) {
+    var t = theme === "light" ? "light" : "dark";
+    document.documentElement.setAttribute("data-theme", t);
+    el.themeDark.setAttribute("aria-pressed", String(t === "dark"));
+    el.themeLight.setAttribute("aria-pressed", String(t === "light"));
+    try { localStorage.setItem(THEME_KEY, t); } catch (e) { /* ignore */ }
+  }
+
+  /* ==========================================================
+     REMARKS TOGGLE (exports only - on-screen editing is unaffected)
+     ========================================================== */
+  function includeRemarks() {
+    return !!el.chkRemarks.checked;
+  }
+
+  function applyRemarksToggle() {
+    var on = includeRemarks();
+    if (on) { document.body.classList.remove("hide-remarks"); }
+    else { document.body.classList.add("hide-remarks"); }
+    try { localStorage.setItem(REMARKS_KEY, on ? "1" : "0"); } catch (e) { /* ignore */ }
+  }
+
+  function initRemarksToggle() {
+    var saved = null;
+    try { saved = localStorage.getItem(REMARKS_KEY); } catch (e) { /* ignore */ }
+    el.chkRemarks.checked = saved !== "0";   // default: checked
+    applyRemarksToggle();
+  }
+
+  function initTheme() {
+    var saved = null;
+    try { saved = localStorage.getItem(THEME_KEY); } catch (e) { /* ignore */ }
+    if (saved === "light" || saved === "dark") { applyTheme(saved); return; }
+    var prefersLight = window.matchMedia && window.matchMedia("(prefers-color-scheme: light)").matches;
+    applyTheme(prefersLight ? "light" : "dark");
+  }
+
+  /* ==========================================================
+     EVENTS
+     ========================================================== */
+  el.insert.addEventListener("click", function () {
+    try { addRecord(); }
+    catch (e) { showMessage("error", "Something went wrong while inserting", ["Check the report format and try again."]); }
+  });
+
+  el.clearInput.addEventListener("click", function () {
+    el.input.value = "";
+    hideMessage();
+    el.input.focus();
+  });
+
+  el.csv.addEventListener("click", function () {
+    try { exportCSV(); } catch (e) { showMessage("error", "CSV export failed", ["Try again."]); }
+  });
+
+  el.pdf.addEventListener("click", function () {
+    try { exportPDF(); } catch (e) { showMessage("error", "PDF export failed", ["Use your browser menu: Print \u2192 Save as PDF."]); }
+  });
+
+  el.img.addEventListener("click", function () {
+    try { exportImage(); } catch (e) { showMessage("error", "Image export failed", ["Try again, or use Export PDF."]); }
+  });
+
+  el.chkRemarks.addEventListener("change", applyRemarksToggle);
+
+  el.tbody.addEventListener("click", function (e) {
+    var btn = e.target.closest ? e.target.closest("[data-delete]") : null;
+    if (btn) { openConfirm(btn.getAttribute("data-delete")); }
+  });
+
+  el.tbody.addEventListener("input", function (e) {
+    var box = e.target;
+    if (box && box.classList && box.classList.contains("remarks-input")) {
+      var id = box.getAttribute("data-id");
+      updateRemarks(id, box.value);
+      autoGrow(box);
+      var cell = box.parentNode;
+      var mirror = cell.querySelector(".remarks-print");
+      if (mirror) { mirror.textContent = box.value; }
+      var row = cell.parentNode;
+      if (box.value.trim()) { row.classList.remove("no-remarks"); }
+      else { row.classList.add("no-remarks"); }
+    }
+  });
+
+  el.confirmOk.addEventListener("click", function () {
+    var id = pendingDeleteId;
+    closeConfirm();
+    if (id) { deleteRecord(id); }
+  });
+  el.confirmNo.addEventListener("click", closeConfirm);
+  el.overlay.addEventListener("click", function (e) {
+    if (e.target === el.overlay) { closeConfirm(); }
+  });
+  document.addEventListener("keydown", function (e) {
+    if (e.key === "Escape" && !el.overlay.hidden) { closeConfirm(); }
+  });
+
+  el.input.addEventListener("keydown", function (e) {
+    if ((e.ctrlKey || e.metaKey) && e.key === "Enter") { e.preventDefault(); addRecord(); }
+  });
+
+  el.themeDark.addEventListener("click", function () { applyTheme("dark"); });
+  el.themeLight.addEventListener("click", function () { applyTheme("light"); });
+
+  window.addEventListener("beforeprint", setPrintMeta);
+  window.addEventListener("resize", function () {
+    var boxes = el.tbody.querySelectorAll(".remarks-input");
+    for (var i = 0; i < boxes.length; i++) { autoGrow(boxes[i]); }
+  });
+
+  window.addEventListener("error", function () {
+    showMessage("error", "Unexpected problem", ["The last action did not complete. Your saved records are unaffected."]);
+  });
+
+  /* ==========================================================
+     START
+     ========================================================== */
+  initTheme();
+  initRemarksToggle();
+  records = loadRecords();
+  refresh();
+  saveRecords();
+})();
+</script>
+</body>
+</html>
