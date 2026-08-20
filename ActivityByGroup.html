@@ -1306,22 +1306,19 @@ function v(id) { return document.getElementById(id).value; }
 function buildReportText(data) {
   const t = I18N[lang];
   const vols = data.volunteers || [];
-
-  if (!vols.length) {
-    // No volunteer entries yet — show shift header only
-    return [
-      t.reportTitle,
-      `${t.reportDate}: ${fmtDate(data.date)}`,
-      `${t.reportStart}: ${fmtTime(data.start)}`,
-      `${t.reportEnd}: ${fmtTime(data.end)}`,
-    ].join("\n");
-  }
-
-  const blocks = vols.map(vol => [
-    t.reportTitle,
+  const header = [
     `${t.reportDate}: ${fmtDate(data.date)}`,
     `${t.reportStart}: ${fmtTime(data.start)}`,
     `${t.reportEnd}: ${fmtTime(data.end)}`,
+  ];
+
+  if (!vols.length) {
+    // No volunteer entries yet — show shift header only
+    return [t.reportTitle, ...header].join("\n");
+  }
+
+  const blocks = vols.map(vol => [
+    ...header,
     `${t.reportVol}: ${vol.count}`,
     `${t.reportVis}: ${vol.visitors}`,
     `${t.reportDia}: ${vol.dialogues}`,
@@ -1330,7 +1327,7 @@ function buildReportText(data) {
     `${t.reportRemarks}: ${vol.name}`,
   ].join("\n"));
 
-  return blocks.join("\n");
+  return t.reportTitle + "\n" + blocks.join("\n\n");
 }
 
 /* ══ Storage ═══════════════════════════════════════════════════════════ */
