@@ -1,0 +1,1261 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Transaction Log</title>
+<style>
+/* ============================================================
+   TOKENS — dark (default)
+   ============================================================ */
+:root{
+  --bg:            #061618;
+  --surface:       #0c2528;
+  --surface-2:     #103034;
+  --surface-3:     #143c41;
+  --border:        #1d4a50;
+  --border-soft:   #163e43;
+
+  --gold:          #d8b25c;
+  --gold-bright:   #f0cd7a;
+  --gold-dim:      #8a6f33;
+  --on-gold:       #0a1c1e;
+
+  --text:          #e8f3f2;
+  --text-muted:    #8bacaa;
+  --text-faint:    #5d817f;
+
+  --credit:        #56c88f;
+  --debit:         #ef7c72;
+
+  --zebra:         rgba(255,255,255,.018);
+  --edit-tint:     rgba(216,178,92,.09);
+  --banner-tint:   rgba(239,124,114,.10);
+
+  --radius:        8px;
+  --radius-sm:     5px;
+  --stick-top:     0px;   /* set at runtime from the summary bar height */
+
+  --font: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  --mono: ui-monospace, SFMono-Regular, "SF Mono", Consolas, "Liberation Mono", Menlo, monospace;
+}
+
+/* ============================================================
+   TOKENS — light
+   ============================================================ */
+:root[data-theme="light"]{
+  --bg:            #eef4f3;
+  --surface:       #ffffff;
+  --surface-2:     #e4eeec;
+  --surface-3:     #d6e4e2;
+  --border:        #c2d6d3;
+  --border-soft:   #dce7e5;
+
+  --gold:          #a9761f;
+  --gold-bright:   #8c6014;
+  --gold-dim:      #d8c390;
+  --on-gold:       #ffffff;
+
+  --text:          #0d2a2c;
+  --text-muted:    #4a6b6a;
+  --text-faint:    #78938f;
+
+  --credit:        #10794c;
+  --debit:         #bb372a;
+
+  --zebra:         rgba(13,42,44,.028);
+  --edit-tint:     rgba(169,118,31,.12);
+  --banner-tint:   rgba(187,55,42,.09);
+}
+
+*{box-sizing:border-box;}
+html,body{margin:0;padding:0;}
+
+body{
+  background:var(--bg);
+  color:var(--text);
+  font-family:var(--font);
+  font-size:15px;
+  line-height:1.5;
+  -webkit-font-smoothing:antialiased;
+  padding:0 0 64px;
+}
+
+.wrap{max-width:1080px;margin:0 auto;padding:0 20px;}
+
+/* ============================================================
+   HEADER
+   ============================================================ */
+.masthead{
+  border-bottom:1px solid var(--border);
+  background:var(--surface);
+  padding:26px 0 22px;
+  margin-bottom:22px;
+}
+.masthead-inner{
+  display:flex;align-items:flex-end;justify-content:space-between;
+  gap:20px;flex-wrap:wrap;
+}
+h1{font-size:22px;font-weight:600;margin:0;letter-spacing:.02em;}
+h1 .mark{color:var(--gold);}
+.tagline{color:var(--text-faint);font-size:13px;margin-top:3px;}
+.toolbar{display:flex;gap:8px;flex-wrap:wrap;}
+
+/* ============================================================
+   BUTTONS
+   ============================================================ */
+button{font-family:inherit;font-size:14px;cursor:pointer;}
+
+.btn{
+  background:var(--surface-2);
+  color:var(--text);
+  border:1px solid var(--border);
+  border-radius:var(--radius-sm);
+  padding:8px 14px;
+  transition:background .12s ease,border-color .12s ease,color .12s ease;
+}
+.btn:hover{background:var(--surface-3);border-color:var(--gold-dim);}
+.btn-primary{background:var(--gold);color:var(--on-gold);border-color:var(--gold);font-weight:600;}
+.btn-primary:hover{background:var(--gold-bright);border-color:var(--gold-bright);}
+.btn-ghost{background:transparent;}
+.btn-danger:hover{border-color:var(--debit);color:var(--debit);}
+.btn-sm{padding:5px 10px;font-size:13px;}
+.btn:disabled{opacity:.45;cursor:not-allowed;}
+.btn:disabled:hover{background:var(--surface-2);border-color:var(--border);color:var(--text);}
+
+:focus-visible{outline:2px solid var(--gold);outline-offset:2px;}
+
+/* ============================================================
+   SUMMARY BAR
+   ============================================================ */
+.summary{
+  position:sticky;top:0;z-index:30;
+  display:grid;grid-template-columns:repeat(4,1fr);
+  background:var(--surface);
+  border:1px solid var(--border);
+  border-radius:var(--radius);
+  overflow:hidden;
+  margin-bottom:20px;
+}
+.stat{padding:12px 16px;border-right:1px solid var(--border-soft);}
+.stat:last-child{border-right:0;}
+.stat-label{
+  font-size:11px;text-transform:uppercase;letter-spacing:.09em;
+  color:var(--text-faint);margin-bottom:3px;
+}
+.stat-value{font-family:var(--mono);font-size:16px;font-weight:600;}
+.stat-value.credit{color:var(--credit);}
+.stat-value.debit{color:var(--debit);}
+.stat-value.gold{color:var(--gold);}
+.stat-value.neg{color:var(--debit);}
+
+/* ============================================================
+   PANELS
+   ============================================================ */
+.panel{
+  background:var(--surface);
+  border:1px solid var(--border);
+  border-radius:var(--radius);
+  padding:16px;
+  margin-bottom:18px;
+}
+.panel-title{
+  font-size:11px;text-transform:uppercase;letter-spacing:.09em;
+  color:var(--gold);margin-bottom:12px;font-weight:600;
+}
+
+/* ============================================================
+   ACCOUNT / SHEET BAR
+   ============================================================ */
+.account-controls{display:flex;gap:8px;flex-wrap:wrap;align-items:center;}
+.account-controls select{min-width:200px;flex:0 1 260px;}
+
+/* ============================================================
+   FORM
+   ============================================================ */
+.entry-grid{
+  display:grid;
+  grid-template-columns:150px 1fr 150px 170px auto;
+  gap:12px;align-items:start;
+}
+.field{display:flex;flex-direction:column;min-width:0;}
+label{font-size:12px;color:var(--text-muted);margin-bottom:5px;}
+
+input[type=text],input[type=date],input[type=number],input[type=search],select{
+  width:100%;
+  background:var(--bg);
+  border:1px solid var(--border);
+  border-radius:var(--radius-sm);
+  color:var(--text);
+  font-family:inherit;font-size:14px;
+  padding:8px 10px;
+}
+input:hover,select:hover{border-color:var(--gold-dim);}
+input.invalid{border-color:var(--debit);}
+input::placeholder{color:var(--text-faint);}
+
+.err{color:var(--debit);font-size:12px;margin-top:4px;}
+
+.toggle{display:flex;border:1px solid var(--border);border-radius:var(--radius-sm);overflow:hidden;}
+.toggle button{flex:1;background:var(--bg);color:var(--text-muted);border:0;padding:8px 6px;font-size:13px;}
+.toggle button[aria-pressed="true"]{
+  background:var(--surface-3);color:var(--text);font-weight:600;
+  box-shadow:inset 0 -2px 0 var(--gold);
+}
+.form-actions{display:flex;gap:8px;align-self:end;padding-bottom:1px;}
+.editing-flag{color:var(--gold);font-size:12px;margin-bottom:10px;display:none;}
+.editing-flag.on{display:block;}
+
+/* ============================================================
+   FILTERS
+   ============================================================ */
+.filters{display:grid;grid-template-columns:1fr 150px 150px auto;gap:12px;align-items:end;}
+.filter-note{color:var(--text-faint);font-size:12px;margin-top:10px;display:none;}
+.filter-note.on{display:block;}
+
+/* ============================================================
+   BULK ACTION BAR
+   ============================================================ */
+.bulk-bar{
+  display:none;align-items:center;gap:12px;
+  background:var(--edit-tint);
+  border:1px solid var(--gold-dim);
+  border-radius:var(--radius);
+  padding:10px 14px;margin-bottom:12px;
+  font-size:13px;color:var(--text);
+}
+.bulk-bar .bulk-count{font-weight:600;color:var(--gold);}
+.bulk-bar .btn{margin-left:auto;}
+.bulk-bar .btn + .btn{margin-left:0;}
+
+/* ============================================================
+   TABLE
+   ============================================================ */
+.table-wrap{
+  background:var(--surface);
+  border:1px solid var(--border);
+  border-radius:var(--radius);
+  /* NOTE: no overflow here — an overflow ancestor would make this box the
+     scroll container for the sticky header and pin it inside the table. */
+}
+table{width:100%;border-collapse:separate;border-spacing:0;font-size:14px;}
+
+thead th{
+  position:sticky;top:var(--stick-top);z-index:20;
+  background:var(--surface-2);
+  color:var(--gold);
+  font-size:11px;text-transform:uppercase;letter-spacing:.09em;
+  text-align:left;font-weight:600;
+  padding:10px 14px;
+  border-bottom:1px solid var(--border);
+}
+thead th:first-child{border-top-left-radius:var(--radius);}
+thead th:last-child{border-top-right-radius:var(--radius);}
+
+tbody td{padding:10px 14px;border-bottom:1px solid var(--border-soft);vertical-align:middle;}
+tbody tr:last-child td{border-bottom:0;}
+tbody tr:last-child td:first-child{border-bottom-left-radius:var(--radius);}
+tbody tr:last-child td:last-child{border-bottom-right-radius:var(--radius);}
+tbody tr:nth-of-type(even){background:var(--zebra);}
+tbody tr:hover{background:var(--surface-2);}
+tbody tr.is-editing{background:var(--edit-tint);box-shadow:inset 3px 0 0 var(--gold);}
+tbody tr.is-selected{background:var(--edit-tint);}
+
+.col-select{width:40px;text-align:center;}
+.col-select input{width:16px;height:16px;cursor:pointer;accent-color:var(--gold);}
+.col-sno{width:56px;color:var(--text-faint);font-family:var(--mono);}
+.col-date{width:120px;white-space:nowrap;color:var(--text-muted);}
+.col-amount,.col-balance{width:150px;text-align:right;font-family:var(--mono);white-space:nowrap;}
+.col-actions{width:120px;text-align:right;white-space:nowrap;}
+.particulars{word-break:break-word;}
+.credit{color:var(--credit);}
+.debit{color:var(--debit);}
+.row-actions{display:inline-flex;gap:6px;}
+
+/* ============================================================
+   EMPTY STATE / BANNER / TOAST
+   ============================================================ */
+.empty{padding:52px 24px;text-align:center;}
+.empty-title{font-size:16px;margin-bottom:6px;}
+.empty-hint{color:var(--text-faint);font-size:13px;}
+
+.banner{
+  display:none;background:var(--banner-tint);
+  border:1px solid var(--debit);color:var(--debit);
+  border-radius:var(--radius);padding:10px 14px;font-size:13px;margin-bottom:16px;
+}
+.banner.on{display:block;}
+
+.toast{
+  position:fixed;left:50%;bottom:24px;transform:translateX(-50%) translateY(14px);
+  background:var(--surface-3);border:1px solid var(--gold-dim);
+  color:var(--text);border-radius:var(--radius-sm);
+  padding:10px 18px;font-size:14px;
+  opacity:0;pointer-events:none;transition:opacity .18s ease,transform .18s ease;
+  z-index:60;max-width:90vw;text-align:center;
+}
+.toast.on{opacity:1;transform:translateX(-50%) translateY(0);}
+
+.sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;}
+
+/* ============================================================
+   RESPONSIVE
+   ============================================================ */
+@media (max-width:900px){
+  .entry-grid{grid-template-columns:1fr 1fr;}
+  .filters{grid-template-columns:1fr 1fr;}
+}
+
+@media (max-width:700px){
+  body{font-size:14px;}
+  .summary{grid-template-columns:1fr 1fr;position:static;}
+  .stat:nth-child(1),.stat:nth-child(2){border-bottom:1px solid var(--border-soft);}
+  .stat:nth-child(2n){border-right:0;}
+
+  .entry-grid,.filters{grid-template-columns:1fr;}
+  .form-actions{align-self:auto;}
+  .form-actions .btn{flex:1;}
+  .account-controls select{flex:1 1 100%;}
+
+  .bulk-bar{flex-wrap:wrap;}
+  .bulk-bar .btn{margin-left:0;}
+
+  .table-wrap{background:transparent;border:0;border-radius:0;}
+  table,tbody,tr,td{display:block;width:100%;}
+  thead{display:none;}
+  tbody tr{
+    background:var(--surface);
+    border:1px solid var(--border);
+    border-radius:var(--radius);
+    padding:6px 4px;margin-bottom:12px;
+  }
+  tbody tr:nth-of-type(even){background:var(--surface);}
+  tbody tr:hover{background:var(--surface);}
+  tbody tr.is-editing{background:var(--edit-tint);box-shadow:inset 0 0 0 1px var(--gold);}
+  tbody tr.is-selected{background:var(--edit-tint);}
+  tbody td{
+    display:flex;justify-content:space-between;gap:16px;
+    padding:7px 14px;border-bottom:0;border-radius:0;text-align:right;width:auto;
+  }
+  tbody tr:last-child td:first-child,
+  tbody tr:last-child td:last-child{border-radius:0;}
+  tbody td:empty{display:none;}
+  tbody td::before{
+    content:attr(data-label);
+    color:var(--text-faint);font-size:11px;text-transform:uppercase;
+    letter-spacing:.09em;text-align:left;flex:0 0 auto;padding-top:2px;
+  }
+  .col-actions{justify-content:flex-end;}
+  .col-select{justify-content:flex-start;}
+  .empty{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);}
+}
+
+@media (prefers-reduced-motion:reduce){
+  *{transition:none!important;animation:none!important;}
+}
+</style>
+</head>
+<body>
+
+<header class="masthead">
+  <div class="wrap masthead-inner">
+    <div>
+      <h1>Transaction <span class="mark">Log</span></h1>
+      <div class="tagline">Running-balance ledger &middot; saved on this device</div>
+    </div>
+    <div class="toolbar">
+      <button class="btn btn-sm" id="btnTheme" type="button">Light theme</button>
+      <button class="btn btn-sm" id="btnExportJson" type="button">Export JSON</button>
+      <button class="btn btn-sm" id="btnExportCsv" type="button">Export CSV</button>
+      <button class="btn btn-sm" id="btnImport" type="button">Import JSON</button>
+      <button class="btn btn-sm btn-danger" id="btnClear" type="button">Clear sheet data</button>
+      <input type="file" id="fileInput" accept="application/json,.json" class="sr-only">
+    </div>
+  </div>
+</header>
+
+<main class="wrap">
+
+  <section class="panel" aria-label="Sheets">
+    <div class="panel-title">Sheet</div>
+    <div class="account-controls">
+      <select id="accountSelect" aria-label="Active sheet"></select>
+      <button class="btn btn-sm" id="btnNewAccount" type="button">+ New sheet</button>
+      <button class="btn btn-sm" id="btnRenameAccount" type="button">Rename</button>
+      <button class="btn btn-sm btn-danger" id="btnDeleteAccount" type="button">Delete sheet</button>
+    </div>
+  </section>
+
+  <div class="banner" id="storageBanner" role="alert"></div>
+
+  <section class="summary" id="summaryBar" aria-label="Ledger totals">
+    <div class="stat">
+      <div class="stat-label">Total credits</div>
+      <div class="stat-value credit" id="statCredits">0.00</div>
+    </div>
+    <div class="stat">
+      <div class="stat-label">Total debits</div>
+      <div class="stat-value debit" id="statDebits">0.00</div>
+    </div>
+    <div class="stat">
+      <div class="stat-label">Closing balance</div>
+      <div class="stat-value gold" id="statBalance">0.00</div>
+    </div>
+    <div class="stat">
+      <div class="stat-label">Entries</div>
+      <div class="stat-value" id="statCount">0</div>
+    </div>
+  </section>
+
+  <section class="panel">
+    <div class="panel-title" id="formTitle">New entry</div>
+    <div class="editing-flag" id="editingFlag">Editing entry #<span id="editingSno"></span> &mdash; press Escape to cancel.</div>
+    <form id="entryForm" novalidate>
+      <div class="entry-grid">
+        <div class="field">
+          <label for="fDate">Date</label>
+          <input type="date" id="fDate" required>
+          <div class="err" id="eDate"></div>
+        </div>
+        <div class="field">
+          <label for="fParticulars">Particulars</label>
+          <input type="text" id="fParticulars" maxlength="200" placeholder="What was this for?" autocomplete="off">
+          <div class="err" id="eParticulars"></div>
+        </div>
+        <div class="field">
+          <label for="fAmount">Amount</label>
+          <input type="number" id="fAmount" step="0.01" min="0" placeholder="0.00" inputmode="decimal">
+          <div class="err" id="eAmount"></div>
+        </div>
+        <div class="field">
+          <label id="lblType">Type</label>
+          <div class="toggle" role="group" aria-labelledby="lblType">
+            <button type="button" id="tCredit" aria-pressed="true">Add (Credit)</button>
+            <button type="button" id="tDebit" aria-pressed="false">Subtract (Debit)</button>
+          </div>
+        </div>
+        <div class="form-actions">
+          <button type="submit" class="btn btn-primary" id="btnSubmit">Add entry</button>
+          <button type="button" class="btn btn-ghost" id="btnCancel" style="display:none">Cancel</button>
+        </div>
+      </div>
+    </form>
+  </section>
+
+  <section class="panel">
+    <div class="panel-title">Find</div>
+    <div class="filters">
+      <div class="field">
+        <label for="fSearch">Search particulars</label>
+        <input type="search" id="fSearch" placeholder="Type to filter&hellip;" autocomplete="off">
+      </div>
+      <div class="field">
+        <label for="fFrom">From date</label>
+        <input type="date" id="fFrom">
+      </div>
+      <div class="field">
+        <label for="fTo">To date</label>
+        <input type="date" id="fTo">
+      </div>
+      <div class="form-actions">
+        <button type="button" class="btn" id="btnOrder">Newest first</button>
+        <button type="button" class="btn" id="btnClearFilters">Clear filters</button>
+      </div>
+    </div>
+    <div class="filter-note" id="filterNote"></div>
+  </section>
+
+  <div class="bulk-bar" id="bulkBar">
+    <span class="bulk-count" id="bulkCount">0 selected</span>
+    <button type="button" class="btn btn-sm btn-danger" id="btnDeleteSelected">Delete selected</button>
+    <button type="button" class="btn btn-sm btn-ghost" id="btnClearSelection">Clear selection</button>
+  </div>
+
+  <section class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th class="col-select"><input type="checkbox" id="chkSelectAll" aria-label="Select all visible rows"></th>
+          <th class="col-sno">SNO</th>
+          <th class="col-date">Date</th>
+          <th>Particulars</th>
+          <th class="col-amount">Amount</th>
+          <th class="col-balance">Balance</th>
+          <th class="col-actions">Actions</th>
+        </tr>
+      </thead>
+      <tbody id="tbody"></tbody>
+    </table>
+    <div class="empty" id="emptyState" style="display:none">
+      <div class="empty-title" id="emptyTitle"></div>
+      <div class="empty-hint" id="emptyHint"></div>
+    </div>
+  </section>
+</main>
+
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script>
+"use strict";
+
+/* ============================================================
+   CONFIG
+   ============================================================ */
+const CONFIG = {
+  CURRENCY: "QAR",
+  ACCOUNTS_KEY: "txnLog.accounts.v1",
+  ACTIVE_ACCOUNT_KEY: "txnLog.activeAccount.v1",
+  RECORDS_PREFIX: "txnLog.records.v1.",
+  THEME_KEY: "txnLog.theme",
+  ORDER_KEY: "txnLog.order",
+  MAX_PARTICULARS: 200,
+  MONTHS: ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"]
+};
+
+/* ============================================================
+   STATE
+   ============================================================ */
+let accounts = [];         // [{id, name}]
+let activeAccountId = null;
+let records = [];          // entries of the ACTIVE account: [{id, date, particulars, amount}] amount is SIGNED
+let editingId = null;
+let selectedIds = new Set();
+let entryType = "credit";  // "credit" | "debit"
+let sortOrder = "desc";    // "desc" = latest transaction on top
+let storageOk = true;
+
+const $ = (id) => document.getElementById(id);
+
+/* ============================================================
+   UTILS
+   ============================================================ */
+function escapeHtml(str){
+  return String(str)
+    .replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;")
+    .replace(/"/g,"&quot;").replace(/'/g,"&#39;");
+}
+
+function newId(){
+  if (window.crypto && typeof window.crypto.randomUUID === "function") return window.crypto.randomUUID();
+  return "id-" + Date.now().toString(36) + "-" + Math.random().toString(36).slice(2,10);
+}
+
+function round2(n){ return Math.round((Number(n) + Number.EPSILON) * 100) / 100; }
+
+function formatNumber(n){
+  return Math.abs(round2(n)).toLocaleString("en-US", {minimumFractionDigits:2, maximumFractionDigits:2});
+}
+
+function formatCurrency(n, opts){
+  const showSign = !opts || opts.sign !== false;
+  const v = round2(n);
+  const sign = v < 0 ? "-" : (showSign ? "+" : "");
+  return sign + CONFIG.CURRENCY + " " + formatNumber(v);
+}
+
+function formatDate(iso){
+  if (!isIsoDate(iso)) return String(iso || "");
+  const [y,m,d] = iso.split("-");
+  return d + "-" + CONFIG.MONTHS[Number(m)-1] + "-" + y;
+}
+
+function isIsoDate(v){
+  if (typeof v !== "string" || !/^\d{4}-\d{2}-\d{2}$/.test(v)) return false;
+  return !isNaN(new Date(v + "T00:00:00").getTime());
+}
+
+function todayIso(){
+  const d = new Date();
+  const p = (n) => String(n).padStart(2,"0");
+  return d.getFullYear() + "-" + p(d.getMonth()+1) + "-" + p(d.getDate());
+}
+
+function slugify(s){
+  const out = String(s).toLowerCase().trim().replace(/[^a-z0-9]+/g,"-").replace(/(^-+|-+$)/g,"");
+  return out || "sheet";
+}
+
+function download(filename, text, mime){
+  const blob = new Blob([text], {type: mime + ";charset=utf-8"});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url; a.download = filename;
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+}
+
+let toastTimer = null;
+function toast(msg){
+  const el = $("toast");
+  el.textContent = msg;
+  el.classList.add("on");
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => el.classList.remove("on"), 2600);
+}
+
+function banner(msg){
+  const el = $("storageBanner");
+  if (!msg){ el.classList.remove("on"); el.textContent = ""; return; }
+  el.textContent = msg;
+  el.classList.add("on");
+}
+
+function activeAccount(){
+  return accounts.find(a => a.id === activeAccountId) || null;
+}
+
+/* ============================================================
+   CALCULATIONS (pure)
+   ============================================================ */
+/**
+ * Always computed oldest-to-newest so the running balance is correct,
+ * regardless of the order the rows are displayed in.
+ * Date ascending, insertion order as tie-breaker (Array#sort is stable).
+ */
+function computeBalances(list){
+  const sorted = list.slice().sort((a,b) => a.date < b.date ? -1 : a.date > b.date ? 1 : 0);
+  let running = 0;
+  return sorted.map((r, i) => {
+    running = round2(running + r.amount);
+    return { ...r, sno: i + 1, balance: running };
+  });
+}
+
+function computeTotals(rows){
+  let credits = 0, debits = 0;
+  rows.forEach(r => { if (r.amount >= 0) credits += r.amount; else debits += r.amount; });
+  return {
+    credits: round2(credits),
+    debits: round2(Math.abs(debits)),
+    balance: round2(credits + debits),
+    count: rows.length
+  };
+}
+
+function applyFilters(rows){
+  const q    = $("fSearch").value.trim().toLowerCase();
+  const from = $("fFrom").value;
+  const to   = $("fTo").value;
+  return rows.filter(r => {
+    if (q && !r.particulars.toLowerCase().includes(q)) return false;
+    if (isIsoDate(from) && r.date < from) return false;
+    if (isIsoDate(to)   && r.date > to)   return false;
+    return true;
+  });
+}
+
+function filtersActive(){
+  return !!($("fSearch").value.trim() || $("fFrom").value || $("fTo").value);
+}
+
+function visibleDisplayRows(){
+  const rows = computeBalances(records);
+  const visible = applyFilters(rows);
+  return sortOrder === "desc" ? visible.slice().reverse() : visible;
+}
+
+/* ============================================================
+   STORAGE — low level
+   ============================================================ */
+function readKey(key){
+  try { return localStorage.getItem(key); } catch (err){ return null; }
+}
+
+function writeKey(key, value){
+  try { localStorage.setItem(key, value); return true; } catch (err){ return false; }
+}
+
+/* ============================================================
+   STORAGE — accounts (sheets)
+   ============================================================ */
+function isValidAccount(a){
+  return a && typeof a === "object" && typeof a.id === "string" && a.id
+    && typeof a.name === "string" && a.name.trim().length > 0;
+}
+
+function loadAccounts(){
+  try {
+    const raw = localStorage.getItem(CONFIG.ACCOUNTS_KEY);
+    const parsed = raw ? JSON.parse(raw) : null;
+    if (Array.isArray(parsed) && parsed.length > 0 && parsed.every(isValidAccount)) return parsed;
+  } catch (err) { /* fall through to default */ }
+  const def = [{ id: newId(), name: "Main" }];
+  writeKey(CONFIG.ACCOUNTS_KEY, JSON.stringify(def));
+  return def;
+}
+
+function saveAccounts(){
+  return writeKey(CONFIG.ACCOUNTS_KEY, JSON.stringify(accounts));
+}
+
+function loadActiveAccountId(){
+  const stored = readKey(CONFIG.ACTIVE_ACCOUNT_KEY);
+  if (stored && accounts.some(a => a.id === stored)) return stored;
+  return accounts[0].id;
+}
+
+function setActiveAccount(id){
+  activeAccountId = id;
+  writeKey(CONFIG.ACTIVE_ACCOUNT_KEY, id);
+}
+
+/* ============================================================
+   STORAGE — records (per active account)
+   ============================================================ */
+function recordsKey(accountId){
+  return CONFIG.RECORDS_PREFIX + accountId;
+}
+
+function isValidRecord(r){
+  return r && typeof r === "object"
+    && isIsoDate(r.date)
+    && typeof r.particulars === "string" && r.particulars.trim().length > 0
+    && typeof r.amount === "number" && isFinite(r.amount) && r.amount !== 0;
+}
+
+function normaliseRecord(r){
+  return {
+    id: (typeof r.id === "string" && r.id) ? r.id : newId(),
+    date: r.date,
+    particulars: r.particulars.trim().slice(0, CONFIG.MAX_PARTICULARS),
+    amount: round2(r.amount)
+  };
+}
+
+function loadRecordsForActiveAccount(){
+  try {
+    const raw = localStorage.getItem(recordsKey(activeAccountId));
+    if (!raw) return [];
+    const parsed = JSON.parse(raw);
+    if (!Array.isArray(parsed)) return [];
+    return parsed.filter(isValidRecord).map(normaliseRecord);
+  } catch (err) {
+    storageOk = false;
+    banner("Saved data for this sheet could not be read from this browser. Anything you add now will stay in this tab only.");
+    return [];
+  }
+}
+
+function saveRecords(){
+  try {
+    localStorage.setItem(recordsKey(activeAccountId), JSON.stringify(records));
+    if (!storageOk){ storageOk = true; banner(""); }
+    return true;
+  } catch (err) {
+    storageOk = false;
+    const full = err && (err.name === "QuotaExceededError" || err.code === 22);
+    banner(full
+      ? "Storage is full, so this change was not saved. Export your data, then clear some browser storage."
+      : "This browser is blocking local storage, so changes are not being saved. Check your privacy settings or export your data before closing.");
+    return false;
+  }
+}
+
+function deleteRecordsForAccount(accountId){
+  try { localStorage.removeItem(recordsKey(accountId)); } catch (err){ /* ignore */ }
+}
+
+/* ============================================================
+   RENDER
+   ============================================================ */
+function render(){
+  const rows = computeBalances(records);          // chronological, with sno + balance
+  const visible = applyFilters(rows);
+  const display = sortOrder === "desc" ? visible.slice().reverse() : visible;
+
+  // drop selection for ids that no longer exist (e.g. after delete/import)
+  const existingIds = new Set(records.map(r => r.id));
+  selectedIds.forEach(id => { if (!existingIds.has(id)) selectedIds.delete(id); });
+
+  renderSummary(rows);
+  renderTable(display);
+  renderFilterNote(rows.length, visible.length);
+  renderBulkBar();
+  syncSelectAllCheckbox(display.map(r => r.id));
+}
+
+function renderSummary(rows){
+  const t = computeTotals(rows);
+  $("statCredits").textContent = formatCurrency(t.credits, {sign:false});
+  $("statDebits").textContent  = formatCurrency(t.debits,  {sign:false});
+  const bal = $("statBalance");
+  bal.textContent = formatCurrency(t.balance, {sign:false});
+  bal.classList.toggle("neg", t.balance < 0);
+  bal.classList.toggle("gold", t.balance >= 0);
+  $("statCount").textContent = String(t.count);
+}
+
+function renderTable(rows){
+  const tbody = $("tbody");
+  const empty = $("emptyState");
+
+  if (rows.length === 0){
+    tbody.innerHTML = "";
+    empty.style.display = "block";
+    if (records.length === 0){
+      $("emptyTitle").textContent = "No entries yet";
+      $("emptyHint").textContent  = "Add your first transaction above and the running balance builds from there.";
+    } else {
+      $("emptyTitle").textContent = "Nothing matches these filters";
+      $("emptyHint").textContent  = "Widen the date range or clear the search to see your entries again.";
+    }
+    return;
+  }
+
+  empty.style.display = "none";
+
+  const body = rows.map(r => {
+    const isCredit = r.amount >= 0;
+    const isSelected = selectedIds.has(r.id);
+    const rowClasses = [r.id === editingId ? "is-editing" : "", isSelected ? "is-selected" : ""].join(" ").trim();
+    return '<tr class="' + rowClasses + '">' +
+      '<td class="col-select" data-label="Select"><input type="checkbox" class="rowChk" data-id="' + escapeHtml(r.id) + '"' + (isSelected ? " checked" : "") + '></td>' +
+      '<td class="col-sno" data-label="SNO">' + r.sno + '</td>' +
+      '<td class="col-date" data-label="Date">' + formatDate(r.date) + '</td>' +
+      '<td class="particulars" data-label="Particulars">' + escapeHtml(r.particulars) + '</td>' +
+      '<td class="col-amount ' + (isCredit ? "credit" : "debit") + '" data-label="Amount">' +
+        escapeHtml(formatCurrency(r.amount)) + '</td>' +
+      '<td class="col-balance' + (r.balance < 0 ? " debit" : "") + '" data-label="Balance">' +
+        escapeHtml(formatCurrency(r.balance, {sign:false})) + '</td>' +
+      '<td class="col-actions" data-label="Actions">' +
+        '<span class="row-actions">' +
+          '<button type="button" class="btn btn-sm" data-edit="' + escapeHtml(r.id) + '">Edit</button>' +
+          '<button type="button" class="btn btn-sm btn-danger" data-del="' + escapeHtml(r.id) + '">Delete</button>' +
+        '</span>' +
+      '</td>' +
+    '</tr>';
+  }).join("");
+
+  tbody.innerHTML = body;
+}
+
+function renderFilterNote(total, shown){
+  const note = $("filterNote");
+  if (filtersActive() && total > 0){
+    note.textContent = "Showing " + shown + " of " + total + " entries. Balances and totals still reflect the full sheet.";
+    note.classList.add("on");
+  } else {
+    note.classList.remove("on");
+  }
+}
+
+function renderBulkBar(){
+  const bar = $("bulkBar");
+  const n = selectedIds.size;
+  if (n > 0){
+    $("bulkCount").textContent = n + " selected";
+    bar.style.display = "flex";
+  } else {
+    bar.style.display = "none";
+  }
+}
+
+function syncSelectAllCheckbox(visibleIds){
+  const chk = $("chkSelectAll");
+  if (visibleIds.length === 0){
+    chk.checked = false; chk.indeterminate = false; chk.disabled = true;
+    return;
+  }
+  chk.disabled = false;
+  const selectedVisible = visibleIds.filter(id => selectedIds.has(id)).length;
+  chk.checked = selectedVisible === visibleIds.length;
+  chk.indeterminate = selectedVisible > 0 && selectedVisible < visibleIds.length;
+}
+
+function renderAccountSelect(){
+  const sel = $("accountSelect");
+  sel.innerHTML = accounts.map(a =>
+    '<option value="' + escapeHtml(a.id) + '"' + (a.id === activeAccountId ? " selected" : "") + '>' +
+      escapeHtml(a.name) +
+    '</option>'
+  ).join("");
+  $("btnDeleteAccount").disabled = accounts.length <= 1;
+}
+
+function setType(type){
+  entryType = type;
+  $("tCredit").setAttribute("aria-pressed", String(type === "credit"));
+  $("tDebit").setAttribute("aria-pressed",  String(type === "debit"));
+}
+
+function setError(fieldId, errId, msg){
+  $(errId).textContent = msg || "";
+  $(fieldId).classList.toggle("invalid", !!msg);
+}
+
+function clearErrors(){
+  setError("fDate","eDate","");
+  setError("fParticulars","eParticulars","");
+  setError("fAmount","eAmount","");
+}
+
+function resetForm(){
+  editingId = null;
+  $("entryForm").reset();
+  $("fDate").value = todayIso();
+  setType("credit");
+  clearErrors();
+  $("btnSubmit").textContent = "Add entry";
+  $("btnCancel").style.display = "none";
+  $("formTitle").textContent = "New entry";
+  $("editingFlag").classList.remove("on");
+}
+
+function applyTheme(theme){
+  document.documentElement.setAttribute("data-theme", theme);
+  $("btnTheme").textContent = theme === "dark" ? "Light theme" : "Dark theme";
+  writeKey(CONFIG.THEME_KEY, theme);
+  syncStickyOffset();
+}
+
+function applyOrder(order){
+  sortOrder = order;
+  $("btnOrder").textContent = order === "desc" ? "Newest first" : "Oldest first";
+  $("btnOrder").title = "Click to show " + (order === "desc" ? "oldest" : "newest") + " entries first";
+  writeKey(CONFIG.ORDER_KEY, order);
+}
+
+/**
+ * Pins the table header flush beneath the summary bar.
+ * Measured rather than hard-coded so it survives zoom, font changes,
+ * and the summary wrapping to two rows.
+ */
+function syncStickyOffset(){
+  const bar = $("summaryBar");
+  const isSticky = window.getComputedStyle(bar).position === "sticky";
+  const offset = isSticky ? Math.max(0, Math.round(bar.getBoundingClientRect().height) - 1) : 0;
+  document.documentElement.style.setProperty("--stick-top", offset + "px");
+}
+
+/* ============================================================
+   ACCOUNT (SHEET) HANDLERS
+   ============================================================ */
+function switchAccount(id){
+  if (id === activeAccountId) return;
+  setActiveAccount(id);
+  records = loadRecordsForActiveAccount();
+  selectedIds.clear();
+  $("fSearch").value = ""; $("fFrom").value = ""; $("fTo").value = "";
+  resetForm();
+  renderAccountSelect();
+  render();
+}
+
+function createAccount(){
+  const name = prompt("Name for the new sheet:");
+  if (name === null) return;
+  const trimmed = name.trim();
+  if (!trimmed){ toast("Sheet name cannot be empty."); return; }
+  if (accounts.some(a => a.name.toLowerCase() === trimmed.toLowerCase())){
+    toast("A sheet named \"" + trimmed + "\" already exists.");
+    return;
+  }
+  const acc = { id: newId(), name: trimmed };
+  accounts.push(acc);
+  saveAccounts();
+  setActiveAccount(acc.id);
+  records = [];
+  selectedIds.clear();
+  $("fSearch").value = ""; $("fFrom").value = ""; $("fTo").value = "";
+  resetForm();
+  renderAccountSelect();
+  render();
+  toast("Sheet \"" + trimmed + "\" created.");
+}
+
+function renameAccount(){
+  const acc = activeAccount();
+  if (!acc) return;
+  const name = prompt("Rename sheet:", acc.name);
+  if (name === null) return;
+  const trimmed = name.trim();
+  if (!trimmed){ toast("Sheet name cannot be empty."); return; }
+  if (accounts.some(a => a.id !== acc.id && a.name.toLowerCase() === trimmed.toLowerCase())){
+    toast("A sheet named \"" + trimmed + "\" already exists.");
+    return;
+  }
+  acc.name = trimmed;
+  saveAccounts();
+  renderAccountSelect();
+  toast("Sheet renamed to \"" + trimmed + "\".");
+}
+
+function deleteAccount(){
+  if (accounts.length <= 1){ toast("At least one sheet must remain."); return; }
+  const acc = activeAccount();
+  if (!acc) return;
+  if (!confirm("Delete sheet \"" + acc.name + "\" and all " + records.length + " of its entries?\n\nThis cannot be undone.")) return;
+  if (!confirm("Last check \u2014 this permanently erases \"" + acc.name + "\". Continue?")) return;
+
+  deleteRecordsForAccount(acc.id);
+  accounts = accounts.filter(a => a.id !== acc.id);
+  saveAccounts();
+
+  setActiveAccount(accounts[0].id);
+  records = loadRecordsForActiveAccount();
+  selectedIds.clear();
+  $("fSearch").value = ""; $("fFrom").value = ""; $("fTo").value = "";
+  resetForm();
+  renderAccountSelect();
+  render();
+  toast("Sheet deleted.");
+}
+
+/* ============================================================
+   SELECTION / BULK DELETE HANDLERS
+   ============================================================ */
+function toggleSelectAll(checked){
+  const visibleIds = visibleDisplayRows().map(r => r.id);
+  if (checked) visibleIds.forEach(id => selectedIds.add(id));
+  else visibleIds.forEach(id => selectedIds.delete(id));
+  render();
+}
+
+function toggleRowSelect(id, checked){
+  if (checked) selectedIds.add(id); else selectedIds.delete(id);
+  renderBulkBar();
+  syncSelectAllCheckbox(visibleDisplayRows().map(r => r.id));
+}
+
+function deleteSelected(){
+  const n = selectedIds.size;
+  if (n === 0) return;
+  if (!confirm("Delete " + n + " selected entr" + (n === 1 ? "y" : "ies") + " from this sheet?\n\nThis cannot be undone.")) return;
+  records = records.filter(r => !selectedIds.has(r.id));
+  if (editingId && selectedIds.has(editingId)) resetForm();
+  selectedIds.clear();
+  saveRecords();
+  render();
+  toast(n + " entr" + (n === 1 ? "y" : "ies") + " deleted.");
+}
+
+/* ============================================================
+   ENTRY HANDLERS
+   ============================================================ */
+function handleSubmit(e){
+  e.preventDefault();
+  clearErrors();
+
+  const date = $("fDate").value;
+  const particulars = $("fParticulars").value.trim();
+  const rawAmount = $("fAmount").value.trim();
+  const amount = Number(rawAmount);
+  let ok = true;
+
+  if (!isIsoDate(date)){ setError("fDate","eDate","Pick a date."); ok = false; }
+  if (!particulars){ setError("fParticulars","eParticulars","Describe what this entry is for."); ok = false; }
+  else if (particulars.length > CONFIG.MAX_PARTICULARS){
+    setError("fParticulars","eParticulars","Keep this under " + CONFIG.MAX_PARTICULARS + " characters."); ok = false;
+  }
+  if (rawAmount === ""){ setError("fAmount","eAmount","Enter an amount."); ok = false; }
+  else if (!isFinite(amount) || amount <= 0){
+    setError("fAmount","eAmount","Amount must be a number greater than zero."); ok = false;
+  }
+  if (!ok) return;
+
+  const signed = round2(entryType === "debit" ? -amount : amount);
+
+  if (editingId){
+    const rec = records.find(r => r.id === editingId);
+    if (rec){
+      rec.date = date; rec.particulars = particulars; rec.amount = signed;
+      saveRecords();
+      toast("Entry updated.");
+    }
+  } else {
+    records.push({ id:newId(), date, particulars, amount:signed });
+    saveRecords();
+    toast("Entry added.");
+  }
+  resetForm();
+  render();
+  $("fParticulars").focus();
+}
+
+function startEdit(id){
+  const rec = records.find(r => r.id === id);
+  if (!rec) return;
+  editingId = id;
+  $("fDate").value = rec.date;
+  $("fParticulars").value = rec.particulars;
+  $("fAmount").value = Math.abs(rec.amount).toFixed(2);
+  setType(rec.amount < 0 ? "debit" : "credit");
+  clearErrors();
+  $("btnSubmit").textContent = "Update entry";
+  $("btnCancel").style.display = "";
+  $("formTitle").textContent = "Edit entry";
+  const row = computeBalances(records).find(r => r.id === id);
+  $("editingSno").textContent = row ? row.sno : "";
+  $("editingFlag").classList.add("on");
+  render();
+  window.scrollTo({top:0, behavior:"smooth"});
+  $("fParticulars").focus();
+}
+
+function deleteEntry(id){
+  const rec = records.find(r => r.id === id);
+  if (!rec) return;
+  const label = rec.particulars.length > 40 ? rec.particulars.slice(0,40) + "\u2026" : rec.particulars;
+  if (!confirm("Delete this entry?\n\n" + formatDate(rec.date) + "  \u2014  " + label + "\n" + formatCurrency(rec.amount))) return;
+  records = records.filter(r => r.id !== id);
+  selectedIds.delete(id);
+  if (editingId === id) resetForm();
+  saveRecords();
+  render();
+  toast("Entry deleted.");
+}
+
+/* ============================================================
+   IMPORT / EXPORT / CLEAR (scoped to the active sheet)
+   ============================================================ */
+function exportJson(){
+  if (records.length === 0){ toast("Nothing to export yet."); return; }
+  const acc = activeAccount();
+  const name = "transaction-log-" + slugify(acc ? acc.name : "sheet") + "-" + todayIso() + ".json";
+  download(name, JSON.stringify(records, null, 2), "application/json");
+  toast("JSON exported.");
+}
+
+function csvCell(v){
+  const s = String(v);
+  return /[",\n\r]/.test(s) ? '"' + s.replace(/"/g,'""') + '"' : s;
+}
+
+function exportCsv(){
+  if (records.length === 0){ toast("Nothing to export yet."); return; }
+  const rows = computeBalances(records);
+  const lines = [["SNO","Date","Particulars","Amount","Balance"].join(",")];
+  rows.forEach(r => {
+    lines.push([r.sno, r.date, csvCell(r.particulars), r.amount.toFixed(2), r.balance.toFixed(2)].join(","));
+  });
+  const acc = activeAccount();
+  const name = "transaction-log-" + slugify(acc ? acc.name : "sheet") + "-" + todayIso() + ".csv";
+  download(name, "\uFEFF" + lines.join("\r\n"), "text/csv");
+  toast("CSV exported.");
+}
+
+function importJson(file){
+  const reader = new FileReader();
+  reader.onerror = () => toast("That file could not be read.");
+  reader.onload = () => {
+    let parsed;
+    try { parsed = JSON.parse(String(reader.result)); }
+    catch (err){ alert("Import failed: the file is not valid JSON."); return; }
+
+    if (!Array.isArray(parsed)){ alert("Import failed: the file must contain a list of entries."); return; }
+    const good = parsed.filter(isValidRecord);
+    if (good.length === 0){
+      alert("Import failed: no valid entries found.\n\nEach entry needs a date (YYYY-MM-DD), particulars text, and a non-zero amount.");
+      return;
+    }
+    const skipped = parsed.length - good.length;
+    const acc = activeAccount();
+    const msg = "Import " + good.length + " entr" + (good.length === 1 ? "y" : "ies") + " into \"" + (acc ? acc.name : "this sheet") + "\"?\n\n" +
+      "This REPLACES all " + records.length + " entries currently in this sheet. This cannot be undone." +
+      (skipped > 0 ? "\n\n" + skipped + " invalid record(s) will be skipped." : "");
+    if (!confirm(msg)) return;
+
+    records = good.map(normaliseRecord);
+    selectedIds.clear();
+    resetForm();
+    saveRecords();
+    render();
+    toast("Imported " + records.length + " entries.");
+  };
+  reader.readAsText(file);
+}
+
+function clearAll(){
+  if (records.length === 0){ toast("This sheet is already empty."); return; }
+  const acc = activeAccount();
+  const name = acc ? acc.name : "this sheet";
+  if (!confirm("Delete all " + records.length + " entries in \"" + name + "\"?\n\nExport first if you want a copy.")) return;
+  if (!confirm("Last check \u2014 this permanently erases \"" + name + "\"'s entries on this device. Continue?")) return;
+  records = [];
+  selectedIds.clear();
+  resetForm();
+  saveRecords();
+  render();
+  toast("All entries deleted.");
+}
+
+function clearFilters(){
+  $("fSearch").value = ""; $("fFrom").value = ""; $("fTo").value = "";
+  selectedIds.clear();
+  render();
+}
+
+/* ============================================================
+   INIT
+   ============================================================ */
+function init(){
+  applyTheme(readKey(CONFIG.THEME_KEY) === "light" ? "light" : "dark");
+  applyOrder(readKey(CONFIG.ORDER_KEY) === "asc" ? "asc" : "desc");
+
+  accounts = loadAccounts();
+  activeAccountId = loadActiveAccountId();
+  records = loadRecordsForActiveAccount();
+  resetForm();
+  renderAccountSelect();
+
+  $("entryForm").addEventListener("submit", handleSubmit);
+  $("btnCancel").addEventListener("click", () => { resetForm(); render(); });
+  $("tCredit").addEventListener("click", () => setType("credit"));
+  $("tDebit").addEventListener("click",  () => setType("debit"));
+
+  $("btnTheme").addEventListener("click", () => {
+    applyTheme(document.documentElement.getAttribute("data-theme") === "dark" ? "light" : "dark");
+  });
+  $("btnOrder").addEventListener("click", () => {
+    applyOrder(sortOrder === "desc" ? "asc" : "desc");
+    render();
+  });
+
+  $("accountSelect").addEventListener("change", (e) => switchAccount(e.target.value));
+  $("btnNewAccount").addEventListener("click", createAccount);
+  $("btnRenameAccount").addEventListener("click", renameAccount);
+  $("btnDeleteAccount").addEventListener("click", deleteAccount);
+
+  $("chkSelectAll").addEventListener("change", (e) => toggleSelectAll(e.target.checked));
+  $("btnDeleteSelected").addEventListener("click", deleteSelected);
+  $("btnClearSelection").addEventListener("click", () => { selectedIds.clear(); render(); });
+
+  $("tbody").addEventListener("click", (e) => {
+    const editBtn = e.target.closest("[data-edit]");
+    if (editBtn){ startEdit(editBtn.getAttribute("data-edit")); return; }
+    const delBtn = e.target.closest("[data-del]");
+    if (delBtn){ deleteEntry(delBtn.getAttribute("data-del")); }
+  });
+  $("tbody").addEventListener("change", (e) => {
+    const chk = e.target.closest(".rowChk");
+    if (chk){ toggleRowSelect(chk.getAttribute("data-id"), chk.checked); }
+  });
+
+  ["fSearch","fFrom","fTo"].forEach(id => $(id).addEventListener("input", () => { selectedIds.clear(); render(); }));
+  $("btnClearFilters").addEventListener("click", clearFilters);
+
+  $("btnExportJson").addEventListener("click", exportJson);
+  $("btnExportCsv").addEventListener("click", exportCsv);
+  $("btnClear").addEventListener("click", clearAll);
+  $("btnImport").addEventListener("click", () => $("fileInput").click());
+  $("fileInput").addEventListener("change", (e) => {
+    const file = e.target.files && e.target.files[0];
+    if (file) importJson(file);
+    e.target.value = "";
+  });
+
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape" && editingId){ resetForm(); render(); }
+  });
+
+  syncStickyOffset();
+  window.addEventListener("resize", syncStickyOffset);
+  if (window.ResizeObserver) new ResizeObserver(syncStickyOffset).observe($("summaryBar"));
+
+  render();
+}
+
+document.addEventListener("DOMContentLoaded", init);
+</script>
+</body>
+</html>
