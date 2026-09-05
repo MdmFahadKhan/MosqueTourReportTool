@@ -367,6 +367,7 @@ tbody tr.is-selected{background:var(--edit-tint);}
       <button class="btn btn-sm" id="btnTheme" type="button">Light theme</button>
       <button class="btn btn-sm" id="btnExportJson" type="button">Export JSON</button>
       <button class="btn btn-sm" id="btnExportCsv" type="button">Export CSV</button>
+      <button class="btn btn-sm" id="btnExportImage" type="button">Export Image</button>
       <button class="btn btn-sm" id="btnImport" type="button">Import JSON</button>
       <button class="btn btn-sm btn-danger" id="btnClear" type="button">Clear sheet data</button>
       <input type="file" id="fileInput" accept="application/json,.json" class="sr-only">
@@ -1134,6 +1135,136 @@ function exportCsv(){
   toast("CSV exported.");
 }
 
+/**
+ * Renders a compact summary card (account name, ledger totals, and the
+ * 5 most recent transactions) to a PNG using an SVG <foreignObject>.
+ * No external libraries — the node is built with inline styles, measured
+ * off-screen, serialised into an SVG, then drawn onto a canvas.
+ */
+function buildImageMarkup(acc, totals, recentRows){
+  // Pull the *current* theme's actual colours so the exported image matches
+  // whatever mode (dark/light) the user is looking at right now.
+  const cs = getComputedStyle(document.documentElement);
+  const c = (name) => cs.getPropertyValue(name).trim();
+  const col = {
+    bg: c("--surface"), border: c("--border"), borderSoft: c("--border-soft"),
+    text: c("--text"), muted: c("--text-muted"), faint: c("--text-faint"),
+    gold: c("--gold"), credit: c("--credit"), debit: c("--debit"), zebra: c("--zebra")
+  };
+
+  const generated = new Date();
+  const generatedLabel = formatDate(todayIso()) + " " +
+    String(generated.getHours()).padStart(2,"0") + ":" + String(generated.getMinutes()).padStart(2,"0");
+
+  const statCell = (label, value, color) =>
+    '<td style="padding:10px 14px;border-right:1px solid ' + col.borderSoft + ';">' +
+      '<div style="font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:' + col.faint + ';margin-bottom:3px;">' + escapeHtml(label) + '</div>' +
+      '<div style="font-size:16px;font-weight:700;color:' + color + ';">' + escapeHtml(value) + '</div>' +
+    '</td>';
+
+  const summaryHtml =
+    '<table style="width:100%;border-collapse:collapse;background:' + col.bg + ';border:1px solid ' + col.border + ';border-radius:8px;overflow:hidden;">' +
+      '<tr>' +
+        statCell("Total credits", formatCurrency(totals.credits, {sign:false}), col.credit) +
+        statCell("Total debits",  formatCurrency(totals.debits,  {sign:false}), col.debit) +
+        statCell("Closing balance", formatCurrency(totals.balance, {sign:false}), col.gold) +
+        '<td style="padding:10px 14px;">' +
+          '<div style="font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:' + col.faint + ';margin-bottom:3px;">Entries</div>' +
+          '<div style="font-size:16px;font-weight:700;color:' + col.text + ';">' + escapeHtml(String(totals.count)) + '</div>' +
+        '</td>' +
+      '</tr>' +
+    '</table>';
+
+  const rowsHtml = recentRows.length === 0
+    ? '<div style="padding:20px;text-align:center;color:' + col.faint + ';font-size:13px;">No entries yet</div>'
+    : '<table style="width:100%;border-collapse:collapse;font-size:13px;">' +
+        '<thead><tr>' +
+          ['Date','Particulars','Amount','Balance'].map((h,i) =>
+            '<td style="padding:8px 12px;font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:' + col.gold + ';border-bottom:1px solid ' + col.border + ';text-align:' + (i>=2?'right':'left') + ';">' + h + '</td>'
+          ).join("") +
+        '</tr></thead><tbody>' +
+        recentRows.map((r, i) => {
+          const isCredit = r.amount >= 0;
+          const zebra = i % 2 === 1 ? 'background:' + col.zebra + ';' : '';
+          return '<tr style="' + zebra + '">' +
+            '<td style="padding:8px 12px;border-bottom:1px solid ' + col.borderSoft + ';color:' + col.muted + ';white-space:nowrap;">' + escapeHtml(formatDate(r.date)) + '</td>' +
+            '<td style="padding:8px 12px;border-bottom:1px solid ' + col.borderSoft + ';color:' + col.text + ';">' + escapeHtml(r.particulars) + '</td>' +
+            '<td style="padding:8px 12px;border-bottom:1px solid ' + col.borderSoft + ';text-align:right;white-space:nowrap;color:' + (isCredit ? col.credit : col.debit) + ';">' + escapeHtml(formatCurrency(r.amount)) + '</td>' +
+            '<td style="padding:8px 12px;border-bottom:1px solid ' + col.borderSoft + ';text-align:right;white-space:nowrap;color:' + (r.balance < 0 ? col.debit : col.text) + ';">' + escapeHtml(formatCurrency(r.balance, {sign:false})) + '</td>' +
+          '</tr>';
+        }).join("") +
+        '</tbody></table>';
+
+  return (
+    '<div xmlns="http://www.w3.org/1999/xhtml" style="width:680px;background:' + col.bg + ';border:1px solid ' + col.border + ';border-radius:10px;padding:24px;font-family:-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;box-sizing:border-box;">' +
+      '<div style="display:flex;justify-content:space-between;align-items:flex-end;margin-bottom:16px;border-bottom:1px solid ' + col.border + ';padding-bottom:14px;">' +
+        '<div>' +
+          '<div style="font-size:19px;font-weight:700;color:' + col.text + ';">' + escapeHtml(acc ? acc.name : "Transaction Log") + '</div>' +
+          '<div style="font-size:12px;color:' + col.faint + ';margin-top:2px;">Transaction Log summary</div>' +
+        '</div>' +
+        '<div style="font-size:11px;color:' + col.faint + ';">Generated ' + escapeHtml(generatedLabel) + '</div>' +
+      '</div>' +
+      summaryHtml +
+      '<div style="font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:' + col.gold + ';font-weight:600;margin:18px 0 8px;">Last ' + recentRows.length + ' transactions</div>' +
+      '<div style="border:1px solid ' + col.border + ';border-radius:8px;overflow:hidden;">' + rowsHtml + '</div>' +
+    '</div>'
+  );
+}
+
+function exportImage(){
+  if (records.length === 0){ toast("Nothing to export yet."); return; }
+
+  const acc = activeAccount();
+  const balanced = computeBalances(records);              // chronological, oldest -> newest
+  const totals = computeTotals(balanced);
+  const recentDesc = balanced.slice(-5).reverse();         // 5 most recent, newest on top
+
+  const markup = buildImageMarkup(acc, totals, recentDesc);
+
+  // Stage off-screen so we can measure its real rendered height.
+  const stage = document.createElement("div");
+  stage.style.position = "fixed";
+  stage.style.left = "-10000px";
+  stage.style.top = "0";
+  stage.innerHTML = markup;
+  document.body.appendChild(stage);
+
+  const node = stage.firstElementChild;
+  const width = 680 + 2 /* border */;
+  const height = Math.ceil(node.getBoundingClientRect().height) + 2;
+
+  const svgXml =
+    '<svg xmlns="http://www.w3.org/2000/svg" width="' + width + '" height="' + height + '">' +
+      '<foreignObject width="100%" height="100%">' + node.outerHTML + '</foreignObject>' +
+    '</svg>';
+
+  document.body.removeChild(stage);
+
+  const scale = 2; // export at 2x for a crisp PNG
+  const img = new Image();
+  img.onload = () => {
+    const canvas = document.createElement("canvas");
+    canvas.width = width * scale;
+    canvas.height = height * scale;
+    const ctx = canvas.getContext("2d");
+    ctx.scale(scale, scale);
+    ctx.drawImage(img, 0, 0, width, height);
+
+    canvas.toBlob((blob) => {
+      if (!blob){ toast("Image export failed in this browser."); return; }
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "transaction-log-" + slugify(acc ? acc.name : "sheet") + "-" + todayIso() + ".png";
+      document.body.appendChild(a); a.click(); document.body.removeChild(a);
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
+      toast("Image exported.");
+    }, "image/png");
+  };
+  img.onerror = () => toast("Image export failed in this browser.");
+  img.src = "data:image/svg+xml;charset=utf-8," + encodeURIComponent(svgXml);
+}
+
 function importJson(file){
   const reader = new FileReader();
   reader.onerror = () => toast("That file could not be read.");
@@ -1236,6 +1367,7 @@ function init(){
 
   $("btnExportJson").addEventListener("click", exportJson);
   $("btnExportCsv").addEventListener("click", exportCsv);
+  $("btnExportImage").addEventListener("click", exportImage);
   $("btnClear").addEventListener("click", clearAll);
   $("btnImport").addEventListener("click", () => $("fileInput").click());
   $("fileInput").addEventListener("change", (e) => {
