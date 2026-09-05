@@ -1,0 +1,3339 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Personal Finance Manager</title>
+<style>
+    :root {
+        --color-bg: #0d2229;
+        --color-bg-elevated: #123039;
+        --color-bg-card: #163843;
+        --color-border: #1f4a56;
+        --color-text: #e8f1f2;
+        --color-text-muted: #8fb3ba;
+        --color-gold: #d4af37;
+        --color-gold-hover: #e6c458;
+        --color-income: #4caf7d;
+        --color-expense: #e07a5f;
+        --color-danger: #c1553f;
+        --color-focus: #d4af37;
+        --radius: 8px;
+        --nav-width: 220px;
+    }
+
+    * { box-sizing: border-box; }
+
+    html, body {
+        margin: 0;
+        padding: 0;
+        height: 100%;
+        background: var(--color-bg);
+        color: var(--color-text);
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+    }
+
+    a { color: var(--color-gold); }
+
+    button {
+        font-family: inherit;
+        cursor: pointer;
+    }
+
+    button:focus-visible,
+    a:focus-visible,
+    input:focus-visible,
+    select:focus-visible,
+    [tabindex]:focus-visible {
+        outline: 2px solid var(--color-focus);
+        outline-offset: 2px;
+    }
+
+    /* ---------- App Layout ---------- */
+
+    #app {
+        display: flex;
+        min-height: 100vh;
+    }
+
+    #sidebar {
+        width: var(--nav-width);
+        flex-shrink: 0;
+        background: var(--color-bg-elevated);
+        border-right: 1px solid var(--color-border);
+        display: flex;
+        flex-direction: column;
+        padding: 20px 0;
+    }
+
+    #sidebar .brand {
+        padding: 0 20px 20px 20px;
+        font-size: 1.1rem;
+        font-weight: 600;
+        letter-spacing: 0.3px;
+        color: var(--color-gold);
+        border-bottom: 1px solid var(--color-border);
+        margin-bottom: 12px;
+    }
+
+    .nav-list {
+        list-style: none;
+        margin: 0;
+        padding: 0;
+        flex: 1;
+    }
+
+    .nav-item {
+        margin: 0;
+    }
+
+    .nav-link {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        width: 100%;
+        padding: 12px 20px;
+        background: none;
+        border: none;
+        color: var(--color-text-muted);
+        font-size: 0.95rem;
+        text-align: left;
+        border-left: 3px solid transparent;
+        transition: background 0.15s ease, color 0.15s ease;
+    }
+
+    .nav-link:hover {
+        background: rgba(212, 175, 55, 0.08);
+        color: var(--color-text);
+    }
+
+    .nav-link.active {
+        color: var(--color-gold);
+        border-left-color: var(--color-gold);
+        background: rgba(212, 175, 55, 0.1);
+        font-weight: 600;
+    }
+
+    .nav-icon {
+        font-size: 1.05rem;
+        width: 20px;
+        text-align: center;
+    }
+
+    #main {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        min-width: 0;
+    }
+
+    #topbar {
+        display: none;
+        align-items: center;
+        justify-content: space-between;
+        padding: 14px 16px;
+        background: var(--color-bg-elevated);
+        border-bottom: 1px solid var(--color-border);
+    }
+
+    #topbar .brand {
+        font-weight: 600;
+        color: var(--color-gold);
+    }
+
+    #content {
+        flex: 1;
+        padding: 28px 32px 90px 32px;
+        max-width: 1100px;
+        width: 100%;
+    }
+
+    .view {
+        display: none;
+    }
+
+    .view.active {
+        display: block;
+    }
+
+    .view-header {
+        margin-bottom: 20px;
+    }
+
+    .view-header h1 {
+        margin: 0 0 4px 0;
+        font-size: 1.5rem;
+    }
+
+    .view-header p {
+        margin: 0;
+        color: var(--color-text-muted);
+        font-size: 0.9rem;
+    }
+
+    /* ---------- Forms ---------- */
+
+    .form-card {
+        background: var(--color-bg-card);
+        border: 1px solid var(--color-border);
+        border-radius: var(--radius);
+        padding: 20px 24px;
+        margin-bottom: 24px;
+    }
+
+    .form-card h2 {
+        margin: 0 0 16px 0;
+        font-size: 1.05rem;
+    }
+
+    .form-row {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 16px;
+        margin-bottom: 14px;
+    }
+
+    .form-group {
+        display: flex;
+        flex-direction: column;
+        gap: 5px;
+        flex: 1 1 200px;
+    }
+
+    .form-group label {
+        font-size: 0.82rem;
+        color: var(--color-text-muted);
+    }
+
+    .form-group input,
+    .form-group select,
+    .form-group textarea {
+        background: var(--color-bg-elevated);
+        border: 1px solid var(--color-border);
+        border-radius: 6px;
+        padding: 9px 11px;
+        color: var(--color-text);
+        font-size: 0.92rem;
+        font-family: inherit;
+    }
+
+    .form-group input.has-error,
+    .form-group select.has-error {
+        border-color: var(--color-danger);
+    }
+
+    .field-error {
+        font-size: 0.78rem;
+        color: var(--color-danger);
+        min-height: 1em;
+    }
+
+    .form-actions {
+        display: flex;
+        gap: 10px;
+        margin-top: 4px;
+    }
+
+    .btn {
+        padding: 9px 18px;
+        border-radius: 6px;
+        border: 1px solid transparent;
+        font-size: 0.9rem;
+        font-weight: 600;
+    }
+
+    .btn-primary {
+        background: var(--color-gold);
+        color: #16232a;
+    }
+
+    .btn-primary:hover {
+        background: var(--color-gold-hover);
+    }
+
+    .btn-secondary {
+        background: transparent;
+        border-color: var(--color-border);
+        color: var(--color-text);
+    }
+
+    .btn-secondary:hover {
+        border-color: var(--color-gold);
+        color: var(--color-gold);
+    }
+
+    .btn-danger-text {
+        background: none;
+        border: none;
+        color: var(--color-danger);
+        font-size: 0.85rem;
+        padding: 4px 8px;
+    }
+
+    .btn-link-text {
+        background: none;
+        border: none;
+        color: var(--color-gold);
+        font-size: 0.85rem;
+        padding: 4px 8px;
+    }
+
+    /* ---------- Data table / cards ---------- */
+
+    .data-table-wrap {
+        background: var(--color-bg-card);
+        border: 1px solid var(--color-border);
+        border-radius: var(--radius);
+        overflow-x: auto;
+    }
+
+    table.data-table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 0.88rem;
+    }
+
+    table.data-table th,
+    table.data-table td {
+        padding: 11px 14px;
+        text-align: left;
+        border-bottom: 1px solid var(--color-border);
+    }
+
+    table.data-table th {
+        color: var(--color-text-muted);
+        font-weight: 600;
+        font-size: 0.78rem;
+        text-transform: uppercase;
+        letter-spacing: 0.4px;
+        background: var(--color-bg-elevated);
+    }
+
+    table.data-table tbody tr:last-child td {
+        border-bottom: none;
+    }
+
+    table.data-table td.amount,
+    table.data-table th.amount {
+        text-align: right;
+        font-variant-numeric: tabular-nums;
+    }
+
+    .status-badge {
+        display: inline-block;
+        padding: 2px 9px;
+        border-radius: 999px;
+        font-size: 0.76rem;
+        font-weight: 600;
+    }
+
+    .status-badge.active {
+        background: rgba(76, 175, 125, 0.16);
+        color: var(--color-income);
+    }
+
+    .status-badge.inactive {
+        background: rgba(224, 122, 95, 0.16);
+        color: var(--color-expense);
+    }
+
+    .status-badge.type-income {
+        background: rgba(76, 175, 125, 0.16);
+        color: var(--color-income);
+    }
+
+    .status-badge.type-expense {
+        background: rgba(224, 122, 95, 0.16);
+        color: var(--color-expense);
+    }
+
+    .amount-income {
+        color: var(--color-income);
+    }
+
+    .amount-expense {
+        color: var(--color-expense);
+    }
+
+    .record-cards {
+        display: none;
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    .record-card {
+        background: var(--color-bg-card);
+        border: 1px solid var(--color-border);
+        border-radius: var(--radius);
+        padding: 14px 16px;
+    }
+
+    .record-card-top {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        margin-bottom: 6px;
+    }
+
+    .record-card-title {
+        font-weight: 600;
+    }
+
+    .record-card-row {
+        display: flex;
+        justify-content: space-between;
+        font-size: 0.85rem;
+        color: var(--color-text-muted);
+        padding: 2px 0;
+    }
+
+    .record-card-actions {
+        display: flex;
+        gap: 8px;
+        margin-top: 10px;
+    }
+
+    .empty-state {
+        padding: 32px 20px;
+        text-align: center;
+        color: var(--color-text-muted);
+        font-size: 0.9rem;
+    }
+
+    /* ---------- Dashboard ---------- */
+
+    .dashboard-section {
+        margin-bottom: 28px;
+    }
+
+    .dashboard-section h2 {
+        font-size: 0.95rem;
+        color: var(--color-text-muted);
+        margin: 0 0 12px 0;
+        font-weight: 600;
+    }
+
+    .summary-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+        gap: 12px;
+    }
+
+    .summary-card {
+        background: var(--color-bg-card);
+        border: 1px solid var(--color-border);
+        border-radius: var(--radius);
+        padding: 16px 18px;
+    }
+
+    .summary-card .label {
+        font-size: 0.8rem;
+        color: var(--color-text-muted);
+        margin-bottom: 6px;
+    }
+
+    .summary-card .value {
+        font-size: 1.35rem;
+        font-weight: 700;
+        font-variant-numeric: tabular-nums;
+    }
+
+    .summary-card .value.positive {
+        color: var(--color-income);
+    }
+
+    .summary-card .value.negative {
+        color: var(--color-expense);
+    }
+
+    /* ---------- Reports ---------- */
+
+    .report-tabs {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        margin-bottom: 20px;
+    }
+
+    .report-tab-btn {
+        padding: 8px 14px;
+        border-radius: 6px;
+        border: 1px solid var(--color-border);
+        background: var(--color-bg-card);
+        color: var(--color-text-muted);
+        font-size: 0.85rem;
+    }
+
+    .report-tab-btn:hover {
+        color: var(--color-text);
+        border-color: var(--color-gold);
+    }
+
+    .report-tab-btn.active {
+        background: rgba(212, 175, 55, 0.12);
+        border-color: var(--color-gold);
+        color: var(--color-gold);
+        font-weight: 600;
+    }
+
+    .report-panel {
+        display: none;
+    }
+
+    .report-panel.active {
+        display: block;
+    }
+
+    @media (max-width: 860px) {
+        .data-table-wrap {
+            display: none;
+        }
+
+        .record-cards {
+            display: flex;
+        }
+    }
+
+    /* ---------- Modal (confirmation dialogs) ---------- */
+
+    .modal-overlay {
+        display: none;
+        position: fixed;
+        inset: 0;
+        background: rgba(0,0,0,0.55);
+        align-items: center;
+        justify-content: center;
+        z-index: 200;
+        padding: 16px;
+    }
+
+    .modal-overlay.open {
+        display: flex;
+    }
+
+    .modal-box {
+        background: var(--color-bg-card);
+        border: 1px solid var(--color-border);
+        border-radius: var(--radius);
+        padding: 22px;
+        max-width: 380px;
+        width: 100%;
+    }
+
+    .modal-box h3 {
+        margin: 0 0 10px 0;
+        font-size: 1.05rem;
+    }
+
+    .modal-box p {
+        margin: 0 0 18px 0;
+        font-size: 0.88rem;
+        color: var(--color-text-muted);
+    }
+
+    .modal-actions {
+        display: flex;
+        justify-content: flex-end;
+        gap: 10px;
+    }
+
+    /* ---------- Lock Screen ---------- */
+
+    #lock-overlay {
+        position: fixed;
+        inset: 0;
+        background: var(--color-bg);
+        z-index: 500;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 20px;
+    }
+
+    #lock-overlay.hidden {
+        display: none;
+    }
+
+    .lock-panel {
+        display: none;
+        background: var(--color-bg-card);
+        border: 1px solid var(--color-border);
+        border-radius: var(--radius);
+        padding: 28px;
+        max-width: 380px;
+        width: 100%;
+    }
+
+    .lock-panel.active {
+        display: block;
+    }
+
+    .lock-panel h2 {
+        margin: 0 0 6px 0;
+        font-size: 1.15rem;
+        color: var(--color-gold);
+    }
+
+    .lock-panel .lock-subtitle {
+        margin: 0 0 20px 0;
+        font-size: 0.85rem;
+        color: var(--color-text-muted);
+    }
+
+    .pin-input {
+        font-size: 1.4rem;
+        letter-spacing: 6px;
+        text-align: center;
+    }
+
+    .lock-security-note {
+        margin-top: 18px;
+        font-size: 0.76rem;
+        color: var(--color-text-muted);
+        border-top: 1px solid var(--color-border);
+        padding-top: 12px;
+    }
+
+    .lock-links {
+        margin-top: 14px;
+        font-size: 0.85rem;
+        text-align: center;
+    }
+
+    .lock-links button {
+        background: none;
+        border: none;
+        color: var(--color-gold);
+        font-size: 0.85rem;
+        padding: 0;
+    }
+
+    /* ---------- Bottom Tab Bar (mobile) ---------- */
+
+    #bottom-nav {
+        display: none;
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        background: var(--color-bg-elevated);
+        border-top: 1px solid var(--color-border);
+        z-index: 20;
+    }
+
+    #bottom-nav-scroll {
+        display: flex;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    .bottom-nav-link {
+        flex: 1 0 auto;
+        min-width: 78px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 3px;
+        padding: 8px 6px 10px 6px;
+        background: none;
+        border: none;
+        color: var(--color-text-muted);
+        font-size: 0.68rem;
+    }
+
+    .bottom-nav-link .nav-icon {
+        font-size: 1.15rem;
+    }
+
+    .bottom-nav-link.active {
+        color: var(--color-gold);
+    }
+
+    /* ---------- Responsive ---------- */
+
+    @media (max-width: 860px) {
+        #sidebar {
+            display: none;
+        }
+
+        #topbar {
+            display: flex;
+        }
+
+        #content {
+            padding: 20px 16px 90px 16px;
+        }
+
+        #bottom-nav {
+            display: block;
+        }
+
+        /* Prevent iOS Safari's automatic zoom-on-focus, which fires
+           whenever a focused input's font-size is below 16px. */
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            font-size: 16px;
+        }
+
+        .lock-panel {
+            padding: 22px 18px;
+        }
+    }
+
+    /* ---------- Notifications ---------- */
+
+    #notification-area {
+        position: fixed;
+        top: 16px;
+        right: 16px;
+        z-index: 100;
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        max-width: 320px;
+    }
+
+    .toast {
+        background: var(--color-bg-card);
+        border: 1px solid var(--color-border);
+        border-left: 4px solid var(--color-gold);
+        border-radius: var(--radius);
+        padding: 12px 16px;
+        font-size: 0.88rem;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+    }
+
+    .toast.success { border-left-color: var(--color-income); }
+    .toast.error { border-left-color: var(--color-danger); }
+    .toast.warning { border-left-color: var(--color-gold); }
+</style>
+</head>
+<body>
+
+<div id="lock-overlay">
+
+    <!-- First launch: create PIN -->
+    <div class="lock-panel" id="lock-panel-create">
+        <h2>Create Your PIN</h2>
+        <p class="lock-subtitle">Set a 6-digit PIN to protect this app on this device.</p>
+        <form id="create-pin-form" novalidate>
+            <div class="form-group">
+                <label for="create-pin-input">Create PIN</label>
+                <input type="password" id="create-pin-input" class="pin-input" inputmode="numeric" maxlength="6" autocomplete="off">
+            </div>
+            <div class="form-group">
+                <label for="create-pin-confirm-input">Confirm PIN</label>
+                <input type="password" id="create-pin-confirm-input" class="pin-input" inputmode="numeric" maxlength="6" autocomplete="off">
+            </div>
+            <div class="form-group">
+                <label for="create-security-question-input">Security Question</label>
+                <input type="text" id="create-security-question-input" placeholder="e.g. What was the name of your first car?" autocomplete="off">
+            </div>
+            <div class="form-group">
+                <label for="create-security-answer-input">Answer</label>
+                <input type="text" id="create-security-answer-input" autocomplete="off">
+            </div>
+            <div class="field-error" role="alert" id="create-pin-error"></div>
+            <div class="form-actions">
+                <button type="submit" class="btn btn-primary" style="width:100%;">Create PIN</button>
+            </div>
+        </form>
+        <p class="lock-security-note">
+            This PIN protects local access to this app on this browser only. It is not equivalent to
+            server-side or enterprise-grade security — anyone with direct access to this browser's
+            storage may still be able to view the underlying data.
+        </p>
+    </div>
+
+    <!-- Returning: enter PIN -->
+    <div class="lock-panel" id="lock-panel-enter">
+        <h2>Enter PIN</h2>
+        <p class="lock-subtitle">Enter your 6-digit PIN to unlock the app.</p>
+        <form id="enter-pin-form" novalidate>
+            <div class="form-group">
+                <label for="enter-pin-input">PIN</label>
+                <input type="password" id="enter-pin-input" class="pin-input" inputmode="numeric" maxlength="6" autocomplete="off">
+            </div>
+            <div class="field-error" role="alert" id="enter-pin-error"></div>
+            <div class="form-actions">
+                <button type="submit" class="btn btn-primary" style="width:100%;">Unlock</button>
+            </div>
+        </form>
+        <div class="lock-links">
+            <button type="button" id="forgot-pin-link">Forgot your PIN?</button>
+        </div>
+    </div>
+
+    <!-- Recovery via security question -->
+    <div class="lock-panel" id="lock-panel-recovery">
+        <h2>Recover Access</h2>
+        <p class="lock-subtitle" id="recovery-question-display">Security question</p>
+        <form id="recovery-answer-form" novalidate>
+            <div class="form-group">
+                <label for="recovery-answer-input">Your Answer</label>
+                <input type="text" id="recovery-answer-input" autocomplete="off">
+            </div>
+            <div class="field-error" role="alert" id="recovery-answer-error"></div>
+            <div class="form-actions">
+                <button type="submit" class="btn btn-primary" style="width:100%;">Verify Answer</button>
+            </div>
+        </form>
+        <div class="lock-links">
+            <button type="button" id="back-to-pin-link">Back to PIN entry</button>
+        </div>
+    </div>
+
+    <!-- Set a new PIN after successful recovery -->
+    <div class="lock-panel" id="lock-panel-reset">
+        <h2>Set a New PIN</h2>
+        <p class="lock-subtitle">Your answer was correct. Choose a new 6-digit PIN.</p>
+        <form id="reset-pin-form" novalidate>
+            <div class="form-group">
+                <label for="reset-pin-input">New PIN</label>
+                <input type="password" id="reset-pin-input" class="pin-input" inputmode="numeric" maxlength="6" autocomplete="off">
+            </div>
+            <div class="form-group">
+                <label for="reset-pin-confirm-input">Confirm New PIN</label>
+                <input type="password" id="reset-pin-confirm-input" class="pin-input" inputmode="numeric" maxlength="6" autocomplete="off">
+            </div>
+            <div class="field-error" role="alert" id="reset-pin-error"></div>
+            <div class="form-actions">
+                <button type="submit" class="btn btn-primary" style="width:100%;">Save New PIN</button>
+            </div>
+        </form>
+    </div>
+
+</div>
+
+<div id="app">
+
+    <!-- Desktop sidebar -->
+    <nav id="sidebar" aria-label="Main navigation">
+        <div class="brand">Finance Manager</div>
+        <ul class="nav-list" id="sidebar-nav-list"></ul>
+    </nav>
+
+    <div id="main">
+        <!-- Mobile top bar -->
+        <header id="topbar">
+            <span class="brand">Finance Manager</span>
+        </header>
+
+        <main id="content">
+
+            <section class="view active" data-view="dashboard">
+                <div class="view-header">
+                    <h1>Dashboard</h1>
+                    <p>Overview of your income, expenses and account balances.</p>
+                </div>
+
+                <div class="dashboard-section">
+                    <h2>Overall</h2>
+                    <div class="summary-grid" id="dashboard-overall-cards"></div>
+                </div>
+
+                <div class="dashboard-section">
+                    <h2>Today</h2>
+                    <div class="summary-grid" id="dashboard-today-cards"></div>
+                </div>
+
+                <div class="dashboard-section">
+                    <h2>Current Month</h2>
+                    <div class="summary-grid" id="dashboard-month-cards"></div>
+                </div>
+
+                <div class="dashboard-section">
+                    <h2>Accounts</h2>
+                    <div class="data-table-wrap">
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>Account Name</th>
+                                    <th class="amount">Opening Balance</th>
+                                    <th class="amount">Income</th>
+                                    <th class="amount">Expense</th>
+                                    <th class="amount">Current Balance</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody id="dashboard-accounts-table-body"></tbody>
+                        </table>
+                    </div>
+                    <div class="record-cards" id="dashboard-accounts-cards"></div>
+                </div>
+            </section>
+
+            <section class="view" data-view="transactions">
+                <div class="view-header">
+                    <h1>Transactions</h1>
+                    <p>Record and manage your income and expense entries.</p>
+                </div>
+
+                <div class="form-card">
+                    <h2 id="transaction-form-title">Add Transaction</h2>
+                    <form id="transaction-form" novalidate>
+                        <input type="hidden" id="transaction-id-input">
+                        <input type="hidden" id="transaction-created-at-input">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="transaction-date-input">Date</label>
+                                <input type="date" id="transaction-date-input">
+                                <div class="field-error" role="alert" id="transaction-date-error"></div>
+                            </div>
+                            <div class="form-group">
+                                <label for="transaction-type-input">Transaction Type</label>
+                                <select id="transaction-type-input">
+                                    <option value="expense">Expense</option>
+                                    <option value="income">Income</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="transaction-account-input">Account</label>
+                                <select id="transaction-account-input">
+                                    <option value="">Select account</option>
+                                </select>
+                                <div class="field-error" role="alert" id="transaction-account-error"></div>
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="transaction-narration-input">Narration</label>
+                                <input type="text" id="transaction-narration-input" list="narration-suggestions" autocomplete="off">
+                                <datalist id="narration-suggestions"></datalist>
+                                <div class="field-error" role="alert" id="transaction-narration-error"></div>
+                            </div>
+                            <div class="form-group">
+                                <label for="transaction-amount-input">Amount (QAR)</label>
+                                <input type="number" id="transaction-amount-input" step="0.01" min="0">
+                                <div class="field-error" role="alert" id="transaction-amount-error"></div>
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group" style="flex-basis: 100%;">
+                                <label for="transaction-notes-input">Notes (optional)</label>
+                                <textarea id="transaction-notes-input" rows="2"></textarea>
+                            </div>
+                        </div>
+                        <div class="form-actions">
+                            <button type="submit" class="btn btn-primary" id="transaction-submit-btn">Save Transaction</button>
+                            <button type="button" class="btn btn-secondary" id="transaction-cancel-btn" style="display:none;">Cancel</button>
+                        </div>
+                    </form>
+                </div>
+
+                <div class="form-card" id="transaction-filter-card">
+                    <h2>Search &amp; Filter</h2>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="filter-narration-input">Search Narration</label>
+                            <input type="text" id="filter-narration-input" placeholder="e.g. Grocery" autocomplete="off">
+                        </div>
+                        <div class="form-group">
+                            <label for="filter-account-input">Account</label>
+                            <select id="filter-account-input">
+                                <option value="">All Accounts</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="filter-type-input">Transaction Type</label>
+                            <select id="filter-type-input">
+                                <option value="">All</option>
+                                <option value="income">Income</option>
+                                <option value="expense">Expense</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="filter-date-from-input">From Date</label>
+                            <input type="date" id="filter-date-from-input">
+                        </div>
+                        <div class="form-group">
+                            <label for="filter-date-to-input">To Date</label>
+                            <input type="date" id="filter-date-to-input">
+                        </div>
+                        <div class="form-group">
+                            <label for="filter-amount-min-input">Minimum Amount</label>
+                            <input type="number" id="filter-amount-min-input" step="0.01" min="0">
+                        </div>
+                        <div class="form-group">
+                            <label for="filter-amount-max-input">Maximum Amount</label>
+                            <input type="number" id="filter-amount-max-input" step="0.01" min="0">
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group" style="flex: 0 0 200px;">
+                            <label for="filter-sort-input">Sort By</label>
+                            <select id="filter-sort-input">
+                                <option value="dateDesc">Newest first</option>
+                                <option value="dateAsc">Oldest first</option>
+                                <option value="amountDesc">Amount: high to low</option>
+                                <option value="amountAsc">Amount: low to high</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-actions">
+                        <button type="button" class="btn btn-secondary" id="filter-clear-btn">Clear Filters</button>
+                    </div>
+                </div>
+
+                <div class="data-table-wrap">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>S.No</th>
+                                <th>Date</th>
+                                <th>Type</th>
+                                <th>Narration</th>
+                                <th>Account</th>
+                                <th class="amount">Amount</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="transactions-table-body"></tbody>
+                    </table>
+                </div>
+                <div class="record-cards" id="transactions-cards"></div>
+            </section>
+
+            <section class="view" data-view="accounts">
+                <div class="view-header">
+                    <h1>Accounts</h1>
+                    <p>Manage the accounts your transactions belong to.</p>
+                </div>
+
+                <div class="form-card">
+                    <h2 id="account-form-title">Add Account</h2>
+                    <form id="account-form" novalidate>
+                        <input type="hidden" id="account-id-input">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="account-name-input">Account Name</label>
+                                <input type="text" id="account-name-input" autocomplete="off">
+                                <div class="field-error" role="alert" id="account-name-error"></div>
+                            </div>
+                            <div class="form-group">
+                                <label for="account-balance-input">Opening Balance (QAR)</label>
+                                <input type="number" id="account-balance-input" step="0.01" value="0">
+                                <div class="field-error" role="alert" id="account-balance-error"></div>
+                            </div>
+                            <div class="form-group" id="account-status-group" style="display:none;">
+                                <label for="account-status-input">Status</label>
+                                <select id="account-status-input">
+                                    <option value="active">Active</option>
+                                    <option value="inactive">Inactive</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="form-actions">
+                            <button type="submit" class="btn btn-primary" id="account-submit-btn">Save Account</button>
+                            <button type="button" class="btn btn-secondary" id="account-cancel-btn" style="display:none;">Cancel</button>
+                        </div>
+                    </form>
+                </div>
+
+                <div class="data-table-wrap">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Account Name</th>
+                                <th class="amount">Opening Balance</th>
+                                <th class="amount">Income</th>
+                                <th class="amount">Expense</th>
+                                <th class="amount">Current Balance</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="accounts-table-body"></tbody>
+                    </table>
+                </div>
+                <div class="record-cards" id="accounts-cards"></div>
+            </section>
+
+            <section class="view" data-view="reports">
+                <div class="view-header">
+                    <h1>Reports</h1>
+                    <p>Monthly, daily and account-wise summaries.</p>
+                </div>
+
+                <div class="report-tabs" id="report-tabs">
+                    <button type="button" class="report-tab-btn" data-report="monthlyIncomeExpense">Monthly Income vs Expense</button>
+                    <button type="button" class="report-tab-btn" data-report="accountWise">Account-wise</button>
+                    <button type="button" class="report-tab-btn" data-report="dailySummary">Daily Summary</button>
+                    <button type="button" class="report-tab-btn" data-report="monthlySummary">Monthly Summary</button>
+                    <button type="button" class="report-tab-btn" data-report="currentBalances">Current Balances</button>
+                </div>
+
+                <div class="report-panel" data-report-panel="monthlyIncomeExpense">
+                    <div class="data-table-wrap">
+                        <table class="data-table">
+                            <thead>
+                                <tr><th>Month</th><th class="amount">Income</th><th class="amount">Expense</th><th class="amount">Net</th></tr>
+                            </thead>
+                            <tbody id="report-monthly-income-expense-body"></tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="report-panel" data-report-panel="accountWise">
+                    <div class="data-table-wrap">
+                        <table class="data-table">
+                            <thead>
+                                <tr><th>Account</th><th class="amount">Opening Balance</th><th class="amount">Income</th><th class="amount">Expense</th><th class="amount">Current Balance</th></tr>
+                            </thead>
+                            <tbody id="report-account-wise-body"></tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="report-panel" data-report-panel="dailySummary">
+                    <div class="data-table-wrap">
+                        <table class="data-table">
+                            <thead>
+                                <tr><th>Date</th><th class="amount">Income</th><th class="amount">Expense</th><th class="amount">Net</th><th class="amount">Transactions</th></tr>
+                            </thead>
+                            <tbody id="report-daily-summary-body"></tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="report-panel" data-report-panel="monthlySummary">
+                    <div class="data-table-wrap">
+                        <table class="data-table">
+                            <thead>
+                                <tr><th>Month</th><th class="amount">Income</th><th class="amount">Expense</th><th class="amount">Net</th><th class="amount">Transactions</th></tr>
+                            </thead>
+                            <tbody id="report-monthly-summary-body"></tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="report-panel" data-report-panel="currentBalances">
+                    <div class="data-table-wrap">
+                        <table class="data-table">
+                            <thead>
+                                <tr><th>Account</th><th class="amount">Opening Balance</th><th class="amount">Current Balance</th><th>Status</th></tr>
+                            </thead>
+                            <tbody id="report-current-balances-body"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <section class="view" data-view="backup">
+                <div class="view-header">
+                    <h1>Backup / Restore</h1>
+                    <p>Export and import your data as JSON, or export transactions as CSV.</p>
+                </div>
+
+                <div class="form-card">
+                    <h2>Export</h2>
+                    <p style="margin:0 0 14px 0; font-size:0.85rem; color:var(--color-text-muted);">
+                        Save a full backup of your accounts, transactions and settings, or export just your transactions to CSV.
+                    </p>
+                    <div class="form-actions">
+                        <button type="button" class="btn btn-primary" id="export-json-btn">Export JSON Backup</button>
+                        <button type="button" class="btn btn-secondary" id="export-csv-btn">Export Transactions (CSV)</button>
+                    </div>
+                    <div class="field-error" role="alert" id="backup-last-export-info" style="color: var(--color-text-muted); margin-top:10px;"></div>
+                </div>
+
+                <div class="form-card">
+                    <h2>Restore from Backup</h2>
+                    <p style="margin:0 0 14px 0; font-size:0.85rem; color:var(--color-text-muted);">
+                        Restoring a backup replaces your current accounts, transactions and settings. Export your current data first if you want to keep it.
+                    </p>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="import-json-input">Select JSON backup file</label>
+                            <input type="file" id="import-json-input" accept="application/json,.json">
+                            <div class="field-error" role="alert" id="import-json-error"></div>
+                        </div>
+                    </div>
+                    <div class="form-actions">
+                        <button type="button" class="btn btn-primary" id="import-json-btn">Import Backup</button>
+                    </div>
+                </div>
+            </section>
+
+            <section class="view" data-view="settings">
+                <div class="view-header">
+                    <h1>Settings</h1>
+                    <p>PIN protection and security question.</p>
+                </div>
+
+                <div class="form-card">
+                    <h2>Change PIN</h2>
+                    <form id="change-pin-form" novalidate>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="change-pin-current-input">Current PIN</label>
+                                <input type="password" id="change-pin-current-input" class="pin-input" inputmode="numeric" maxlength="6" autocomplete="off">
+                            </div>
+                            <div class="form-group">
+                                <label for="change-pin-new-input">New PIN</label>
+                                <input type="password" id="change-pin-new-input" class="pin-input" inputmode="numeric" maxlength="6" autocomplete="off">
+                            </div>
+                            <div class="form-group">
+                                <label for="change-pin-confirm-input">Confirm New PIN</label>
+                                <input type="password" id="change-pin-confirm-input" class="pin-input" inputmode="numeric" maxlength="6" autocomplete="off">
+                            </div>
+                        </div>
+                        <div class="field-error" role="alert" id="change-pin-error"></div>
+                        <div class="form-actions">
+                            <button type="submit" class="btn btn-primary">Update PIN</button>
+                        </div>
+                    </form>
+                </div>
+
+                <div class="form-card">
+                    <h2>Update Security Question</h2>
+                    <form id="change-security-form" novalidate>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="change-security-current-pin-input">Current PIN</label>
+                                <input type="password" id="change-security-current-pin-input" class="pin-input" inputmode="numeric" maxlength="6" autocomplete="off">
+                            </div>
+                            <div class="form-group" style="flex-basis: 100%;">
+                                <label for="change-security-question-input">Security Question</label>
+                                <input type="text" id="change-security-question-input" autocomplete="off">
+                            </div>
+                            <div class="form-group" style="flex-basis: 100%;">
+                                <label for="change-security-answer-input">Answer</label>
+                                <input type="text" id="change-security-answer-input" autocomplete="off">
+                            </div>
+                        </div>
+                        <div class="field-error" role="alert" id="change-security-error"></div>
+                        <div class="form-actions">
+                            <button type="submit" class="btn btn-primary">Update Security Question</button>
+                        </div>
+                    </form>
+                </div>
+
+                <div class="form-card">
+                    <h2>Demo Data</h2>
+                    <p style="margin:0 0 14px 0; font-size:0.85rem; color:var(--color-text-muted);">
+                        Adds a small set of sample accounts and transactions so you can try out the app.
+                        This adds to your existing data — it does not replace or remove anything.
+                    </p>
+                    <div class="form-actions">
+                        <button type="button" class="btn btn-secondary" id="load-demo-data-btn">Load Sample Data</button>
+                    </div>
+                </div>
+            </section>
+
+        </main>
+    </div>
+
+    <!-- Mobile bottom tab bar -->
+    <nav id="bottom-nav" aria-label="Main navigation (mobile)">
+        <div id="bottom-nav-scroll"></div>
+    </nav>
+
+</div>
+
+<!-- Reusable confirmation modal -->
+<div class="modal-overlay" id="confirm-modal">
+    <div class="modal-box" role="dialog" aria-modal="true" aria-labelledby="confirm-modal-title" aria-describedby="confirm-modal-message">
+        <h3 id="confirm-modal-title">Confirm</h3>
+        <p id="confirm-modal-message">Are you sure?</p>
+        <div class="modal-actions">
+            <button type="button" class="btn btn-secondary" id="confirm-modal-cancel">Cancel</button>
+            <button type="button" class="btn btn-primary" id="confirm-modal-confirm">Confirm</button>
+        </div>
+    </div>
+</div>
+
+<div id="notification-area" aria-live="polite"></div>
+
+<script>
+(function () {
+    "use strict";
+
+    /* =========================================================
+       NAVIGATION CONFIG
+       Single source of truth for both sidebar and bottom nav.
+    ========================================================= */
+
+    var NAV_ITEMS = [
+        { id: "dashboard",    label: "Dashboard",       icon: "\u25A6" },
+        { id: "transactions", label: "Transactions",    icon: "\u2261" },
+        { id: "accounts",     label: "Accounts",        icon: "\u2B21" },
+        { id: "reports",      label: "Reports",         icon: "\u25A4" },
+        { id: "backup",       label: "Backup",          icon: "\u21BB" },
+        { id: "settings",     label: "Settings",        icon: "\u2699" }
+    ];
+
+    /* =========================================================
+       STORAGE MODULE
+       Thin wrapper around localStorage: key management, safe
+       JSON read/write, first-run defaults, and data versioning.
+    ========================================================= */
+
+    var CURRENT_DATA_VERSION = 1;
+
+    var STORAGE_KEYS = {
+        ACCOUNTS:     "pfm_accounts",
+        TRANSACTIONS: "pfm_transactions",
+        SETTINGS:     "pfm_settings",
+        METADATA:     "pfm_metadata"
+    };
+
+    // Add an entry here when a future stage changes the data shape.
+    // Each migration receives the full data set at its "from" version
+    // and must return the data set upgraded to "from + 1".
+    var MIGRATIONS = [
+        // Example for a future stage:
+        // { from: 1, run: function (data) { ... return data; } }
+    ];
+
+    var DEFAULTS = {
+        accounts: [],
+        transactions: [],
+        settings: {
+            pinHash: null,
+            pinSalt: null,
+            securityQuestion: null,
+            securityAnswerHash: null,
+            securityAnswerSalt: null
+        },
+        metadata: {
+            dataVersion: CURRENT_DATA_VERSION,
+            appVersion: "1.0.0",
+            lastBackupAt: null
+        }
+    };
+
+    var Storage = {
+
+        // True once we've confirmed localStorage works; false means
+        // we're running on an in-memory fallback for this session only.
+        persistent: true,
+        _memoryFallback: {},
+
+        init: function () {
+            Storage.persistent = Storage._checkAvailability();
+
+            if (!Storage.persistent) {
+                UI.showNotification(
+                    "Local storage is unavailable in this browser. Your data will not be saved after you close this page.",
+                    "warning"
+                );
+            }
+
+            Storage._ensureDefault(STORAGE_KEYS.ACCOUNTS, DEFAULTS.accounts);
+            Storage._ensureDefault(STORAGE_KEYS.TRANSACTIONS, DEFAULTS.transactions);
+            Storage._ensureDefault(STORAGE_KEYS.SETTINGS, DEFAULTS.settings);
+            Storage._ensureDefault(STORAGE_KEYS.METADATA, DEFAULTS.metadata);
+
+            Storage._migrateIfNeeded();
+        },
+
+        _checkAvailability: function () {
+            try {
+                var testKey = "pfm_storage_test";
+                window.localStorage.setItem(testKey, "1");
+                window.localStorage.removeItem(testKey);
+                return true;
+            } catch (err) {
+                return false;
+            }
+        },
+
+        _ensureDefault: function (key, defaultValue) {
+            var existing = Storage._rawGet(key);
+            if (existing === null) {
+                Storage._rawSet(key, defaultValue);
+            }
+        },
+
+        _rawGet: function (key) {
+            try {
+                var raw = Storage.persistent
+                    ? window.localStorage.getItem(key)
+                    : (Object.prototype.hasOwnProperty.call(Storage._memoryFallback, key)
+                        ? Storage._memoryFallback[key]
+                        : null);
+                return raw === null || raw === undefined ? null : JSON.parse(raw);
+            } catch (err) {
+                console.error("Storage read failed for key: " + key, err);
+                return null;
+            }
+        },
+
+        _rawSet: function (key, value) {
+            var serialized = JSON.stringify(value);
+            try {
+                if (Storage.persistent) {
+                    window.localStorage.setItem(key, serialized);
+                } else {
+                    Storage._memoryFallback[key] = serialized;
+                }
+                return true;
+            } catch (err) {
+                console.error("Storage write failed for key: " + key, err);
+                UI.showNotification("Could not save your changes. The browser's storage may be full.", "error");
+                return false;
+            }
+        },
+
+        _migrateIfNeeded: function () {
+            var metadata = Storage._rawGet(STORAGE_KEYS.METADATA) || DEFAULTS.metadata;
+            var version = metadata.dataVersion || 1;
+
+            if (version >= CURRENT_DATA_VERSION) {
+                return;
+            }
+
+            var data = {
+                accounts: Storage._rawGet(STORAGE_KEYS.ACCOUNTS) || [],
+                transactions: Storage._rawGet(STORAGE_KEYS.TRANSACTIONS) || [],
+                settings: Storage._rawGet(STORAGE_KEYS.SETTINGS) || DEFAULTS.settings
+            };
+
+            MIGRATIONS
+                .filter(function (m) { return m.from >= version; })
+                .sort(function (a, b) { return a.from - b.from; })
+                .forEach(function (migration) {
+                    data = migration.run(data);
+                    version = migration.from + 1;
+                });
+
+            Storage._rawSet(STORAGE_KEYS.ACCOUNTS, data.accounts);
+            Storage._rawSet(STORAGE_KEYS.TRANSACTIONS, data.transactions);
+            Storage._rawSet(STORAGE_KEYS.SETTINGS, data.settings);
+
+            metadata.dataVersion = version;
+            Storage._rawSet(STORAGE_KEYS.METADATA, metadata);
+        },
+
+        getAccounts: function () {
+            return Storage._rawGet(STORAGE_KEYS.ACCOUNTS) || [];
+        },
+
+        setAccounts: function (accounts) {
+            return Storage._rawSet(STORAGE_KEYS.ACCOUNTS, accounts);
+        },
+
+        getTransactions: function () {
+            return Storage._rawGet(STORAGE_KEYS.TRANSACTIONS) || [];
+        },
+
+        setTransactions: function (transactions) {
+            return Storage._rawSet(STORAGE_KEYS.TRANSACTIONS, transactions);
+        },
+
+        getSettings: function () {
+            return Storage._rawGet(STORAGE_KEYS.SETTINGS) || DEFAULTS.settings;
+        },
+
+        setSettings: function (settings) {
+            return Storage._rawSet(STORAGE_KEYS.SETTINGS, settings);
+        },
+
+        getMetadata: function () {
+            return Storage._rawGet(STORAGE_KEYS.METADATA) || DEFAULTS.metadata;
+        },
+
+        setMetadata: function (metadata) {
+            return Storage._rawSet(STORAGE_KEYS.METADATA, metadata);
+        }
+    };
+
+    /* =========================================================
+       SECURITY MODULE
+       PIN + security-question hashing and verification using the
+       browser's built-in Web Crypto API (SHA-256 + random salt).
+       Neither the PIN nor the security answer is ever stored as
+       plain text (§20/§21). This is a local UI lock only — see
+       the disclaimer shown on the lock screen and in §22.
+    ========================================================= */
+
+    var Security = {
+
+        generateSaltHex: function () {
+            var bytes = new Uint8Array(16);
+            window.crypto.getRandomValues(bytes);
+            return Array.from(bytes).map(function (b) { return b.toString(16).padStart(2, "0"); }).join("");
+        },
+
+        hashWithSalt: function (text, saltHex) {
+            var encoder = new TextEncoder();
+            var data = encoder.encode(saltHex + ":" + text);
+            return window.crypto.subtle.digest("SHA-256", data).then(function (buffer) {
+                return Array.from(new Uint8Array(buffer))
+                    .map(function (b) { return b.toString(16).padStart(2, "0"); })
+                    .join("");
+            });
+        },
+
+        isPinFormatValid: function (pin) {
+            return /^[0-9]{6}$/.test(pin);
+        },
+
+        // Normalizes a security answer so casing/whitespace differences
+        // don't cause a legitimate answer to fail verification.
+        normalizeAnswer: function (answer) {
+            return answer.trim().toLowerCase();
+        },
+
+        hasPinConfigured: function () {
+            var settings = Storage.getSettings();
+            return !!(settings.pinHash && settings.pinSalt);
+        },
+
+        setupPin: function (pin, question, answer) {
+            var pinSalt = Security.generateSaltHex();
+            var answerSalt = Security.generateSaltHex();
+            return Promise.all([
+                Security.hashWithSalt(pin, pinSalt),
+                Security.hashWithSalt(Security.normalizeAnswer(answer), answerSalt)
+            ]).then(function (results) {
+                var settings = Storage.getSettings();
+                settings.pinHash = results[0];
+                settings.pinSalt = pinSalt;
+                settings.securityQuestion = question.trim();
+                settings.securityAnswerHash = results[1];
+                settings.securityAnswerSalt = answerSalt;
+                Storage.setSettings(settings);
+            });
+        },
+
+        verifyPin: function (pin) {
+            var settings = Storage.getSettings();
+            if (!settings.pinHash || !settings.pinSalt) { return Promise.resolve(false); }
+            return Security.hashWithSalt(pin, settings.pinSalt).then(function (computed) {
+                return computed === settings.pinHash;
+            });
+        },
+
+        verifySecurityAnswer: function (answer) {
+            var settings = Storage.getSettings();
+            if (!settings.securityAnswerHash || !settings.securityAnswerSalt) { return Promise.resolve(false); }
+            return Security.hashWithSalt(Security.normalizeAnswer(answer), settings.securityAnswerSalt).then(function (computed) {
+                return computed === settings.securityAnswerHash;
+            });
+        },
+
+        setPin: function (newPin) {
+            var pinSalt = Security.generateSaltHex();
+            return Security.hashWithSalt(newPin, pinSalt).then(function (computed) {
+                var settings = Storage.getSettings();
+                settings.pinHash = computed;
+                settings.pinSalt = pinSalt;
+                Storage.setSettings(settings);
+            });
+        },
+
+        setSecurityQuestion: function (question, answer) {
+            var answerSalt = Security.generateSaltHex();
+            return Security.hashWithSalt(Security.normalizeAnswer(answer), answerSalt).then(function (computed) {
+                var settings = Storage.getSettings();
+                settings.securityQuestion = question.trim();
+                settings.securityAnswerHash = computed;
+                settings.securityAnswerSalt = answerSalt;
+                Storage.setSettings(settings);
+            });
+        }
+    };
+
+    /* =========================================================
+       UI MODULE
+       Handles view switching, nav rendering and notifications.
+    ========================================================= */
+
+    var UI = {
+
+        init: function () {
+            UI.renderSidebarNav();
+            UI.renderBottomNav();
+            UI.bindNavClicks();
+            UI.showView("dashboard");
+        },
+
+        renderSidebarNav: function () {
+            var list = document.getElementById("sidebar-nav-list");
+            list.innerHTML = NAV_ITEMS.map(function (item) {
+                return (
+                    '<li class="nav-item">' +
+                        '<button class="nav-link" data-nav-target="' + item.id + '">' +
+                            '<span class="nav-icon" aria-hidden="true">' + item.icon + '</span>' +
+                            '<span>' + item.label + '</span>' +
+                        '</button>' +
+                    '</li>'
+                );
+            }).join("");
+        },
+
+        renderBottomNav: function () {
+            var scroll = document.getElementById("bottom-nav-scroll");
+            scroll.innerHTML = NAV_ITEMS.map(function (item) {
+                return (
+                    '<button class="bottom-nav-link" data-nav-target="' + item.id + '">' +
+                        '<span class="nav-icon" aria-hidden="true">' + item.icon + '</span>' +
+                        '<span>' + item.label + '</span>' +
+                    '</button>'
+                );
+            }).join("");
+        },
+
+        bindNavClicks: function () {
+            document.querySelectorAll("[data-nav-target]").forEach(function (el) {
+                el.addEventListener("click", function () {
+                    UI.showView(el.getAttribute("data-nav-target"));
+                });
+            });
+        },
+
+        showView: function (viewId) {
+            document.querySelectorAll(".view").forEach(function (view) {
+                view.classList.toggle("active", view.getAttribute("data-view") === viewId);
+            });
+
+            document.querySelectorAll("[data-nav-target]").forEach(function (el) {
+                el.classList.toggle("active", el.getAttribute("data-nav-target") === viewId);
+            });
+
+            // Keep the active nav item visible if the bottom tab bar scrolls.
+            var activeBottomLink = document.querySelector(
+                '.bottom-nav-link[data-nav-target="' + viewId + '"]'
+            );
+            if (activeBottomLink) {
+                activeBottomLink.scrollIntoView({ inline: "nearest", block: "nearest" });
+            }
+
+            // Re-render the target view so it reflects any changes made
+            // elsewhere (e.g. an account renamed while Transactions was
+            // hidden). Registered lazily since these views load after UI.
+            if (typeof UI.viewRenderers[viewId] === "function") {
+                UI.viewRenderers[viewId]();
+            }
+        },
+
+        // Populated by other modules once they've initialized (see bottom
+        // of the script). Keyed by data-view id.
+        viewRenderers: {},
+
+        showNotification: function (message, type) {
+            var area = document.getElementById("notification-area");
+            var toast = document.createElement("div");
+            toast.className = "toast " + (type || "success");
+            toast.textContent = message;
+            area.appendChild(toast);
+            setTimeout(function () {
+                toast.remove();
+            }, 3500);
+        },
+
+        confirm: function (title, message, onConfirm) {
+            var overlay = document.getElementById("confirm-modal");
+            document.getElementById("confirm-modal-title").textContent = title;
+            document.getElementById("confirm-modal-message").textContent = message;
+            overlay.classList.add("open");
+
+            var confirmBtn = document.getElementById("confirm-modal-confirm");
+            var cancelBtn = document.getElementById("confirm-modal-cancel");
+            var previouslyFocused = document.activeElement;
+
+            // Cancel is the safer default focus target for a destructive
+            // confirmation (deactivate/delete actions use this modal).
+            cancelBtn.focus();
+
+            function close() {
+                overlay.classList.remove("open");
+                confirmBtn.removeEventListener("click", handleConfirm);
+                cancelBtn.removeEventListener("click", handleCancel);
+                document.removeEventListener("keydown", handleKeydown);
+                if (previouslyFocused && typeof previouslyFocused.focus === "function") {
+                    previouslyFocused.focus();
+                }
+            }
+            function handleConfirm() {
+                close();
+                onConfirm();
+            }
+            function handleCancel() {
+                close();
+            }
+            function handleKeydown(event) {
+                if (event.key === "Escape") {
+                    handleCancel();
+                }
+            }
+
+            confirmBtn.addEventListener("click", handleConfirm);
+            cancelBtn.addEventListener("click", handleCancel);
+            document.addEventListener("keydown", handleKeydown);
+        }
+    };
+
+    /* =========================================================
+       UTILITIES MODULE
+       Small shared helpers used across future stages.
+    ========================================================= */
+
+    var Utilities = {
+        generateId: function (prefix) {
+            var random = Math.random().toString(36).slice(2, 10).toUpperCase();
+            return prefix + "-" + random;
+        },
+
+        formatCurrency: function (amount) {
+            var value = Number(amount) || 0;
+            var formatted = value.toLocaleString("en-US", {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2
+            });
+            return "QAR " + formatted;
+        },
+
+        escapeHtml: function (text) {
+            var div = document.createElement("div");
+            div.textContent = text == null ? "" : String(text);
+            return div.innerHTML;
+        },
+
+        MONTH_NAMES: ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"],
+
+        // Parses a "YYYY-MM-DD" string into display format "DD-Mon-YYYY"
+        // without ever constructing a Date object from the raw string,
+        // which avoids local/UTC shift bugs entirely.
+        formatDateDisplay: function (isoDateStr) {
+            if (!isoDateStr) { return ""; }
+            var parts = isoDateStr.split("-");
+            var year = parts[0];
+            var month = parseInt(parts[1], 10);
+            var day = parts[2];
+            return day + "-" + Utilities.MONTH_NAMES[month - 1] + "-" + year;
+        },
+
+        // Today's date as "YYYY-MM-DD" using the LOCAL timezone
+        // (not toISOString, which is UTC and can roll to the wrong day).
+        getTodayIso: function () {
+            var now = new Date();
+            var year = now.getFullYear();
+            var month = String(now.getMonth() + 1).padStart(2, "0");
+            var day = String(now.getDate()).padStart(2, "0");
+            return year + "-" + month + "-" + day;
+        },
+
+        // "2026-09" -> "Sep 2026"
+        formatMonthDisplay: function (yearMonthStr) {
+            var parts = yearMonthStr.split("-");
+            var month = parseInt(parts[1], 10);
+            return Utilities.MONTH_NAMES[month - 1] + " " + parts[0];
+        },
+
+        csvEscape: function (value) {
+            var str = value === null || value === undefined ? "" : String(value);
+            if (/["\n\r,]/.test(str)) {
+                str = '"' + str.replace(/"/g, '""') + '"';
+            }
+            return str;
+        },
+
+        downloadTextFile: function (filename, content, mimeType) {
+            var blob = new Blob([content], { type: mimeType || "text/plain" });
+            var url = URL.createObjectURL(blob);
+            var link = document.createElement("a");
+            link.href = url;
+            link.download = filename;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            URL.revokeObjectURL(url);
+        }
+    };
+
+    /* =========================================================
+       ACCOUNTS MODULE
+       Data operations + view rendering for Account Management.
+    ========================================================= */
+
+    var Accounts = {
+
+        getAll: function () {
+            return Storage.getAccounts();
+        },
+
+        getActive: function () {
+            return Accounts.getAll().filter(function (acc) {
+                return acc.status === "active";
+            });
+        },
+
+        getById: function (id) {
+            return Accounts.getAll().find(function (acc) {
+                return acc.id === id;
+            }) || null;
+        },
+
+        isDuplicateName: function (name, excludeId) {
+            var normalized = name.trim().toLowerCase();
+            return Accounts.getAll().some(function (acc) {
+                return acc.name.trim().toLowerCase() === normalized && acc.id !== excludeId;
+            });
+        },
+
+        add: function (name, openingBalance) {
+            var accounts = Accounts.getAll();
+            accounts.push({
+                id: Utilities.generateId("ACC"),
+                name: name.trim(),
+                openingBalance: Number(openingBalance),
+                status: "active",
+                createdAt: new Date().toISOString()
+            });
+            Storage.setAccounts(accounts);
+        },
+
+        update: function (id, changes) {
+            var accounts = Accounts.getAll().map(function (acc) {
+                if (acc.id !== id) { return acc; }
+                return Object.assign({}, acc, changes);
+            });
+            Storage.setAccounts(accounts);
+        },
+
+        deactivate: function (id) {
+            Accounts.update(id, { status: "inactive" });
+        },
+
+        // Core balance formula (§10/§26): never stored, always derived.
+        // Current Balance = Opening Balance + Total Income - Total Expense
+        getBalanceSummary: function (accountId) {
+            var account = Accounts.getById(accountId);
+            var openingBalance = account ? Number(account.openingBalance) : 0;
+
+            var income = 0;
+            var expense = 0;
+            Transactions.getAll().forEach(function (t) {
+                if (t.accountId !== accountId) { return; }
+                if (t.type === "income") {
+                    income += Number(t.amount);
+                } else if (t.type === "expense") {
+                    expense += Number(t.amount);
+                }
+            });
+
+            return {
+                openingBalance: openingBalance,
+                income: income,
+                expense: expense,
+                currentBalance: openingBalance + income - expense
+            };
+        }
+    };
+
+    var AccountsView = {
+
+        editingId: null,
+
+        init: function () {
+            document.getElementById("account-form").addEventListener("submit", AccountsView.handleSubmit);
+            document.getElementById("account-cancel-btn").addEventListener("click", AccountsView.cancelEdit);
+            AccountsView.render();
+        },
+
+        render: function () {
+            var accounts = Accounts.getAll();
+            var tbody = document.getElementById("accounts-table-body");
+            var cardsWrap = document.getElementById("accounts-cards");
+
+            if (accounts.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="7"><div class="empty-state">No accounts have been created.<br>Create an account above before adding transactions.</div></td></tr>';
+                cardsWrap.innerHTML = '<div class="empty-state">No accounts have been created.<br>Create an account above before adding transactions.</div>';
+                return;
+            }
+
+            tbody.innerHTML = accounts.map(AccountsView.renderRow).join("");
+            cardsWrap.innerHTML = accounts.map(AccountsView.renderCard).join("");
+
+            accounts.forEach(function (acc) {
+                var editBtn = document.getElementById("acc-edit-" + acc.id);
+                var deactivateBtn = document.getElementById("acc-deactivate-" + acc.id);
+                if (editBtn) { editBtn.addEventListener("click", function () { AccountsView.startEdit(acc.id); }); }
+                if (deactivateBtn) { deactivateBtn.addEventListener("click", function () { AccountsView.confirmDeactivate(acc.id); }); }
+            });
+        },
+
+        renderRow: function (acc) {
+            var statusClass = acc.status === "active" ? "active" : "inactive";
+            var statusLabel = acc.status === "active" ? "Active" : "Inactive";
+            var summary = Accounts.getBalanceSummary(acc.id);
+            var balanceClass = summary.currentBalance < 0 ? "amount-expense" : "amount-income";
+            var deactivateBtn = acc.status === "active"
+                ? '<button type="button" class="btn-danger-text" id="acc-deactivate-' + acc.id + '">Deactivate</button>'
+                : "";
+            return (
+                "<tr>" +
+                    "<td>" + Utilities.escapeHtml(acc.name) + "</td>" +
+                    '<td class="amount">' + Utilities.formatCurrency(summary.openingBalance) + "</td>" +
+                    '<td class="amount amount-income">' + Utilities.formatCurrency(summary.income) + "</td>" +
+                    '<td class="amount amount-expense">' + Utilities.formatCurrency(summary.expense) + "</td>" +
+                    '<td class="amount ' + balanceClass + '" style="font-weight:600;">' + Utilities.formatCurrency(summary.currentBalance) + "</td>" +
+                    '<td><span class="status-badge ' + statusClass + '">' + statusLabel + "</span></td>" +
+                    "<td>" +
+                        '<button type="button" class="btn-link-text" id="acc-edit-' + acc.id + '">Edit</button>' +
+                        deactivateBtn +
+                    "</td>" +
+                "</tr>"
+            );
+        },
+
+        renderCard: function (acc) {
+            var statusClass = acc.status === "active" ? "active" : "inactive";
+            var statusLabel = acc.status === "active" ? "Active" : "Inactive";
+            var summary = Accounts.getBalanceSummary(acc.id);
+            var balanceClass = summary.currentBalance < 0 ? "amount-expense" : "amount-income";
+            var deactivateBtn = acc.status === "active"
+                ? '<button type="button" class="btn-danger-text" id="acc-deactivate-' + acc.id + '">Deactivate</button>'
+                : "";
+            return (
+                '<div class="record-card">' +
+                    '<div class="record-card-top">' +
+                        '<span class="record-card-title">' + Utilities.escapeHtml(acc.name) + "</span>" +
+                        '<span class="status-badge ' + statusClass + '">' + statusLabel + "</span>" +
+                    "</div>" +
+                    '<div class="record-card-row"><span>Opening Balance</span><span>' + Utilities.formatCurrency(summary.openingBalance) + "</span></div>" +
+                    '<div class="record-card-row amount-income"><span>Income</span><span>' + Utilities.formatCurrency(summary.income) + "</span></div>" +
+                    '<div class="record-card-row amount-expense"><span>Expense</span><span>' + Utilities.formatCurrency(summary.expense) + "</span></div>" +
+                    '<div class="record-card-row ' + balanceClass + '" style="font-weight:600; font-size:1rem;"><span>Current Balance</span><span>' + Utilities.formatCurrency(summary.currentBalance) + "</span></div>" +
+                    '<div class="record-card-actions">' +
+                        '<button type="button" class="btn-link-text" id="acc-edit-' + acc.id + '">Edit</button>' +
+                        deactivateBtn +
+                    "</div>" +
+                "</div>"
+            );
+        },
+
+        clearErrors: function () {
+            document.getElementById("account-name-error").textContent = "";
+            document.getElementById("account-balance-error").textContent = "";
+            document.getElementById("account-name-input").classList.remove("has-error");
+            document.getElementById("account-balance-input").classList.remove("has-error");
+        },
+
+        handleSubmit: function (event) {
+            event.preventDefault();
+            AccountsView.clearErrors();
+
+            var nameInput = document.getElementById("account-name-input");
+            var balanceInput = document.getElementById("account-balance-input");
+            var statusInput = document.getElementById("account-status-input");
+
+            var name = nameInput.value.trim();
+            var balanceRaw = balanceInput.value;
+            var balance = parseFloat(balanceRaw);
+
+            var hasError = false;
+
+            if (!name) {
+                document.getElementById("account-name-error").textContent = "Account name is required.";
+                nameInput.classList.add("has-error");
+                hasError = true;
+            } else if (Accounts.isDuplicateName(name, AccountsView.editingId)) {
+                document.getElementById("account-name-error").textContent = "An account with this name already exists.";
+                nameInput.classList.add("has-error");
+                hasError = true;
+            }
+
+            if (balanceRaw === "" || isNaN(balance)) {
+                document.getElementById("account-balance-error").textContent = "Opening balance must be a number.";
+                balanceInput.classList.add("has-error");
+                hasError = true;
+            } else if (balance < 0) {
+                document.getElementById("account-balance-error").textContent = "Opening balance cannot be negative.";
+                balanceInput.classList.add("has-error");
+                hasError = true;
+            }
+
+            if (hasError) { return; }
+
+            if (AccountsView.editingId) {
+                var changes = { name: name, openingBalance: balance };
+                if (statusInput) { changes.status = statusInput.value; }
+                Accounts.update(AccountsView.editingId, changes);
+                UI.showNotification("Account updated.", "success");
+            } else {
+                Accounts.add(name, balance);
+                UI.showNotification("Account created.", "success");
+            }
+
+            AccountsView.cancelEdit();
+            AccountsView.render();
+        },
+
+        startEdit: function (id) {
+            var acc = Accounts.getById(id);
+            if (!acc) { return; }
+
+            AccountsView.editingId = id;
+            AccountsView.clearErrors();
+
+            document.getElementById("account-id-input").value = acc.id;
+            document.getElementById("account-name-input").value = acc.name;
+            document.getElementById("account-balance-input").value = acc.openingBalance;
+
+            var statusGroup = document.getElementById("account-status-group");
+            statusGroup.style.display = "flex";
+            document.getElementById("account-status-input").value = acc.status;
+
+            document.getElementById("account-form-title").textContent = "Edit Account";
+            document.getElementById("account-submit-btn").textContent = "Update Account";
+            document.getElementById("account-cancel-btn").style.display = "inline-block";
+
+            document.getElementById("account-form").scrollIntoView({ behavior: "smooth", block: "start" });
+        },
+
+        cancelEdit: function () {
+            AccountsView.editingId = null;
+            AccountsView.clearErrors();
+            document.getElementById("account-form").reset();
+            document.getElementById("account-id-input").value = "";
+            document.getElementById("account-balance-input").value = "0";
+            document.getElementById("account-status-group").style.display = "none";
+            document.getElementById("account-form-title").textContent = "Add Account";
+            document.getElementById("account-submit-btn").textContent = "Save Account";
+            document.getElementById("account-cancel-btn").style.display = "none";
+        },
+
+        confirmDeactivate: function (id) {
+            var acc = Accounts.getById(id);
+            if (!acc) { return; }
+            UI.confirm(
+                "Deactivate Account",
+                'Deactivate "' + acc.name + '"? It will no longer be available for new transactions, but existing transactions will remain intact.',
+                function () {
+                    Accounts.deactivate(id);
+                    UI.showNotification("Account deactivated.", "success");
+                    AccountsView.render();
+                }
+            );
+        }
+    };
+
+    /* =========================================================
+       TRANSACTIONS MODULE
+       Data operations + view rendering for Transaction entry/list.
+    ========================================================= */
+
+    var Transactions = {
+
+        getAll: function () {
+            return Storage.getTransactions();
+        },
+
+        getById: function (id) {
+            return Transactions.getAll().find(function (t) {
+                return t.id === id;
+            }) || null;
+        },
+
+        // Default sort: Date DESC, then Created-At DESC as tiebreaker.
+        getSorted: function () {
+            return Transactions.getAll().slice().sort(function (a, b) {
+                if (a.date !== b.date) {
+                    return a.date < b.date ? 1 : -1;
+                }
+                return a.createdAt < b.createdAt ? 1 : -1;
+            });
+        },
+
+        getDistinctNarrations: function () {
+            var seen = {};
+            var result = [];
+            Transactions.getAll().forEach(function (t) {
+                var key = t.narration.trim().toLowerCase();
+                if (key && !seen[key]) {
+                    seen[key] = true;
+                    result.push(t.narration.trim());
+                }
+            });
+            return result;
+        },
+
+        add: function (data) {
+            var transactions = Transactions.getAll();
+            transactions.push({
+                id: Utilities.generateId("TXN"),
+                date: data.date,
+                type: data.type,
+                narration: data.narration.trim(),
+                accountId: data.accountId,
+                amount: Number(data.amount),
+                notes: (data.notes || "").trim(),
+                createdAt: new Date().toISOString()
+            });
+            Storage.setTransactions(transactions);
+        },
+
+        update: function (id, data) {
+            var transactions = Transactions.getAll().map(function (t) {
+                if (t.id !== id) { return t; }
+                return Object.assign({}, t, {
+                    date: data.date,
+                    type: data.type,
+                    narration: data.narration.trim(),
+                    accountId: data.accountId,
+                    amount: Number(data.amount),
+                    notes: (data.notes || "").trim()
+                    // id and createdAt are intentionally preserved.
+                });
+            });
+            Storage.setTransactions(transactions);
+        },
+
+        remove: function (id) {
+            var transactions = Transactions.getAll().filter(function (t) {
+                return t.id !== id;
+            });
+            Storage.setTransactions(transactions);
+        }
+    };
+
+    var TransactionsView = {
+
+        editingId: null,
+
+        filters: {
+            narration: "",
+            accountId: "",
+            type: "",
+            dateFrom: "",
+            dateTo: "",
+            amountMin: "",
+            amountMax: "",
+            sortBy: "dateDesc"
+        },
+
+        init: function () {
+            document.getElementById("transaction-form").addEventListener("submit", TransactionsView.handleSubmit);
+            document.getElementById("transaction-cancel-btn").addEventListener("click", TransactionsView.cancelEdit);
+            TransactionsView.resetDefaults();
+            TransactionsView.bindFilterEvents();
+            TransactionsView.render();
+        },
+
+        bindFilterEvents: function () {
+            var liveFields = [
+                "filter-narration-input", "filter-account-input", "filter-type-input",
+                "filter-date-from-input", "filter-date-to-input",
+                "filter-amount-min-input", "filter-amount-max-input", "filter-sort-input"
+            ];
+            liveFields.forEach(function (id) {
+                var el = document.getElementById(id);
+                var eventName = (el.tagName === "SELECT") ? "change" : "input";
+                el.addEventListener(eventName, TransactionsView.applyFiltersFromForm);
+            });
+            document.getElementById("filter-clear-btn").addEventListener("click", TransactionsView.clearFilters);
+        },
+
+        applyFiltersFromForm: function () {
+            TransactionsView.filters = {
+                narration: document.getElementById("filter-narration-input").value.trim().toLowerCase(),
+                accountId: document.getElementById("filter-account-input").value,
+                type: document.getElementById("filter-type-input").value,
+                dateFrom: document.getElementById("filter-date-from-input").value,
+                dateTo: document.getElementById("filter-date-to-input").value,
+                amountMin: document.getElementById("filter-amount-min-input").value,
+                amountMax: document.getElementById("filter-amount-max-input").value,
+                sortBy: document.getElementById("filter-sort-input").value
+            };
+            TransactionsView.render();
+        },
+
+        clearFilters: function () {
+            document.getElementById("filter-narration-input").value = "";
+            document.getElementById("filter-account-input").value = "";
+            document.getElementById("filter-type-input").value = "";
+            document.getElementById("filter-date-from-input").value = "";
+            document.getElementById("filter-date-to-input").value = "";
+            document.getElementById("filter-amount-min-input").value = "";
+            document.getElementById("filter-amount-max-input").value = "";
+            document.getElementById("filter-sort-input").value = "dateDesc";
+            TransactionsView.applyFiltersFromForm();
+        },
+
+        refreshFilterAccountOptions: function () {
+            var select = document.getElementById("filter-account-input");
+            var currentValue = select.value;
+            var options = ['<option value="">All Accounts</option>'];
+            Accounts.getAll().forEach(function (acc) {
+                var suffix = acc.status !== "active" ? " (Inactive)" : "";
+                options.push('<option value="' + acc.id + '">' + Utilities.escapeHtml(acc.name) + suffix + "</option>");
+            });
+            select.innerHTML = options.join("");
+            select.value = currentValue;
+        },
+
+        // Called whenever the Transactions view needs its dropdowns/autocomplete
+        // refreshed to reflect the latest Accounts data (e.g. after an account
+        // is added/deactivated on the Accounts screen).
+        refreshAccountOptions: function (selectedAccountId) {
+            var select = document.getElementById("transaction-account-input");
+            var activeAccounts = Accounts.getActive();
+            var currentAccount = selectedAccountId ? Accounts.getById(selectedAccountId) : null;
+
+            var options = ['<option value="">Select account</option>'];
+            activeAccounts.forEach(function (acc) {
+                options.push('<option value="' + acc.id + '">' + Utilities.escapeHtml(acc.name) + "</option>");
+            });
+
+            // If editing a transaction whose account is now inactive, still
+            // list it (flagged) so the existing link isn't broken (§9/§26).
+            if (currentAccount && currentAccount.status !== "active") {
+                options.push('<option value="' + currentAccount.id + '">' + Utilities.escapeHtml(currentAccount.name) + " (Inactive)</option>");
+            }
+
+            select.innerHTML = options.join("");
+            select.value = selectedAccountId || "";
+        },
+
+        refreshNarrationSuggestions: function () {
+            var datalist = document.getElementById("narration-suggestions");
+            datalist.innerHTML = Transactions.getDistinctNarrations().map(function (n) {
+                return '<option value="' + Utilities.escapeHtml(n) + '">';
+            }).join("");
+        },
+
+        resetDefaults: function () {
+            document.getElementById("transaction-date-input").value = Utilities.getTodayIso();
+            document.getElementById("transaction-type-input").value = "expense";
+            TransactionsView.refreshAccountOptions(null);
+            TransactionsView.refreshNarrationSuggestions();
+        },
+
+        render: function () {
+            TransactionsView.refreshNarrationSuggestions();
+            // Refresh account dropdown too, in case accounts changed while
+            // this view was hidden (name edits, new accounts, deactivation).
+            var select = document.getElementById("transaction-account-input");
+            TransactionsView.refreshAccountOptions(select.value || null);
+            TransactionsView.refreshFilterAccountOptions();
+
+            var totalCount = Transactions.getAll().length;
+            var transactions = TransactionsView.getAccountAwareList();
+            var tbody = document.getElementById("transactions-table-body");
+            var cardsWrap = document.getElementById("transactions-cards");
+
+            if (transactions.length === 0) {
+                var emptyMsg = totalCount === 0
+                    ? "No transactions have been recorded yet.<br>Add your first income or expense transaction to get started."
+                    : "No transactions found.<br>Try adjusting or clearing your filters.";
+                tbody.innerHTML = '<tr><td colspan="7"><div class="empty-state">' + emptyMsg + "</div></td></tr>";
+                cardsWrap.innerHTML = '<div class="empty-state">' + emptyMsg + "</div>";
+                return;
+            }
+
+            tbody.innerHTML = transactions.map(TransactionsView.renderRow).join("");
+            cardsWrap.innerHTML = transactions.map(TransactionsView.renderCard).join("");
+
+            transactions.forEach(function (t) {
+                var editBtn = document.getElementById("txn-edit-" + t.id);
+                var deleteBtn = document.getElementById("txn-delete-" + t.id);
+                if (editBtn) { editBtn.addEventListener("click", function () { TransactionsView.startEdit(t.id); }); }
+                if (deleteBtn) { deleteBtn.addEventListener("click", function () { TransactionsView.confirmDelete(t.id); }); }
+            });
+        },
+
+        // Applies the current filters, then sorts, then annotates with
+        // S.No and resolved account name for display. Filters are combined
+        // with AND, matching §13's example.
+        getAccountAwareList: function () {
+            var f = TransactionsView.filters;
+
+            var filtered = Transactions.getAll().filter(function (t) {
+                if (f.narration && t.narration.toLowerCase().indexOf(f.narration) === -1) { return false; }
+                if (f.accountId && t.accountId !== f.accountId) { return false; }
+                if (f.type && t.type !== f.type) { return false; }
+                if (f.dateFrom && t.date < f.dateFrom) { return false; }
+                if (f.dateTo && t.date > f.dateTo) { return false; }
+                if (f.amountMin !== "" && !isNaN(parseFloat(f.amountMin)) && t.amount < parseFloat(f.amountMin)) { return false; }
+                if (f.amountMax !== "" && !isNaN(parseFloat(f.amountMax)) && t.amount > parseFloat(f.amountMax)) { return false; }
+                return true;
+            });
+
+            filtered.sort(function (a, b) {
+                switch (f.sortBy) {
+                    case "dateAsc":
+                        if (a.date !== b.date) { return a.date > b.date ? 1 : -1; }
+                        return a.createdAt > b.createdAt ? 1 : -1;
+                    case "amountDesc":
+                        return b.amount - a.amount;
+                    case "amountAsc":
+                        return a.amount - b.amount;
+                    case "dateDesc":
+                    default:
+                        if (a.date !== b.date) { return a.date < b.date ? 1 : -1; }
+                        return a.createdAt < b.createdAt ? 1 : -1;
+                }
+            });
+
+            return filtered.map(function (t, index) {
+                var account = Accounts.getById(t.accountId);
+                return Object.assign({}, t, {
+                    sNo: index + 1,
+                    accountName: account ? account.name : "(Unknown Account)"
+                });
+            });
+        },
+
+        renderRow: function (t) {
+            var typeClass = t.type === "income" ? "type-income" : "type-expense";
+            var typeLabel = t.type === "income" ? "Income" : "Expense";
+            var amountClass = t.type === "income" ? "amount-income" : "amount-expense";
+            return (
+                "<tr>" +
+                    "<td>" + t.sNo + "</td>" +
+                    "<td>" + Utilities.formatDateDisplay(t.date) + "</td>" +
+                    '<td><span class="status-badge ' + typeClass + '">' + typeLabel + "</span></td>" +
+                    "<td>" + Utilities.escapeHtml(t.narration) + "</td>" +
+                    "<td>" + Utilities.escapeHtml(t.accountName) + "</td>" +
+                    '<td class="amount ' + amountClass + '">' + Utilities.formatCurrency(t.amount) + "</td>" +
+                    "<td>" +
+                        '<button type="button" class="btn-link-text" id="txn-edit-' + t.id + '">Edit</button>' +
+                        '<button type="button" class="btn-danger-text" id="txn-delete-' + t.id + '">Delete</button>' +
+                    "</td>" +
+                "</tr>"
+            );
+        },
+
+        renderCard: function (t) {
+            var typeClass = t.type === "income" ? "type-income" : "type-expense";
+            var typeLabel = t.type === "income" ? "Income" : "Expense";
+            var amountClass = t.type === "income" ? "amount-income" : "amount-expense";
+            return (
+                '<div class="record-card">' +
+                    '<div class="record-card-top">' +
+                        "<span class=\"record-card-title\">" + Utilities.escapeHtml(t.narration) + "</span>" +
+                        '<span class="status-badge ' + typeClass + '">' + typeLabel + "</span>" +
+                    "</div>" +
+                    '<div class="record-card-row"><span>' + Utilities.formatDateDisplay(t.date) + '</span><span>' + Utilities.escapeHtml(t.accountName) + "</span></div>" +
+                    '<div class="record-card-row ' + amountClass + '" style="font-size:1rem; font-weight:600;"><span>Amount</span><span>' + Utilities.formatCurrency(t.amount) + "</span></div>" +
+                    '<div class="record-card-actions">' +
+                        '<button type="button" class="btn-link-text" id="txn-edit-' + t.id + '">Edit</button>' +
+                        '<button type="button" class="btn-danger-text" id="txn-delete-' + t.id + '">Delete</button>' +
+                    "</div>" +
+                "</div>"
+            );
+        },
+
+        clearErrors: function () {
+            ["transaction-date-error", "transaction-account-error", "transaction-narration-error", "transaction-amount-error"].forEach(function (id) {
+                document.getElementById(id).textContent = "";
+            });
+            ["transaction-date-input", "transaction-account-input", "transaction-narration-input", "transaction-amount-input"].forEach(function (id) {
+                document.getElementById(id).classList.remove("has-error");
+            });
+        },
+
+        handleSubmit: function (event) {
+            event.preventDefault();
+            TransactionsView.clearErrors();
+
+            var dateInput = document.getElementById("transaction-date-input");
+            var typeInput = document.getElementById("transaction-type-input");
+            var accountInput = document.getElementById("transaction-account-input");
+            var narrationInput = document.getElementById("transaction-narration-input");
+            var amountInput = document.getElementById("transaction-amount-input");
+            var notesInput = document.getElementById("transaction-notes-input");
+
+            var date = dateInput.value;
+            var type = typeInput.value;
+            var accountId = accountInput.value;
+            var narration = narrationInput.value.trim();
+            var amountRaw = amountInput.value;
+            var amount = parseFloat(amountRaw);
+
+            var hasError = false;
+
+            if (!date) {
+                document.getElementById("transaction-date-error").textContent = "Date is required.";
+                dateInput.classList.add("has-error");
+                hasError = true;
+            }
+
+            if (!accountId) {
+                document.getElementById("transaction-account-error").textContent = "Account is required.";
+                accountInput.classList.add("has-error");
+                hasError = true;
+            }
+
+            if (!narration) {
+                document.getElementById("transaction-narration-error").textContent = "Narration is required.";
+                narrationInput.classList.add("has-error");
+                hasError = true;
+            }
+
+            if (amountRaw === "" || isNaN(amount)) {
+                document.getElementById("transaction-amount-error").textContent = "Amount is required and must be numeric.";
+                amountInput.classList.add("has-error");
+                hasError = true;
+            } else if (amount <= 0) {
+                document.getElementById("transaction-amount-error").textContent = "Amount must be greater than zero.";
+                amountInput.classList.add("has-error");
+                hasError = true;
+            }
+
+            if (hasError) { return; }
+
+            var payload = {
+                date: date,
+                type: type,
+                accountId: accountId,
+                narration: narration,
+                amount: amount,
+                notes: notesInput.value
+            };
+
+            if (TransactionsView.editingId) {
+                Transactions.update(TransactionsView.editingId, payload);
+                UI.showNotification("Transaction updated.", "success");
+            } else {
+                Transactions.add(payload);
+                UI.showNotification("Transaction saved.", "success");
+            }
+
+            TransactionsView.cancelEdit();
+            TransactionsView.render();
+        },
+
+        startEdit: function (id) {
+            var t = Transactions.getById(id);
+            if (!t) { return; }
+
+            TransactionsView.editingId = id;
+            TransactionsView.clearErrors();
+
+            document.getElementById("transaction-id-input").value = t.id;
+            document.getElementById("transaction-created-at-input").value = t.createdAt;
+            document.getElementById("transaction-date-input").value = t.date;
+            document.getElementById("transaction-type-input").value = t.type;
+            TransactionsView.refreshAccountOptions(t.accountId);
+            document.getElementById("transaction-narration-input").value = t.narration;
+            document.getElementById("transaction-amount-input").value = t.amount;
+            document.getElementById("transaction-notes-input").value = t.notes || "";
+
+            document.getElementById("transaction-form-title").textContent = "Edit Transaction";
+            document.getElementById("transaction-submit-btn").textContent = "Update Transaction";
+            document.getElementById("transaction-cancel-btn").style.display = "inline-block";
+
+            document.getElementById("transaction-form").scrollIntoView({ behavior: "smooth", block: "start" });
+        },
+
+        cancelEdit: function () {
+            TransactionsView.editingId = null;
+            TransactionsView.clearErrors();
+            document.getElementById("transaction-form").reset();
+            document.getElementById("transaction-id-input").value = "";
+            document.getElementById("transaction-created-at-input").value = "";
+            document.getElementById("transaction-notes-input").value = "";
+            TransactionsView.resetDefaults();
+            document.getElementById("transaction-form-title").textContent = "Add Transaction";
+            document.getElementById("transaction-submit-btn").textContent = "Save Transaction";
+            document.getElementById("transaction-cancel-btn").style.display = "none";
+        },
+
+        confirmDelete: function (id) {
+            var t = Transactions.getById(id);
+            if (!t) { return; }
+            var typeLabel = t.type === "income" ? "Income" : "Expense";
+            UI.confirm(
+                "Delete Transaction",
+                'Delete this ' + typeLabel.toLowerCase() + ' transaction — "' + t.narration + '", ' + Utilities.formatCurrency(t.amount) + ' on ' + Utilities.formatDateDisplay(t.date) + '? This cannot be undone.',
+                function () {
+                    Transactions.remove(id);
+                    UI.showNotification("Transaction deleted.", "success");
+                    TransactionsView.render();
+                }
+            );
+        }
+    };
+
+    /* =========================================================
+       DASHBOARD MODULE
+       Read-only summary calculations, all derived live from
+       Storage data on every render — nothing is cached or
+       hardcoded (§12).
+    ========================================================= */
+
+    var Dashboard = {
+
+        getOverallSummary: function () {
+            var transactions = Transactions.getAll();
+            var income = 0;
+            var expense = 0;
+            transactions.forEach(function (t) {
+                if (t.type === "income") { income += Number(t.amount); }
+                else { expense += Number(t.amount); }
+            });
+            return {
+                income: income,
+                expense: expense,
+                net: income - expense,
+                count: transactions.length
+            };
+        },
+
+        getPeriodSummary: function (matchFn) {
+            var income = 0;
+            var expense = 0;
+            Transactions.getAll().forEach(function (t) {
+                if (!matchFn(t)) { return; }
+                if (t.type === "income") { income += Number(t.amount); }
+                else { expense += Number(t.amount); }
+            });
+            return { income: income, expense: expense, net: income - expense };
+        },
+
+        getTodaySummary: function () {
+            var todayIso = Utilities.getTodayIso();
+            return Dashboard.getPeriodSummary(function (t) { return t.date === todayIso; });
+        },
+
+        getCurrentMonthSummary: function () {
+            var currentYearMonth = Utilities.getTodayIso().slice(0, 7); // "YYYY-MM"
+            return Dashboard.getPeriodSummary(function (t) { return t.date.slice(0, 7) === currentYearMonth; });
+        }
+    };
+
+    var DashboardView = {
+
+        render: function () {
+            DashboardView.renderOverall();
+            DashboardView.renderToday();
+            DashboardView.renderMonth();
+            DashboardView.renderAccounts();
+        },
+
+        summaryCard: function (label, value, colorClass) {
+            var cls = colorClass ? " " + colorClass : "";
+            return (
+                '<div class="summary-card">' +
+                    '<div class="label">' + label + "</div>" +
+                    '<div class="value' + cls + '">' + value + "</div>" +
+                "</div>"
+            );
+        },
+
+        netClass: function (net) {
+            return net < 0 ? "negative" : "positive";
+        },
+
+        renderOverall: function () {
+            var s = Dashboard.getOverallSummary();
+            var el = document.getElementById("dashboard-overall-cards");
+            el.innerHTML =
+                DashboardView.summaryCard("Total Income", Utilities.formatCurrency(s.income), "positive") +
+                DashboardView.summaryCard("Total Expense", Utilities.formatCurrency(s.expense), "negative") +
+                DashboardView.summaryCard("Net Balance", Utilities.formatCurrency(s.net), DashboardView.netClass(s.net)) +
+                DashboardView.summaryCard("Number of Transactions", String(s.count));
+        },
+
+        renderToday: function () {
+            var s = Dashboard.getTodaySummary();
+            var el = document.getElementById("dashboard-today-cards");
+            el.innerHTML =
+                DashboardView.summaryCard("Today's Income", Utilities.formatCurrency(s.income), "positive") +
+                DashboardView.summaryCard("Today's Expense", Utilities.formatCurrency(s.expense), "negative") +
+                DashboardView.summaryCard("Today's Net", Utilities.formatCurrency(s.net), DashboardView.netClass(s.net));
+        },
+
+        renderMonth: function () {
+            var s = Dashboard.getCurrentMonthSummary();
+            var el = document.getElementById("dashboard-month-cards");
+            el.innerHTML =
+                DashboardView.summaryCard("Monthly Income", Utilities.formatCurrency(s.income), "positive") +
+                DashboardView.summaryCard("Monthly Expense", Utilities.formatCurrency(s.expense), "negative") +
+                DashboardView.summaryCard("Monthly Net", Utilities.formatCurrency(s.net), DashboardView.netClass(s.net));
+        },
+
+        renderAccounts: function () {
+            var accounts = Accounts.getAll();
+            var tbody = document.getElementById("dashboard-accounts-table-body");
+            var cardsWrap = document.getElementById("dashboard-accounts-cards");
+
+            if (accounts.length === 0) {
+                var emptyMsg = "No accounts have been created yet.";
+                tbody.innerHTML = '<tr><td colspan="6"><div class="empty-state">' + emptyMsg + "</div></td></tr>";
+                cardsWrap.innerHTML = '<div class="empty-state">' + emptyMsg + "</div>";
+                return;
+            }
+
+            tbody.innerHTML = accounts.map(function (acc) {
+                var summary = Accounts.getBalanceSummary(acc.id);
+                var balanceClass = summary.currentBalance < 0 ? "amount-expense" : "amount-income";
+                var statusClass = acc.status === "active" ? "active" : "inactive";
+                var statusLabel = acc.status === "active" ? "Active" : "Inactive";
+                return (
+                    "<tr>" +
+                        "<td>" + Utilities.escapeHtml(acc.name) + "</td>" +
+                        '<td class="amount">' + Utilities.formatCurrency(summary.openingBalance) + "</td>" +
+                        '<td class="amount amount-income">' + Utilities.formatCurrency(summary.income) + "</td>" +
+                        '<td class="amount amount-expense">' + Utilities.formatCurrency(summary.expense) + "</td>" +
+                        '<td class="amount ' + balanceClass + '" style="font-weight:600;">' + Utilities.formatCurrency(summary.currentBalance) + "</td>" +
+                        '<td><span class="status-badge ' + statusClass + '">' + statusLabel + "</span></td>" +
+                    "</tr>"
+                );
+            }).join("");
+
+            cardsWrap.innerHTML = accounts.map(function (acc) {
+                var summary = Accounts.getBalanceSummary(acc.id);
+                var balanceClass = summary.currentBalance < 0 ? "amount-expense" : "amount-income";
+                var statusClass = acc.status === "active" ? "active" : "inactive";
+                var statusLabel = acc.status === "active" ? "Active" : "Inactive";
+                return (
+                    '<div class="record-card">' +
+                        '<div class="record-card-top">' +
+                            '<span class="record-card-title">' + Utilities.escapeHtml(acc.name) + "</span>" +
+                            '<span class="status-badge ' + statusClass + '">' + statusLabel + "</span>" +
+                        "</div>" +
+                        '<div class="record-card-row"><span>Opening Balance</span><span>' + Utilities.formatCurrency(summary.openingBalance) + "</span></div>" +
+                        '<div class="record-card-row amount-income"><span>Income</span><span>' + Utilities.formatCurrency(summary.income) + "</span></div>" +
+                        '<div class="record-card-row amount-expense"><span>Expense</span><span>' + Utilities.formatCurrency(summary.expense) + "</span></div>" +
+                        '<div class="record-card-row ' + balanceClass + '" style="font-weight:600; font-size:1rem;"><span>Current Balance</span><span>' + Utilities.formatCurrency(summary.currentBalance) + "</span></div>" +
+                    "</div>"
+                );
+            }).join("");
+        }
+    };
+
+    /* =========================================================
+       REPORTS MODULE
+       Grouping/aggregation logic for the 5 required reports.
+       All computed live from Accounts/Transactions on render.
+    ========================================================= */
+
+    var Reports = {
+
+        // Report 1 & Report 4 share this grouping; Report 4 adds count.
+        getMonthlyGroups: function () {
+            var groups = {};
+            Transactions.getAll().forEach(function (t) {
+                var month = t.date.slice(0, 7); // "YYYY-MM"
+                if (!groups[month]) {
+                    groups[month] = { month: month, income: 0, expense: 0, count: 0 };
+                }
+                groups[month].count += 1;
+                if (t.type === "income") { groups[month].income += Number(t.amount); }
+                else { groups[month].expense += Number(t.amount); }
+            });
+            return Object.keys(groups)
+                .map(function (key) {
+                    var g = groups[key];
+                    return { month: g.month, income: g.income, expense: g.expense, net: g.income - g.expense, count: g.count };
+                })
+                .sort(function (a, b) { return a.month < b.month ? 1 : -1; }); // newest first
+        },
+
+        getDailyGroups: function () {
+            var groups = {};
+            Transactions.getAll().forEach(function (t) {
+                if (!groups[t.date]) {
+                    groups[t.date] = { date: t.date, income: 0, expense: 0, count: 0 };
+                }
+                groups[t.date].count += 1;
+                if (t.type === "income") { groups[t.date].income += Number(t.amount); }
+                else { groups[t.date].expense += Number(t.amount); }
+            });
+            return Object.keys(groups)
+                .map(function (key) {
+                    var g = groups[key];
+                    return { date: g.date, income: g.income, expense: g.expense, net: g.income - g.expense, count: g.count };
+                })
+                .sort(function (a, b) { return a.date < b.date ? 1 : -1; }); // newest first
+        },
+
+        getAccountWise: function () {
+            return Accounts.getAll().map(function (acc) {
+                var summary = Accounts.getBalanceSummary(acc.id);
+                return {
+                    name: acc.name,
+                    status: acc.status,
+                    openingBalance: summary.openingBalance,
+                    income: summary.income,
+                    expense: summary.expense,
+                    currentBalance: summary.currentBalance
+                };
+            });
+        }
+    };
+
+    var ReportsView = {
+
+        activeReport: "monthlyIncomeExpense",
+
+        init: function () {
+            document.querySelectorAll("#report-tabs [data-report]").forEach(function (btn) {
+                btn.addEventListener("click", function () {
+                    ReportsView.showReport(btn.getAttribute("data-report"));
+                });
+            });
+            ReportsView.showReport(ReportsView.activeReport);
+        },
+
+        showReport: function (reportId) {
+            ReportsView.activeReport = reportId;
+
+            document.querySelectorAll("#report-tabs [data-report]").forEach(function (btn) {
+                btn.classList.toggle("active", btn.getAttribute("data-report") === reportId);
+            });
+            document.querySelectorAll("[data-report-panel]").forEach(function (panel) {
+                panel.classList.toggle("active", panel.getAttribute("data-report-panel") === reportId);
+            });
+
+            ReportsView.render();
+        },
+
+        render: function () {
+            switch (ReportsView.activeReport) {
+                case "monthlyIncomeExpense": ReportsView.renderMonthlyIncomeExpense(); break;
+                case "accountWise": ReportsView.renderAccountWise(); break;
+                case "dailySummary": ReportsView.renderDailySummary(); break;
+                case "monthlySummary": ReportsView.renderMonthlySummary(); break;
+                case "currentBalances": ReportsView.renderCurrentBalances(); break;
+            }
+        },
+
+        emptyRow: function (colspan, message) {
+            return '<tr><td colspan="' + colspan + '"><div class="empty-state">' + message + "</div></td></tr>";
+        },
+
+        renderMonthlyIncomeExpense: function () {
+            var rows = Reports.getMonthlyGroups();
+            var tbody = document.getElementById("report-monthly-income-expense-body");
+            if (rows.length === 0) {
+                tbody.innerHTML = ReportsView.emptyRow(4, "There is no transaction data available for this period.");
+                return;
+            }
+            tbody.innerHTML = rows.map(function (r) {
+                var netClass = r.net < 0 ? "amount-expense" : "amount-income";
+                return (
+                    "<tr>" +
+                        "<td>" + Utilities.formatMonthDisplay(r.month) + "</td>" +
+                        '<td class="amount amount-income">' + Utilities.formatCurrency(r.income) + "</td>" +
+                        '<td class="amount amount-expense">' + Utilities.formatCurrency(r.expense) + "</td>" +
+                        '<td class="amount ' + netClass + '" style="font-weight:600;">' + Utilities.formatCurrency(r.net) + "</td>" +
+                    "</tr>"
+                );
+            }).join("");
+        },
+
+        renderMonthlySummary: function () {
+            var rows = Reports.getMonthlyGroups();
+            var tbody = document.getElementById("report-monthly-summary-body");
+            if (rows.length === 0) {
+                tbody.innerHTML = ReportsView.emptyRow(5, "There is no transaction data available for this period.");
+                return;
+            }
+            tbody.innerHTML = rows.map(function (r) {
+                var netClass = r.net < 0 ? "amount-expense" : "amount-income";
+                return (
+                    "<tr>" +
+                        "<td>" + Utilities.formatMonthDisplay(r.month) + "</td>" +
+                        '<td class="amount amount-income">' + Utilities.formatCurrency(r.income) + "</td>" +
+                        '<td class="amount amount-expense">' + Utilities.formatCurrency(r.expense) + "</td>" +
+                        '<td class="amount ' + netClass + '" style="font-weight:600;">' + Utilities.formatCurrency(r.net) + "</td>" +
+                        '<td class="amount">' + r.count + "</td>" +
+                    "</tr>"
+                );
+            }).join("");
+        },
+
+        renderDailySummary: function () {
+            var rows = Reports.getDailyGroups();
+            var tbody = document.getElementById("report-daily-summary-body");
+            if (rows.length === 0) {
+                tbody.innerHTML = ReportsView.emptyRow(5, "There is no transaction data available for this period.");
+                return;
+            }
+            tbody.innerHTML = rows.map(function (r) {
+                var netClass = r.net < 0 ? "amount-expense" : "amount-income";
+                return (
+                    "<tr>" +
+                        "<td>" + Utilities.formatDateDisplay(r.date) + "</td>" +
+                        '<td class="amount amount-income">' + Utilities.formatCurrency(r.income) + "</td>" +
+                        '<td class="amount amount-expense">' + Utilities.formatCurrency(r.expense) + "</td>" +
+                        '<td class="amount ' + netClass + '" style="font-weight:600;">' + Utilities.formatCurrency(r.net) + "</td>" +
+                        '<td class="amount">' + r.count + "</td>" +
+                    "</tr>"
+                );
+            }).join("");
+        },
+
+        renderAccountWise: function () {
+            var rows = Reports.getAccountWise();
+            var tbody = document.getElementById("report-account-wise-body");
+            if (rows.length === 0) {
+                tbody.innerHTML = ReportsView.emptyRow(5, "No accounts have been created.");
+                return;
+            }
+            tbody.innerHTML = rows.map(function (r) {
+                var balanceClass = r.currentBalance < 0 ? "amount-expense" : "amount-income";
+                return (
+                    "<tr>" +
+                        "<td>" + Utilities.escapeHtml(r.name) + "</td>" +
+                        '<td class="amount">' + Utilities.formatCurrency(r.openingBalance) + "</td>" +
+                        '<td class="amount amount-income">' + Utilities.formatCurrency(r.income) + "</td>" +
+                        '<td class="amount amount-expense">' + Utilities.formatCurrency(r.expense) + "</td>" +
+                        '<td class="amount ' + balanceClass + '" style="font-weight:600;">' + Utilities.formatCurrency(r.currentBalance) + "</td>" +
+                    "</tr>"
+                );
+            }).join("");
+        },
+
+        renderCurrentBalances: function () {
+            var rows = Reports.getAccountWise();
+            var tbody = document.getElementById("report-current-balances-body");
+            if (rows.length === 0) {
+                tbody.innerHTML = ReportsView.emptyRow(4, "No accounts have been created.");
+                return;
+            }
+            tbody.innerHTML = rows.map(function (r) {
+                var balanceClass = r.currentBalance < 0 ? "amount-expense" : "amount-income";
+                var statusClass = r.status === "active" ? "active" : "inactive";
+                var statusLabel = r.status === "active" ? "Active" : "Inactive";
+                return (
+                    "<tr>" +
+                        "<td>" + Utilities.escapeHtml(r.name) + "</td>" +
+                        '<td class="amount">' + Utilities.formatCurrency(r.openingBalance) + "</td>" +
+                        '<td class="amount ' + balanceClass + '" style="font-weight:600;">' + Utilities.formatCurrency(r.currentBalance) + "</td>" +
+                        '<td><span class="status-badge ' + statusClass + '">' + statusLabel + "</span></td>" +
+                    "</tr>"
+                );
+            }).join("");
+        }
+    };
+
+    /* =========================================================
+       BACKUP MODULE
+       JSON export/import with structure + version validation,
+       and CSV export of transactions.
+    ========================================================= */
+
+    var Backup = {
+
+        buildBackupPayload: function () {
+            var metadata = Storage.getMetadata();
+            return {
+                dataVersion: metadata.dataVersion,
+                appVersion: metadata.appVersion,
+                exportedAt: new Date().toISOString(),
+                accounts: Storage.getAccounts(),
+                transactions: Storage.getTransactions(),
+                settings: Storage.getSettings()
+            };
+        },
+
+        // Returns { valid: true, data } or { valid: false, error }.
+        // Never throws — always returns a result the caller can branch on.
+        validateBackupPayload: function (raw) {
+            var parsed;
+            try {
+                parsed = JSON.parse(raw);
+            } catch (err) {
+                return { valid: false, error: "This file is not valid JSON and cannot be read as a backup." };
+            }
+
+            if (!parsed || typeof parsed !== "object") {
+                return { valid: false, error: "This file does not contain a recognizable backup." };
+            }
+
+            if (!Array.isArray(parsed.accounts) || !Array.isArray(parsed.transactions)) {
+                return { valid: false, error: "This backup is missing its accounts or transactions data and cannot be imported." };
+            }
+
+            var accountsValid = parsed.accounts.every(function (acc) {
+                return acc && typeof acc.id === "string" && typeof acc.name === "string";
+            });
+            if (!accountsValid) {
+                return { valid: false, error: "One or more accounts in this backup are malformed." };
+            }
+
+            var transactionsValid = parsed.transactions.every(function (t) {
+                return t && typeof t.id === "string" && typeof t.date === "string" &&
+                    (t.type === "income" || t.type === "expense") && typeof t.accountId === "string";
+            });
+            if (!transactionsValid) {
+                return { valid: false, error: "One or more transactions in this backup are malformed." };
+            }
+
+            if (typeof parsed.dataVersion !== "number") {
+                return { valid: false, error: "This backup does not specify a data version and cannot be safely imported." };
+            }
+
+            if (parsed.dataVersion > CURRENT_DATA_VERSION) {
+                return { valid: false, error: "This backup was created with a newer version of the app and cannot be imported here." };
+            }
+
+            return { valid: true, data: parsed };
+        },
+
+        applyBackup: function (data) {
+            Storage.setAccounts(data.accounts);
+            Storage.setTransactions(data.transactions);
+            Storage.setSettings(data.settings || DEFAULTS.settings);
+            Storage.setMetadata({
+                dataVersion: CURRENT_DATA_VERSION,
+                appVersion: data.appVersion || DEFAULTS.metadata.appVersion,
+                lastBackupAt: Storage.getMetadata().lastBackupAt
+            });
+            // Future versions: run MIGRATIONS here if data.dataVersion < CURRENT_DATA_VERSION.
+        },
+
+        transactionsToCsv: function () {
+            var header = ["S.No", "Transaction ID", "Date", "Type", "Narration", "Account", "Amount", "Notes", "Created Date/Time"];
+            var rows = Transactions.getSorted().map(function (t, index) {
+                var account = Accounts.getById(t.accountId);
+                return [
+                    index + 1,
+                    t.id,
+                    Utilities.formatDateDisplay(t.date),
+                    t.type === "income" ? "Income" : "Expense",
+                    t.narration,
+                    account ? account.name : "(Unknown Account)",
+                    Number(t.amount).toFixed(2),
+                    t.notes || "",
+                    t.createdAt
+                ];
+            });
+
+            var lines = [header].concat(rows).map(function (row) {
+                return row.map(Utilities.csvEscape).join(",");
+            });
+            return lines.join("\r\n");
+        }
+    };
+
+    /* =========================================================
+       LOCK SCREEN
+       Gates the entire app behind PIN entry / creation. The app
+       itself (Storage, views) still initializes underneath so
+       that once unlocked everything is ready instantly.
+    ========================================================= */
+
+    var LockScreen = {
+
+        recoveryVerified: false,
+
+        init: function () {
+            document.getElementById("create-pin-form").addEventListener("submit", LockScreen.handleCreatePin);
+            document.getElementById("enter-pin-form").addEventListener("submit", LockScreen.handleEnterPin);
+            document.getElementById("forgot-pin-link").addEventListener("click", LockScreen.showRecovery);
+            document.getElementById("back-to-pin-link").addEventListener("click", LockScreen.showEnter);
+            document.getElementById("recovery-answer-form").addEventListener("submit", LockScreen.handleRecoveryAnswer);
+            document.getElementById("reset-pin-form").addEventListener("submit", LockScreen.handleResetPin);
+
+            if (Security.hasPinConfigured()) {
+                LockScreen.showEnter();
+            } else {
+                LockScreen.showPanel("lock-panel-create");
+                document.getElementById("create-pin-input").focus();
+            }
+        },
+
+        showPanel: function (panelId) {
+            document.querySelectorAll(".lock-panel").forEach(function (panel) {
+                panel.classList.toggle("active", panel.id === panelId);
+            });
+        },
+
+        showEnter: function () {
+            LockScreen.showPanel("lock-panel-enter");
+            document.getElementById("enter-pin-input").value = "";
+            document.getElementById("enter-pin-error").textContent = "";
+            document.getElementById("enter-pin-input").focus();
+        },
+
+        showRecovery: function () {
+            var settings = Storage.getSettings();
+            document.getElementById("recovery-question-display").textContent = settings.securityQuestion || "Security question";
+            document.getElementById("recovery-answer-input").value = "";
+            document.getElementById("recovery-answer-error").textContent = "";
+            LockScreen.showPanel("lock-panel-recovery");
+            document.getElementById("recovery-answer-input").focus();
+        },
+
+        handleCreatePin: function (event) {
+            event.preventDefault();
+            var errorEl = document.getElementById("create-pin-error");
+            errorEl.textContent = "";
+
+            var pin = document.getElementById("create-pin-input").value;
+            var confirm = document.getElementById("create-pin-confirm-input").value;
+            var question = document.getElementById("create-security-question-input").value.trim();
+            var answer = document.getElementById("create-security-answer-input").value.trim();
+
+            if (!Security.isPinFormatValid(pin)) {
+                errorEl.textContent = "PIN must be exactly 6 digits.";
+                return;
+            }
+            if (pin !== confirm) {
+                errorEl.textContent = "PIN and confirmation do not match.";
+                return;
+            }
+            if (!question) {
+                errorEl.textContent = "A security question is required.";
+                return;
+            }
+            if (!answer) {
+                errorEl.textContent = "An answer to the security question is required.";
+                return;
+            }
+
+            Security.setupPin(pin, question, answer).then(function () {
+                UI.showNotification("PIN created. Your app is now protected.", "success");
+                LockScreen.unlock();
+            });
+        },
+
+        handleEnterPin: function (event) {
+            event.preventDefault();
+            var errorEl = document.getElementById("enter-pin-error");
+            errorEl.textContent = "";
+            var pin = document.getElementById("enter-pin-input").value;
+
+            if (!Security.isPinFormatValid(pin)) {
+                errorEl.textContent = "PIN must be exactly 6 digits.";
+                return;
+            }
+
+            Security.verifyPin(pin).then(function (isValid) {
+                if (isValid) {
+                    LockScreen.unlock();
+                } else {
+                    errorEl.textContent = "Incorrect PIN. Please try again.";
+                    document.getElementById("enter-pin-input").value = "";
+                }
+            });
+        },
+
+        handleRecoveryAnswer: function (event) {
+            event.preventDefault();
+            var errorEl = document.getElementById("recovery-answer-error");
+            errorEl.textContent = "";
+            var answer = document.getElementById("recovery-answer-input").value;
+
+            if (!answer.trim()) {
+                errorEl.textContent = "Please enter your answer.";
+                return;
+            }
+
+            Security.verifySecurityAnswer(answer).then(function (isValid) {
+                if (isValid) {
+                    LockScreen.showPanel("lock-panel-reset");
+                    document.getElementById("reset-pin-input").value = "";
+                    document.getElementById("reset-pin-confirm-input").value = "";
+                    document.getElementById("reset-pin-error").textContent = "";
+                    document.getElementById("reset-pin-input").focus();
+                } else {
+                    errorEl.textContent = "That answer is not correct.";
+                }
+            });
+        },
+
+        handleResetPin: function (event) {
+            event.preventDefault();
+            var errorEl = document.getElementById("reset-pin-error");
+            errorEl.textContent = "";
+
+            var pin = document.getElementById("reset-pin-input").value;
+            var confirm = document.getElementById("reset-pin-confirm-input").value;
+
+            if (!Security.isPinFormatValid(pin)) {
+                errorEl.textContent = "PIN must be exactly 6 digits.";
+                return;
+            }
+            if (pin !== confirm) {
+                errorEl.textContent = "PIN and confirmation do not match.";
+                return;
+            }
+
+            Security.setPin(pin).then(function () {
+                UI.showNotification("Your PIN has been reset.", "success");
+                LockScreen.unlock();
+            });
+        },
+
+        unlock: function () {
+            document.getElementById("lock-overlay").classList.add("hidden");
+        }
+    };
+
+    var SettingsView = {
+
+        init: function () {
+            document.getElementById("change-pin-form").addEventListener("submit", SettingsView.handleChangePin);
+            document.getElementById("change-security-form").addEventListener("submit", SettingsView.handleChangeSecurity);
+            document.getElementById("load-demo-data-btn").addEventListener("click", SettingsView.handleLoadDemoData);
+        },
+
+        handleLoadDemoData: function () {
+            UI.confirm(
+                "Load Sample Data",
+                "This will add 5 sample accounts and 3 sample transactions to your data, for trying out the app. " +
+                    "Existing accounts and transactions are not changed or removed.",
+                function () {
+                    var result = DemoData.load();
+                    UI.showNotification(
+                        "Sample data loaded: " + result.accountsAdded + " account(s), " + result.transactionsAdded + " transaction(s) added.",
+                        "success"
+                    );
+                    DashboardView.render();
+                    AccountsView.render();
+                    TransactionsView.render();
+                    ReportsView.render();
+                }
+            );
+        },
+
+        handleChangePin: function (event) {
+            event.preventDefault();
+            var errorEl = document.getElementById("change-pin-error");
+            errorEl.textContent = "";
+
+            var currentPin = document.getElementById("change-pin-current-input").value;
+            var newPin = document.getElementById("change-pin-new-input").value;
+            var confirmPin = document.getElementById("change-pin-confirm-input").value;
+
+            if (!Security.isPinFormatValid(newPin)) {
+                errorEl.textContent = "New PIN must be exactly 6 digits.";
+                return;
+            }
+            if (newPin !== confirmPin) {
+                errorEl.textContent = "New PIN and confirmation do not match.";
+                return;
+            }
+
+            Security.verifyPin(currentPin).then(function (isValid) {
+                if (!isValid) {
+                    errorEl.textContent = "Current PIN is incorrect.";
+                    return;
+                }
+                Security.setPin(newPin).then(function () {
+                    document.getElementById("change-pin-form").reset();
+                    UI.showNotification("PIN updated.", "success");
+                });
+            });
+        },
+
+        handleChangeSecurity: function (event) {
+            event.preventDefault();
+            var errorEl = document.getElementById("change-security-error");
+            errorEl.textContent = "";
+
+            var currentPin = document.getElementById("change-security-current-pin-input").value;
+            var question = document.getElementById("change-security-question-input").value.trim();
+            var answer = document.getElementById("change-security-answer-input").value.trim();
+
+            if (!Security.isPinFormatValid(currentPin)) {
+                errorEl.textContent = "Enter your current 6-digit PIN to confirm this change.";
+                return;
+            }
+            if (!question || !answer) {
+                errorEl.textContent = "Both a security question and an answer are required.";
+                return;
+            }
+
+            Security.verifyPin(currentPin).then(function (isValid) {
+                if (!isValid) {
+                    errorEl.textContent = "Current PIN is incorrect.";
+                    return;
+                }
+                Security.setSecurityQuestion(question, answer).then(function () {
+                    document.getElementById("change-security-form").reset();
+                    UI.showNotification("Security question updated.", "success");
+                });
+            });
+        }
+    };
+
+    var BackupView = {
+
+        init: function () {
+            document.getElementById("export-json-btn").addEventListener("click", BackupView.handleExportJson);
+            document.getElementById("export-csv-btn").addEventListener("click", BackupView.handleExportCsv);
+            document.getElementById("import-json-btn").addEventListener("click", BackupView.handleImportClick);
+            BackupView.renderLastExportInfo();
+        },
+
+        renderLastExportInfo: function () {
+            var metadata = Storage.getMetadata();
+            var el = document.getElementById("backup-last-export-info");
+            el.textContent = metadata.lastBackupAt
+                ? "Last backup exported: " + new Date(metadata.lastBackupAt).toLocaleString()
+                : "No backup has been exported yet.";
+        },
+
+        handleExportJson: function () {
+            var payload = Backup.buildBackupPayload();
+            var todayIso = Utilities.getTodayIso();
+            var filename = "personal-finance-backup-" + todayIso + ".json";
+
+            Utilities.downloadTextFile(filename, JSON.stringify(payload, null, 2), "application/json");
+
+            var metadata = Storage.getMetadata();
+            metadata.lastBackupAt = new Date().toISOString();
+            Storage.setMetadata(metadata);
+            BackupView.renderLastExportInfo();
+
+            UI.showNotification("Backup exported.", "success");
+        },
+
+        handleExportCsv: function () {
+            if (Transactions.getAll().length === 0) {
+                UI.showNotification("There are no transactions to export.", "warning");
+                return;
+            }
+            var csv = Backup.transactionsToCsv();
+            var filename = "transactions-" + Utilities.getTodayIso() + ".csv";
+            Utilities.downloadTextFile(filename, csv, "text/csv");
+            UI.showNotification("Transactions exported to CSV.", "success");
+        },
+
+        handleImportClick: function () {
+            var fileInput = document.getElementById("import-json-input");
+            var errorEl = document.getElementById("import-json-error");
+            errorEl.textContent = "";
+
+            var file = fileInput.files && fileInput.files[0];
+            if (!file) {
+                errorEl.textContent = "Please select a JSON backup file first.";
+                return;
+            }
+
+            var reader = new FileReader();
+            reader.onload = function () {
+                var result = Backup.validateBackupPayload(reader.result);
+                if (!result.valid) {
+                    errorEl.textContent = result.error;
+                    UI.showNotification("Import failed: " + result.error, "error");
+                    return;
+                }
+
+                UI.confirm(
+                    "Restore Backup",
+                    "Restoring this backup will replace your current accounts, transactions and settings (" +
+                        result.data.accounts.length + " account(s), " + result.data.transactions.length + " transaction(s)). " +
+                        "This cannot be undone unless you have exported your current data separately.",
+                    function () {
+                        Backup.applyBackup(result.data);
+                        fileInput.value = "";
+                        UI.showNotification("Backup restored successfully.", "success");
+
+                        // Refresh every view so restored data is reflected immediately.
+                        DashboardView.render();
+                        AccountsView.render();
+                        TransactionsView.resetDefaults();
+                        TransactionsView.render();
+                        ReportsView.render();
+                        BackupView.renderLastExportInfo();
+                    }
+                );
+            };
+            reader.onerror = function () {
+                errorEl.textContent = "This file could not be read. Please try again.";
+            };
+            reader.readAsText(file);
+        }
+    };
+
+    /* =========================================================
+       DEMO DATA (optional, opt-in only — §40)
+       Not loaded automatically. Only runs when explicitly
+       triggered from Settings, and only adds sample records —
+       it never replaces or removes existing data.
+    ========================================================= */
+
+    var DemoData = {
+
+        SAMPLE_ACCOUNTS: [
+            { name: "Cash", openingBalance: 2000 },
+            { name: "Bank", openingBalance: 5000 },
+            { name: "Credit Card", openingBalance: 0 },
+            { name: "Household", openingBalance: 0 },
+            { name: "Salary", openingBalance: 0 }
+        ],
+
+        SAMPLE_TRANSACTIONS: [
+            { type: "income", narration: "Salary", accountName: "Salary", amount: 10000 },
+            { type: "expense", narration: "Grocery", accountName: "Household", amount: 250 },
+            { type: "expense", narration: "Rent", accountName: "Bank", amount: 3000 }
+        ],
+
+        load: function () {
+            var accountsAdded = 0;
+
+            DemoData.SAMPLE_ACCOUNTS.forEach(function (sample) {
+                if (!Accounts.isDuplicateName(sample.name, null)) {
+                    Accounts.add(sample.name, sample.openingBalance);
+                    accountsAdded += 1;
+                }
+            });
+
+            var todayIso = Utilities.getTodayIso();
+            var transactionsAdded = 0;
+
+            DemoData.SAMPLE_TRANSACTIONS.forEach(function (sample) {
+                var account = Accounts.getAll().find(function (acc) {
+                    return acc.name.trim().toLowerCase() === sample.accountName.trim().toLowerCase();
+                });
+                if (account) {
+                    Transactions.add({
+                        date: todayIso,
+                        type: sample.type,
+                        narration: sample.narration,
+                        accountId: account.id,
+                        amount: sample.amount,
+                        notes: ""
+                    });
+                    transactionsAdded += 1;
+                }
+            });
+
+            return { accountsAdded: accountsAdded, transactionsAdded: transactionsAdded };
+        }
+    };
+
+    // Expose for later stages / manual console testing.
+    window.Storage = Storage;
+    window.UI = UI;
+    window.Utilities = Utilities;
+    window.Accounts = Accounts;
+    window.AccountsView = AccountsView;
+    window.Transactions = Transactions;
+    window.TransactionsView = TransactionsView;
+    window.Dashboard = Dashboard;
+    window.DashboardView = DashboardView;
+    window.Reports = Reports;
+    window.ReportsView = ReportsView;
+    window.Backup = Backup;
+    window.BackupView = BackupView;
+    window.Security = Security;
+    window.LockScreen = LockScreen;
+    window.SettingsView = SettingsView;
+    window.DemoData = DemoData;
+
+    document.addEventListener("DOMContentLoaded", function () {
+        Storage.init();
+        UI.init();
+        AccountsView.init();
+        TransactionsView.init();
+        DashboardView.render();
+        ReportsView.init();
+        BackupView.init();
+        SettingsView.init();
+        LockScreen.init();
+
+        UI.viewRenderers.accounts = AccountsView.render;
+        UI.viewRenderers.transactions = TransactionsView.render;
+        UI.viewRenderers.dashboard = DashboardView.render;
+        UI.viewRenderers.reports = ReportsView.render;
+    });
+})();
+</script>
+</body>
+</html>
