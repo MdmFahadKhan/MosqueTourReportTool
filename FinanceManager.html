@@ -707,6 +707,48 @@
     .toast.success { border-left-color: var(--color-income); }
     .toast.error { border-left-color: var(--color-danger); }
     .toast.warning { border-left-color: var(--color-gold); }
+
+    /* ---------- Import Bank SMS ---------- */
+
+    .status-badge.badge-duplicate { background: rgba(212, 175, 55, 0.16); color: var(--color-gold); }
+    .status-badge.badge-unknown { background: rgba(193, 85, 63, 0.16); color: var(--color-danger); }
+    .status-badge.badge-nontx { background: rgba(143, 179, 186, 0.16); color: var(--color-text-muted); }
+    .status-badge.badge-fx { background: rgba(212, 175, 55, 0.10); color: var(--color-gold); }
+
+    .sms-summary-line {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 18px;
+        margin: 4px 0 16px 0;
+        font-size: 0.85rem;
+        color: var(--color-text-muted);
+    }
+
+    .sms-summary-line b { color: var(--color-gold); }
+
+    .sms-mapping-row {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        margin: 6px 0;
+    }
+
+    .sms-mapping-row label {
+        width: 150px;
+        font-size: 0.85rem;
+        color: var(--color-text-muted);
+        flex-shrink: 0;
+    }
+
+    .sms-mapping-row select {
+        flex: 1 1 240px;
+    }
+
+    table.data-table input[type="text"].sms-amount-input {
+        width: 90px;
+        padding: 5px 7px;
+        font-size: 0.85rem;
+    }
 </style>
 </head>
 <body>
@@ -1158,6 +1200,54 @@
                 </div>
             </section>
 
+            <section class="view" data-view="importSms">
+                <div class="view-header">
+                    <h1>Import Bank SMS</h1>
+                    <p>Paste bank SMS text below, review the parsed results, then import only what you select.</p>
+                </div>
+
+                <div class="form-card">
+                    <h2>Paste Messages</h2>
+                    <div class="form-row">
+                        <div class="form-group" style="flex-basis: 100%;">
+                            <label for="sms-input-textarea">Bank SMS text</label>
+                            <textarea id="sms-input-textarea" rows="10" placeholder="Paste one or more bank SMS messages here..."></textarea>
+                        </div>
+                    </div>
+                    <div class="form-actions">
+                        <button type="button" class="btn btn-primary" id="sms-parse-btn">Parse Messages</button>
+                    </div>
+                </div>
+
+                <div class="form-card" id="sms-results-card" style="display:none;">
+                    <h2>Parsing Result</h2>
+                    <div class="sms-summary-line" id="sms-summary-line"></div>
+
+                    <div id="sms-mapping-panel"></div>
+
+                    <div class="data-table-wrap">
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th></th><th>Date</th><th>Time</th><th>Type</th><th>Category</th>
+                                    <th>Description</th><th class="amount">Amount</th><th>Cur</th>
+                                    <th class="amount">Balance</th><th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody id="sms-results-table-body"></tbody>
+                        </table>
+                    </div>
+
+                    <div class="form-actions" style="margin-top:14px;">
+                        <button type="button" class="btn btn-secondary" id="sms-select-all-btn">Select All</button>
+                        <button type="button" class="btn btn-secondary" id="sms-clear-selection-btn">Clear Selection</button>
+                        <button type="button" class="btn btn-primary" id="sms-import-btn">Import Selected Transactions</button>
+                    </div>
+
+                    <div class="field-error" role="alert" id="sms-import-summary" style="color: var(--color-text-muted); margin-top:12px; white-space:pre-line;"></div>
+                </div>
+            </section>
+
             <section class="view" data-view="settings">
                 <div class="view-header">
                     <h1>Settings</h1>
@@ -1263,6 +1353,7 @@
         { id: "accounts",     label: "Accounts",        icon: "\u2B21" },
         { id: "reports",      label: "Reports",         icon: "\u25A4" },
         { id: "backup",       label: "Backup",          icon: "\u21BB" },
+        { id: "importSms",    label: "Import SMS",      icon: "\u2709" },
         { id: "settings",     label: "Settings",        icon: "\u2699" }
     ];
 
@@ -3298,6 +3389,544 @@
         }
     };
 
+    /* =========================================================
+       SMS PARSER MODULE
+       Pure parsing logic: message splitting, classification and
+       field extraction from bank SMS text. No DOM, no Storage —
+       ImportSms/ImportSmsView below are what wire this into the
+       app's real Transactions/Accounts data.
+    ========================================================= */
+
+    var MONTH_ABBR_MAP = {
+        jan: 0, feb: 1, mar: 2, apr: 3, may: 4, jun: 5,
+        jul: 6, aug: 7, sep: 8, oct: 9, nov: 10, dec: 11
+    };
+
+    var SmsParser = {
+
+        // "09-Sep-26" -> "2026-09-09". Never relies on the browser's
+        // locale-dependent Date parsing of ambiguous string formats.
+        parseSmsDate: function (str) {
+            if (!str) { return null; }
+            var m = str.match(/(\d{1,2})-([A-Za-z]{3})-(\d{2})/);
+            if (!m) { return null; }
+            var mon = MONTH_ABBR_MAP[m[2].toLowerCase()];
+            if (mon === undefined) { return null; }
+            var day = m[1].length === 1 ? "0" + m[1] : m[1];
+            var mm = String(mon + 1).length === 1 ? "0" + String(mon + 1) : String(mon + 1);
+            var yyyy = 2000 + parseInt(m[3], 10);
+            return yyyy + "-" + mm + "-" + day;
+        },
+
+        parseAmount: function (str) {
+            if (str === undefined || str === null) { return null; }
+            var n = parseFloat(String(str).replace(/,/g, ""));
+            return isNaN(n) ? null : n;
+        },
+
+        normalizeForParsing: function (message) {
+            return message.replace(/\r/g, "").replace(/\s+/g, " ").trim();
+        },
+
+        extractBalance: function (normalizedText) {
+            var m = normalizedText.match(/(?:Current Acc Bal|Updated balance|Balance)\s*:?\s*QAR\s*([\d,]+\.\d{2})/i);
+            return m ? SmsParser.parseAmount(m[1]) : null;
+        },
+
+        // Anchors mark the start of a NEW message. The (credited|debited)
+        // requirement on the "Current Acc" anchor is deliberate: without
+        // it, the "Current Acc Bal: QAR ..." balance LINE inside a
+        // message would be wrongly read as the start of a new one.
+        MESSAGE_START_ANCHORS: [
+            /^Debit Card/i,
+            /^Current Acc\s+\S+\s+(credited|debited)/i,
+            /^Your salary has been credited/i,
+            /^Dear Customer/i,
+            /^You successfully added/i,
+            /^Your Internet Banking login OTP/i
+        ],
+
+        isMessageStart: function (line) {
+            return SmsParser.MESSAGE_START_ANCHORS.some(function (rx) { return rx.test(line.trim()); });
+        },
+
+        splitMessages: function (rawText) {
+            var lines = rawText.replace(/\r/g, "").split("\n");
+            var messages = [];
+            var current = [];
+
+            lines.forEach(function (line) {
+                var trimmed = line.trim();
+                if (trimmed === "") { return; }
+                if (SmsParser.isMessageStart(trimmed) && current.length > 0) {
+                    messages.push(current.join("\n"));
+                    current = [trimmed];
+                } else {
+                    current.push(trimmed);
+                }
+            });
+            if (current.length > 0) { messages.push(current.join("\n")); }
+
+            // Known limitation: a security SMS with "Dear Customer,
+            // Warning..." followed by an OTP line in the SAME message
+            // will be split into two pieces, because the OTP line also
+            // matches a start-anchor. Both halves still classify as
+            // NON_TRANSACTION, so nothing financial is affected.
+            return messages;
+        },
+
+        parseSalary: function (text) {
+            var m = text.match(/Your salary has been credited to your ([A-Za-z0-9]+) for QAR\s*([\d,]+\.\d{2})\s*at\s*(\d{1,2}:\d{2}),\s*(\d{1,2}-[A-Za-z]{3}-\d{2})\s*from\s*([A-Za-z0-9 &.\-]+?)(?=\s*(?:Current Acc Bal|Updated balance|Balance)\b|$)/i);
+            if (!m) { return null; }
+            return {
+                classification: "SALARY", type: "Income", category: "Salary",
+                amount: SmsParser.parseAmount(m[2]), currency: "QAR",
+                account: m[1], card: null,
+                description: "Salary from " + m[5].trim(), merchant: null,
+                sender: m[5].trim(), recipient: null, reference: null,
+                time: m[3], date: SmsParser.parseSmsDate(m[4]),
+                balanceAfter: SmsParser.extractBalance(text), pending: false
+            };
+        },
+
+        parseFawranCredit: function (text) {
+            var m = text.match(/Current Acc\s+([A-Za-z0-9]+)\s+credited with QAR\s*([\d,]+\.\d{2})\s+for Fawran instant payment\s+ref\s*,?\s*(.+?)\s+with\s*(\S+)\s+at\s*(\d{1,2}:\d{2}),\s*(\d{1,2}-[A-Za-z]{3}-\d{2})/i);
+            if (!m) { return null; }
+            return {
+                classification: "FAWRAN_CREDIT", type: "Income", category: "Fawran",
+                amount: SmsParser.parseAmount(m[2]), currency: "QAR",
+                account: m[1], card: null,
+                description: m[3].trim(), merchant: null,
+                sender: m[3].trim(), recipient: null, reference: m[4],
+                time: m[5], date: SmsParser.parseSmsDate(m[6]),
+                balanceAfter: SmsParser.extractBalance(text), pending: false
+            };
+        },
+
+        parseFawranDebit: function (text) {
+            var m = text.match(/Current Acc\s+([A-Za-z0-9]+)\s+debited with QAR\s*([\d,]+\.\d{2})\s+for Fawran instant payment\s+ref\s*,?\s*(.+?)\s+at\s*(\d{1,2}:\d{2}),\s*(\d{1,2}-[A-Za-z]{3}-\d{2})/i);
+            if (!m) { return null; }
+            return {
+                classification: "FAWRAN_DEBIT", type: "Expense", category: "Fawran",
+                amount: SmsParser.parseAmount(m[2]), currency: "QAR",
+                account: m[1], card: null,
+                description: m[3].trim(), merchant: null,
+                sender: null, recipient: m[3].trim(), reference: null,
+                time: m[4], date: SmsParser.parseSmsDate(m[5]),
+                balanceAfter: SmsParser.extractBalance(text), pending: false
+            };
+        },
+
+        parseTransferCharge: function (text) {
+            var m = text.match(/Current Acc\s+([A-Za-z0-9]+)\s+debited with QAR\s*([\d,]+\.\d{2})\s+for Transfer Charge\s+at\s*(\d{1,2}:\d{2}),\s*(\d{1,2}-[A-Za-z]{3}-\d{2})/i);
+            if (!m) { return null; }
+            return {
+                classification: "TRANSFER_CHARGE", type: "Expense", category: "Transfer Charge",
+                amount: SmsParser.parseAmount(m[2]), currency: "QAR",
+                account: m[1], card: null,
+                description: "Transfer Charge", merchant: null,
+                sender: null, recipient: null, reference: null,
+                time: m[3], date: SmsParser.parseSmsDate(m[4]),
+                balanceAfter: SmsParser.extractBalance(text), pending: false
+            };
+        },
+
+        parseTransfer: function (text) {
+            var m = text.match(/Current Acc\s+([A-Za-z0-9]+)\s+(debited|credited) with QAR\s*([\d,]+\.\d{2})\s+for Transfer\s+ref\s*,?\s*(.+?)\s+at\s*(\d{1,2}:\d{2}),\s*(\d{1,2}-[A-Za-z]{3}-\d{2})/i);
+            if (!m) { return null; }
+            var isDebit = /debited/i.test(m[2]);
+            return {
+                classification: "TRANSFER", type: isDebit ? "Expense" : "Income", category: "Transfer",
+                amount: SmsParser.parseAmount(m[3]), currency: "QAR",
+                account: m[1], card: null,
+                description: m[4].trim(), merchant: null,
+                sender: isDebit ? null : m[4].trim(), recipient: isDebit ? m[4].trim() : null,
+                reference: null, time: m[5], date: SmsParser.parseSmsDate(m[6]),
+                balanceAfter: SmsParser.extractBalance(text), pending: false
+            };
+        },
+
+        parseDebitCard: function (text) {
+            var m = text.match(/Debit Card\s+(\*\*\d+)\s+was used for\s+([A-Z]{3})\s*([\d,]+\.\d{2})\s+at\s+(.+?)\s+at\s+(\d{1,2}:\d{2})\s+(\d{1,2}-[A-Za-z]{3}-\d{2})/i);
+            if (!m) { return null; }
+            var merchant = m[4].trim();
+            return {
+                classification: "CARD_PURCHASE", type: "Expense", category: "Card Purchase",
+                amount: SmsParser.parseAmount(m[3]), currency: m[2].toUpperCase(),
+                account: null, card: m[1],
+                description: merchant, merchant: merchant,
+                sender: null, recipient: null, reference: null,
+                time: m[5], date: SmsParser.parseSmsDate(m[6]),
+                balanceAfter: SmsParser.extractBalance(text), // always QAR (account currency)
+                pending: /pending/i.test(merchant)
+            };
+        },
+
+        NON_TRANSACTION_RULES: [
+            { rx: /Internet Banking login OTP|Do not share this OTP/i, reason: "Security / OTP message" },
+            { rx: /detected a login attempt|Warning:/i, reason: "Security / login alert" },
+            { rx: /successfully added your card.*Wallet/i, reason: "Card wallet notification" },
+            { rx: /profile details held on our records/i, reason: "Profile update notification" }
+        ],
+
+        classifyNonTransaction: function (text) {
+            var found = SmsParser.NON_TRANSACTION_RULES.filter(function (rule) { return rule.rx.test(text); })[0];
+            return found ? found.reason : null;
+        },
+
+        // Priority order and why:
+        // 1 Salary          - unique opening phrase, zero overlap
+        // 2 Fawran Credit   - "Current Acc ... credited ... Fawran"
+        // 3 Fawran Debit    - same family, checked after credit
+        // 4 Transfer Charge - MORE specific than plain "Transfer", must
+        //                      be excluded before the generic parser runs
+        // 5 Transfer        - generic "Current Acc ... for Transfer ref ..."
+        // 6 Debit Card      - distinct opening phrase, no overlap
+        // 7 Known non-transaction - keyword rules
+        // 8 Unknown         - never guess; surfaced for manual review
+        PARSERS: [],
+
+        parseMessage: function (rawMessage) {
+            var normalized = SmsParser.normalizeForParsing(rawMessage);
+
+            for (var i = 0; i < SmsParser.PARSERS.length; i++) {
+                var result;
+                try {
+                    result = SmsParser.PARSERS[i](normalized);
+                } catch (err) {
+                    return SmsParser.baseResult(rawMessage, "Error", "Low", { errorMessage: err.message });
+                }
+                if (result) {
+                    return Object.assign(SmsParser.baseResult(rawMessage, "Parsed", "High"), result);
+                }
+            }
+
+            var nonTxnReason = SmsParser.classifyNonTransaction(normalized);
+            if (nonTxnReason) {
+                return Object.assign(SmsParser.baseResult(rawMessage, "Non-Transaction", "High"), {
+                    classification: "INFORMATION", type: null, category: null, reason: nonTxnReason
+                });
+            }
+
+            return Object.assign(SmsParser.baseResult(rawMessage, "Unknown", "Low"), {
+                classification: "UNKNOWN", type: null, category: null,
+                reason: "Could not identify a known message pattern."
+            });
+        },
+
+        baseResult: function (rawMessage, status, confidence, extra) {
+            return Object.assign({
+                date: null, time: null, type: null, category: null,
+                amount: null, currency: null, account: null, card: null,
+                description: null, merchant: null, sender: null, recipient: null,
+                reference: null, balanceAfter: null, pending: false,
+                source: "Bank SMS", status: status, confidence: confidence, rawMessage: rawMessage
+            }, extra || {});
+        },
+
+        parseAllMessages: function (rawText) {
+            return SmsParser.splitMessages(rawText).map(SmsParser.parseMessage);
+        }
+    };
+
+    SmsParser.PARSERS = [
+        SmsParser.parseSalary, SmsParser.parseFawranCredit, SmsParser.parseFawranDebit,
+        SmsParser.parseTransferCharge, SmsParser.parseTransfer, SmsParser.parseDebitCard
+    ];
+
+    /* =========================================================
+       IMPORT SMS MODULE
+       Bridges SmsParser's output into the app's real Accounts/
+       Transactions data: account mapping, duplicate detection,
+       balance-sequence warnings, and the actual import.
+    ========================================================= */
+
+    var SMS_ACCOUNT_MAP_KEY = "pfm_sms_account_map";
+
+    var ImportSms = {
+
+        loadAccountMap: function () {
+            try { return JSON.parse(window.localStorage.getItem(SMS_ACCOUNT_MAP_KEY)) || {}; }
+            catch (err) { return {}; }
+        },
+
+        saveAccountMap: function (map) {
+            window.localStorage.setItem(SMS_ACCOUNT_MAP_KEY, JSON.stringify(map));
+        },
+
+        normalizeForFingerprint: function (str) {
+            return (str || "").toString().trim().toLowerCase().replace(/\s+/g, " ");
+        },
+
+        // Duplicate fingerprint deliberately excludes account: at parse
+        // time we only know the bank's account/card token, not which of
+        // your real Accounts it maps to (that's chosen in the mapping
+        // panel, after parsing). date+type+amount+narration together are
+        // specific enough in practice to catch a genuine re-paste of the
+        // same SMS; this is a warning either way, never a hard block.
+        fingerprint: function (date, type, amount, narration) {
+            var amt = (typeof amount === "number" ? amount : parseFloat(amount) || 0).toFixed(2);
+            return [date, type, amt, ImportSms.normalizeForFingerprint(narration)].join("|");
+        },
+
+        findDuplicates: function (parsedRows, existingTransactions) {
+            var existingFingerprints = {};
+            existingTransactions.forEach(function (t) {
+                existingFingerprints[ImportSms.fingerprint(t.date, t.type, t.amount, t.narration)] = true;
+            });
+            return parsedRows.map(function (r) {
+                if (r.status !== "Parsed") { return r; }
+                var fp = ImportSms.fingerprint(r.date, r.type.toLowerCase(), r.amount, r.description);
+                return Object.assign({}, r, { duplicate: !!existingFingerprints[fp] });
+            });
+        },
+
+        // Warning-only balance check (never blocks import). Groups by
+        // bank account/card token, sorts chronologically within THIS
+        // pasted batch, and flags a mismatch between consecutive rows.
+        // Skips pending/foreign-currency rows, and accepts that a gap in
+        // the pasted batch (some real transactions not included) will
+        // produce a false-positive warning — that's expected, not a bug.
+        flagBalanceWarnings: function (rows) {
+            var groups = {};
+            rows.forEach(function (r) {
+                if (r.status !== "Parsed" || r.currency !== "QAR" || r.balanceAfter == null) { return; }
+                var key = r.account || r.card;
+                if (!key) { return; }
+                (groups[key] = groups[key] || []).push(r);
+            });
+
+            Object.keys(groups).forEach(function (key) {
+                var group = groups[key];
+                group.sort(function (a, b) { return (a.date + a.time).localeCompare(b.date + b.time); });
+                for (var i = 1; i < group.length; i++) {
+                    var prev = group[i - 1], curr = group[i];
+                    if (prev.pending || curr.pending) { continue; }
+                    var expected = prev.balanceAfter + (curr.type === "Income" ? curr.amount : -curr.amount);
+                    if (Math.abs(expected - curr.balanceAfter) > 0.01) {
+                        curr.balanceWarning = true;
+                    }
+                }
+            });
+            return rows;
+        },
+
+        buildImportNotes: function (r) {
+            var lines = ["Imported from Bank SMS", "Category: " + r.category];
+            if (r.card) { lines.push("Card: " + r.card); }
+            if (r.balanceAfter !== null && r.balanceAfter !== undefined) { lines.push("Balance after: QAR " + r.balanceAfter); }
+            if (r.reference) { lines.push("Reference: " + r.reference); }
+            if (r.currency && r.currency !== "QAR") { lines.push("Original SMS amount: " + r.currency + " " + r.amount); }
+            if (r.pending) { lines.push("Status: Pending at time of SMS"); }
+            return lines.join("\n");
+        }
+    };
+
+    var ImportSmsView = {
+
+        currentResults: [],
+
+        init: function () {
+            document.getElementById("sms-parse-btn").addEventListener("click", ImportSmsView.handleParse);
+            document.getElementById("sms-select-all-btn").addEventListener("click", function () { ImportSmsView.selectAll(true); });
+            document.getElementById("sms-clear-selection-btn").addEventListener("click", function () { ImportSmsView.selectAll(false); });
+            document.getElementById("sms-import-btn").addEventListener("click", ImportSmsView.handleImport);
+        },
+
+        handleParse: function () {
+            var text = document.getElementById("sms-input-textarea").value;
+            var parsed = SmsParser.parseAllMessages(text);
+            var existing = Transactions.getAll();
+
+            ImportSmsView.currentResults = ImportSms.findDuplicates(parsed, existing).map(function (r, i) {
+                return Object.assign({ rowId: i, selected: false }, r);
+            });
+            ImportSms.flagBalanceWarnings(ImportSmsView.currentResults);
+
+            ImportSmsView.currentResults.forEach(function (r) {
+                r.selected = r.status === "Parsed" && !r.duplicate && r.currency === "QAR";
+            });
+
+            document.getElementById("sms-results-card").style.display = "block";
+            document.getElementById("sms-import-summary").textContent = "";
+            ImportSmsView.renderSummary();
+            ImportSmsView.renderMappingPanel();
+            ImportSmsView.renderTable();
+        },
+
+        renderSummary: function () {
+            var rows = ImportSmsView.currentResults;
+            var total = rows.length;
+            var txCount = rows.filter(function (r) { return r.status === "Parsed"; }).length;
+            var dup = rows.filter(function (r) { return r.duplicate; }).length;
+            var nonTx = rows.filter(function (r) { return r.status === "Non-Transaction"; }).length;
+            var unknown = rows.filter(function (r) { return r.status === "Unknown"; }).length;
+            document.getElementById("sms-summary-line").innerHTML =
+                "<span>Total Messages: <b>" + total + "</b></span>" +
+                "<span>Transactions Found: <b>" + txCount + "</b></span>" +
+                "<span>Duplicates: <b>" + dup + "</b></span>" +
+                "<span>Non-Transactions: <b>" + nonTx + "</b></span>" +
+                "<span>Unknown: <b>" + unknown + "</b></span>";
+        },
+
+        // One dropdown per distinct bank account/card token seen in this
+        // batch, mapping it to one of your real active Accounts. Saved
+        // to localStorage so it's remembered next time the same card
+        // or account number shows up in a future paste.
+        renderMappingPanel: function () {
+            var tokens = {};
+            ImportSmsView.currentResults.forEach(function (r) {
+                if (r.status === "Parsed") { tokens[r.account || r.card] = true; }
+            });
+            var tokenList = Object.keys(tokens);
+            var panel = document.getElementById("sms-mapping-panel");
+
+            if (tokenList.length === 0) {
+                panel.innerHTML = "";
+                return;
+            }
+
+            var savedMap = ImportSms.loadAccountMap();
+            var activeAccounts = Accounts.getActive();
+
+            if (activeAccounts.length === 0) {
+                panel.innerHTML = '<div class="field-error" role="alert">No active accounts exist yet. Create an account on the Accounts page before importing.</div>';
+                return;
+            }
+
+            var html = '<h2 style="font-size:0.95rem;">Account Mapping</h2>';
+            tokenList.forEach(function (token) {
+                var savedAccountId = savedMap[token];
+                html += '<div class="sms-mapping-row"><label>' + Utilities.escapeHtml(token) + "</label>" +
+                    '<select data-token="' + Utilities.escapeHtml(token) + '" class="sms-account-map-select">' +
+                    '<option value="">Select account</option>' +
+                    activeAccounts.map(function (acc) {
+                        var selected = acc.id === savedAccountId ? " selected" : "";
+                        return '<option value="' + acc.id + '"' + selected + ">" + Utilities.escapeHtml(acc.name) + "</option>";
+                    }).join("") +
+                    "</select></div>";
+            });
+            panel.innerHTML = html;
+        },
+
+        currentAccountMapFromInputs: function () {
+            var map = {};
+            document.querySelectorAll(".sms-account-map-select").forEach(function (el) {
+                if (el.value) { map[el.dataset.token] = el.value; }
+            });
+            return map;
+        },
+
+        renderTable: function () {
+            var body = document.getElementById("sms-results-table-body");
+            body.innerHTML = ImportSmsView.currentResults.map(function (r) {
+                var statusCell = r.status;
+                if (r.status === "Parsed") {
+                    statusCell = '<span class="status-badge ' + (r.type === "Income" ? "type-income" : "type-expense") + '">' + r.status + "</span>";
+                    if (r.duplicate) { statusCell += ' <span class="status-badge badge-duplicate">Duplicate</span>'; }
+                    if (r.currency && r.currency !== "QAR") { statusCell += ' <span class="status-badge badge-fx">Foreign currency</span>'; }
+                    if (r.balanceWarning) { statusCell += ' <span class="status-badge badge-duplicate">Balance mismatch</span>'; }
+                } else if (r.status === "Unknown") {
+                    statusCell = '<span class="status-badge badge-unknown">Unknown</span>';
+                } else if (r.status === "Non-Transaction") {
+                    statusCell = '<span class="status-badge badge-nontx">' + Utilities.escapeHtml(r.reason || "Non-Transaction") + "</span>";
+                } else if (r.status === "Error") {
+                    statusCell = '<span class="status-badge badge-unknown">Error</span>';
+                }
+
+                var checkable = r.status === "Parsed";
+                return (
+                    "<tr>" +
+                        "<td>" + (checkable ? '<input type="checkbox" ' + (r.selected ? "checked" : "") + ' onchange="ImportSmsView.toggleRow(' + r.rowId + ', this.checked)">' : "") + "</td>" +
+                        "<td>" + Utilities.formatDateDisplay(r.date) + "</td>" +
+                        "<td>" + (r.time || "") + "</td>" +
+                        "<td>" + (r.type || "") + "</td>" +
+                        "<td>" + (r.category || "") + "</td>" +
+                        "<td>" + Utilities.escapeHtml(r.description || r.reason || "") + "</td>" +
+                        '<td class="amount">' + (checkable
+                            ? '<input type="text" class="sms-amount-input" value="' + (r.amount != null ? r.amount : "") + '" onchange="ImportSmsView.editAmount(' + r.rowId + ', this.value)">'
+                            : (r.amount != null ? r.amount : "")) + "</td>" +
+                        "<td>" + (r.currency || "") + "</td>" +
+                        '<td class="amount">' + (r.balanceAfter != null ? Utilities.formatCurrency(r.balanceAfter) : "") + "</td>" +
+                        "<td>" + statusCell + "</td>" +
+                    "</tr>"
+                );
+            }).join("");
+        },
+
+        toggleRow: function (rowId, checked) {
+            var r = ImportSmsView.currentResults.find(function (x) { return x.rowId === rowId; });
+            if (r) { r.selected = checked; }
+        },
+
+        editAmount: function (rowId, value) {
+            var r = ImportSmsView.currentResults.find(function (x) { return x.rowId === rowId; });
+            if (r) { r.amount = parseFloat(value) || 0; }
+        },
+
+        selectAll: function (state) {
+            ImportSmsView.currentResults.forEach(function (r) { if (r.status === "Parsed") { r.selected = state; } });
+            ImportSmsView.renderTable();
+        },
+
+        handleImport: function () {
+            if (ImportSmsView.currentResults.length === 0) { return; }
+
+            var accountMap = ImportSmsView.currentAccountMapFromInputs();
+            var selectedRows = ImportSmsView.currentResults.filter(function (r) { return r.status === "Parsed" && r.selected; });
+
+            var unmapped = selectedRows.filter(function (r) { return !accountMap[r.account || r.card]; });
+            if (unmapped.length > 0) {
+                UI.showNotification("Please map every bank account/card shown to one of your Accounts before importing.", "error");
+                return;
+            }
+
+            ImportSms.saveAccountMap(accountMap);
+
+            var imported = 0;
+            var skippedDuplicates = 0;
+
+            selectedRows.forEach(function (r) {
+                if (r.duplicate) { skippedDuplicates++; return; } // still respected even if left checked
+                Transactions.add({
+                    date: r.date,
+                    type: r.type.toLowerCase(),
+                    narration: r.description,
+                    accountId: accountMap[r.account || r.card],
+                    amount: r.amount,
+                    notes: ImportSms.buildImportNotes(r)
+                });
+                imported++;
+                r.status = "Imported";
+            });
+
+            ImportSmsView.renderTable();
+
+            var unknownCount = ImportSmsView.currentResults.filter(function (r) { return r.status === "Unknown"; }).length;
+            var nonTxCount = ImportSmsView.currentResults.filter(function (r) { return r.status === "Non-Transaction"; }).length;
+            var foundCount = ImportSmsView.currentResults.filter(function (r) { return r.status === "Parsed" || r.status === "Imported"; }).length;
+
+            document.getElementById("sms-import-summary").textContent =
+                "Import Completed\n\n" +
+                foundCount + " transactions found\n" +
+                imported + " imported\n" +
+                skippedDuplicates + " duplicates skipped\n" +
+                unknownCount + " unknown message(s)\n" +
+                nonTxCount + " non-transaction message(s) ignored";
+
+            UI.showNotification(imported + " transaction(s) imported.", "success");
+
+            // Same refresh pattern as BackupView.handleImportClick, so
+            // every other view reflects the newly-added transactions.
+            DashboardView.render();
+            AccountsView.render();
+            TransactionsView.resetDefaults();
+            TransactionsView.render();
+            ReportsView.render();
+        }
+    };
+    window.ImportSmsView = ImportSmsView; // needed for the inline onchange handlers in renderTable
+
     // Expose for later stages / manual console testing.
     window.Storage = Storage;
     window.UI = UI;
@@ -3327,11 +3956,18 @@
         BackupView.init();
         SettingsView.init();
         LockScreen.init();
+        ImportSmsView.init();
 
         UI.viewRenderers.accounts = AccountsView.render;
         UI.viewRenderers.transactions = TransactionsView.render;
         UI.viewRenderers.dashboard = DashboardView.render;
         UI.viewRenderers.reports = ReportsView.render;
+        // Re-populate the account-mapping dropdowns if the results table
+        // is already showing, in case an account was added/edited on
+        // another view since the last parse.
+        UI.viewRenderers.importSms = function () {
+            if (ImportSmsView.currentResults.length > 0) { ImportSmsView.renderMappingPanel(); }
+        };
     });
 })();
 </script>
