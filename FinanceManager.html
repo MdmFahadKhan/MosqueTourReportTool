@@ -1185,6 +1185,11 @@
                     <p>Export and import your data as JSON, or export transactions as CSV.</p>
                 </div>
 
+                <p style="margin: -8px 0 16px 0; font-size:0.82rem; color:var(--color-text-muted);">
+                    Note: this is a manual, one-off export/import. For a JSON file that stays
+                    automatically up to date as you work, use <strong>Settings &rarr; Server Sync</strong>.
+                </p>
+
                 <div class="form-card">
                     <h2>Export</h2>
                     <p style="margin:0 0 14px 0; font-size:0.85rem; color:var(--color-text-muted);">
@@ -1267,6 +1272,32 @@
                 <div class="view-header">
                     <h1>Settings</h1>
                     <p>PIN protection and security question.</p>
+                </div>
+
+                <div class="form-card">
+                    <h2>Server Sync</h2>
+                    <p style="margin:0 0 14px 0; font-size:0.85rem; color:var(--color-text-muted);">
+                        Your data always stays in this browser's local storage. Optionally, connect to your
+                        own server API to also keep it there as the shared source of truth — reachable from
+                        any device or browser. Every change is auto-saved to the server a moment after you
+                        make it.
+                    </p>
+                    <div class="form-row">
+                        <div class="form-group" style="flex-basis: 100%;">
+                            <label for="ss-url-input">Server Address</label>
+                            <input type="url" id="ss-url-input" placeholder="https://your-function-app.azurewebsites.net" autocomplete="off">
+                        </div>
+                    </div>
+                    <p class="field-error" role="alert" id="ss-status-line" style="color: var(--color-text-muted);"></p>
+                    <div class="form-actions">
+                        <button type="button" class="btn btn-primary" id="ss-connect-btn">Connect</button>
+                        <button type="button" class="btn btn-secondary" id="ss-sync-now-btn" style="display:none;">Sync Now</button>
+                        <button type="button" class="btn btn-secondary" id="ss-disconnect-btn" style="display:none;">Disconnect</button>
+                    </div>
+                    <p style="margin:14px 0 0 0; font-size:0.78rem; color:var(--color-text-muted); border-top: 1px solid var(--color-border); padding-top:12px;">
+                        This connection has no login of its own — access is controlled entirely by your
+                        network (VPN/private network). Do not point this at a publicly reachable address.
+                    </p>
                 </div>
 
                 <div class="form-card">
@@ -1477,6 +1508,13 @@
                 } else {
                     Storage._memoryFallback[key] = serialized;
                 }
+                // Mirror every successful localStorage write out to the
+                // connected server (if any). Skipped while ServerSync
+                // itself is loading server data INTO localStorage, or this
+                // would immediately write the same data straight back out.
+                if (!ServerSync._applyingRemote) {
+                    ServerSync.scheduleWrite();
+                }
                 return true;
             } catch (err) {
                 console.error("Storage write failed for key: " + key, err);
@@ -1545,6 +1583,197 @@
 
         setMetadata: function (metadata) {
             return Storage._rawSet(STORAGE_KEYS.METADATA, metadata);
+        }
+    };
+
+    /* =========================================================
+       SERVER SYNC MODULE
+       Hybrid persistence: localStorage (above) remains the live
+       working copy that every read/write in this app goes
+       through. This module additionally mirrors that data to a
+       shared JSON file kept on a server you control, so the
+       server — not localStorage — is the durable "source of
+       truth", reachable from any device or browser (unlike the
+       old File System Access approach, this needs nothing more
+       than fetch()).
+
+       There is deliberately NO login here: this app assumes the
+       server endpoint itself is only reachable over a private
+       network/VPN you control. If that ever changes, add real
+       authentication on the server before pointing this at it.
+    ========================================================= */
+
+    var SERVER_SYNC_URL_KEY = "pfm_server_sync_api_base_url";
+    var SERVER_SYNC_WRITE_DEBOUNCE_MS = 500;
+
+    var ServerSync = {
+
+        // "disconnected" | "connected" | "error"
+        status: "disconnected",
+        apiBaseUrl: null,
+        lastSyncedAt: null,
+        lastError: null,
+        _applyingRemote: false,   // true while writing SERVER data INTO localStorage
+        _writeTimer: null,
+        _writeInFlight: false,
+        _writeQueuedAgain: false,
+
+        loadSavedUrl: function () {
+            try { return window.localStorage.getItem(SERVER_SYNC_URL_KEY) || ""; }
+            catch (err) { return ""; }
+        },
+
+        saveUrl: function (url) {
+            try { window.localStorage.setItem(SERVER_SYNC_URL_KEY, url); }
+            catch (err) { /* non-fatal: just won't auto-reconnect next time */ }
+        },
+
+        clearUrl: function () {
+            try { window.localStorage.removeItem(SERVER_SYNC_URL_KEY); }
+            catch (err) { /* non-fatal */ }
+        },
+
+        normalizeBaseUrl: function (url) {
+            return (url || "").trim().replace(/\/+$/, ""); // strip trailing slash(es)
+        },
+
+        dataEndpoint: function () {
+            return ServerSync.apiBaseUrl + "/api/data";
+        },
+
+        _describeError: function (err) {
+            // A fetch() TypeError almost always means "could not reach the
+            // host at all" (offline, VPN down, wrong address, CORS block) —
+            // give the practical explanation rather than the raw message.
+            if (err instanceof TypeError) {
+                return "Could not reach the server. Check your VPN/network connection and the address.";
+            }
+            return err.message || String(err);
+        },
+
+        /* ---- Startup: reconnect to a previously configured server, if any ---- */
+
+        init: function () {
+            var saved = ServerSync.loadSavedUrl();
+            if (!saved) { return Promise.resolve(); }
+            ServerSync.apiBaseUrl = saved;
+            return ServerSync._pullFromServer().then(function () {
+                ServerSync.status = "connected";
+                ServerSync.lastError = null;
+            }).catch(function (err) {
+                console.error("Server sync unreachable at startup:", err);
+                // Deliberately does NOT clear apiBaseUrl/saved URL — the
+                // server may simply be unreachable right now (VPN not yet
+                // connected). Falls back to localStorage until "Sync Now"
+                // or a reload succeeds.
+                ServerSync.status = "error";
+                ServerSync.lastError = ServerSync._describeError(err);
+            });
+        },
+
+        /* ---- Reading the server's data into localStorage (server wins) ---- */
+
+        _pullFromServer: function () {
+            return fetch(ServerSync.dataEndpoint(), { method: "GET" }).then(function (response) {
+                if (!response.ok) { throw new Error("Server returned HTTP " + response.status); }
+                return response.text();
+            }).then(function (text) {
+                var result = Backup.validateBackupPayload(text);
+                if (!result.valid) { throw new Error(result.error); }
+                ServerSync._applyingRemote = true;
+                try {
+                    Backup.applyBackup(result.data);
+                } finally {
+                    ServerSync._applyingRemote = false;
+                }
+                ServerSync.lastSyncedAt = new Date();
+            });
+        },
+
+        /* ---- Connecting / disconnecting ---- */
+
+        connect: function (url) {
+            var normalized = ServerSync.normalizeBaseUrl(url);
+            if (!normalized) { return Promise.reject(new Error("Enter a server address first.")); }
+            var previous = ServerSync.apiBaseUrl;
+            ServerSync.apiBaseUrl = normalized;
+            return ServerSync._pullFromServer().then(function () {
+                ServerSync.saveUrl(normalized);
+                ServerSync.status = "connected";
+                ServerSync.lastError = null;
+            }).catch(function (err) {
+                ServerSync.apiBaseUrl = previous;
+                throw err;
+            });
+        },
+
+        disconnect: function () {
+            ServerSync.apiBaseUrl = null;
+            ServerSync.status = "disconnected";
+            ServerSync.lastSyncedAt = null;
+            ServerSync.lastError = null;
+            ServerSync.clearUrl();
+        },
+
+        syncNow: function () {
+            if (!ServerSync.apiBaseUrl) { return Promise.reject(new Error("Not connected to a server.")); }
+            return ServerSync._pullFromServer().then(function () {
+                ServerSync.status = "connected";
+                ServerSync.lastError = null;
+            }).catch(function (err) {
+                ServerSync.status = "error";
+                ServerSync.lastError = ServerSync._describeError(err);
+                throw err;
+            });
+        },
+
+        /* ---- Writing: localStorage -> server, debounced and coalesced ---- */
+
+        scheduleWrite: function () {
+            if (!ServerSync.apiBaseUrl) { return; }
+            if (ServerSync._writeTimer) { clearTimeout(ServerSync._writeTimer); }
+            ServerSync._writeTimer = setTimeout(function () {
+                ServerSync._writeTimer = null;
+                ServerSync._writeNow();
+            }, SERVER_SYNC_WRITE_DEBOUNCE_MS);
+        },
+
+        _writeNow: function () {
+            if (ServerSync._writeInFlight) {
+                ServerSync._writeQueuedAgain = true;
+                return Promise.resolve();
+            }
+            if (!ServerSync.apiBaseUrl) { return Promise.resolve(); }
+
+            ServerSync._writeInFlight = true;
+            var payload = Backup.buildBackupPayload();
+
+            return fetch(ServerSync.dataEndpoint(), {
+                method: "PUT",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(payload)
+            }).then(function (response) {
+                if (!response.ok) { throw new Error("Server returned HTTP " + response.status); }
+                ServerSync.status = "connected";
+                ServerSync.lastSyncedAt = new Date();
+                ServerSync.lastError = null;
+                if (typeof ServerSyncView !== "undefined") { ServerSyncView.render(); }
+            }).catch(function (err) {
+                console.error("Server sync write failed:", err);
+                ServerSync.status = "error";
+                ServerSync.lastError = ServerSync._describeError(err);
+                UI.showNotification(
+                    "Could not save to the server. Your changes are still kept in this browser — click Sync Now in Settings once reconnected.",
+                    "error"
+                );
+                if (typeof ServerSyncView !== "undefined") { ServerSyncView.render(); }
+            }).then(function () {
+                ServerSync._writeInFlight = false;
+                if (ServerSync._writeQueuedAgain) {
+                    ServerSync._writeQueuedAgain = false;
+                    ServerSync.scheduleWrite();
+                }
+            });
         }
     };
 
@@ -3352,6 +3581,92 @@
         }
     };
 
+    var ServerSyncView = {
+
+        init: function () {
+            document.getElementById("ss-url-input").value = ServerSync.apiBaseUrl || ServerSync.loadSavedUrl();
+            document.getElementById("ss-connect-btn").addEventListener("click", ServerSyncView.handleConnect);
+            document.getElementById("ss-sync-now-btn").addEventListener("click", ServerSyncView.handleSyncNow);
+            document.getElementById("ss-disconnect-btn").addEventListener("click", ServerSyncView.handleDisconnect);
+            ServerSyncView.render();
+        },
+
+        formatStatusLine: function () {
+            switch (ServerSync.status) {
+                case "connected":
+                    return "Connected to " + ServerSync.apiBaseUrl +
+                        (ServerSync.lastSyncedAt ? " — last synced " + ServerSync.lastSyncedAt.toLocaleTimeString() : "");
+                case "error":
+                    return "Could not sync with " + ServerSync.apiBaseUrl + ": " + (ServerSync.lastError || "unknown error") +
+                        ". Changes are being kept in this browser until sync succeeds again.";
+                default:
+                    return "Not connected. Your data is being saved to this browser's local storage only.";
+            }
+        },
+
+        render: function () {
+            var statusEl = document.getElementById("ss-status-line");
+            if (!statusEl) { return; } // Settings view not in the DOM yet on first load ordering
+            statusEl.textContent = ServerSyncView.formatStatusLine();
+            statusEl.style.color = ServerSync.status === "error" ? "var(--color-danger)" : "var(--color-text-muted)";
+
+            var isConnectedOrError = ServerSync.status === "connected" || ServerSync.status === "error";
+            document.getElementById("ss-sync-now-btn").style.display = isConnectedOrError ? "inline-block" : "none";
+            document.getElementById("ss-disconnect-btn").style.display = isConnectedOrError ? "inline-block" : "none";
+        },
+
+        // Re-renders every other view after a (re)connect, since the
+        // server's data may differ from what was already showing from
+        // localStorage.
+        refreshAllViews: function () {
+            DashboardView.render();
+            AccountsView.render();
+            TransactionsView.resetDefaults();
+            TransactionsView.render();
+            ReportsView.render();
+        },
+
+        handleConnect: function () {
+            var url = document.getElementById("ss-url-input").value;
+            var btn = document.getElementById("ss-connect-btn");
+            btn.disabled = true;
+            ServerSync.connect(url).then(function () {
+                UI.showNotification("Connected. The server is now the source of truth for your data.", "success");
+                ServerSyncView.render();
+                ServerSyncView.refreshAllViews();
+            }).catch(function (err) {
+                UI.showNotification("Could not connect: " + err.message, "error");
+                ServerSyncView.render();
+            }).then(function () {
+                btn.disabled = false;
+            });
+        },
+
+        handleSyncNow: function () {
+            ServerSync.syncNow().then(function () {
+                UI.showNotification("Synced with the server.", "success");
+                ServerSyncView.render();
+                ServerSyncView.refreshAllViews();
+            }).catch(function (err) {
+                UI.showNotification("Sync failed: " + err.message, "error");
+                ServerSyncView.render();
+            });
+        },
+
+        handleDisconnect: function () {
+            UI.confirm(
+                "Disconnect from Server",
+                "Stop syncing with the server? Your data stays in this browser's local storage and keeps working normally — you can reconnect at any time.",
+                function () {
+                    ServerSync.disconnect();
+                    document.getElementById("ss-url-input").value = "";
+                    UI.showNotification("Disconnected from the server.", "success");
+                    ServerSyncView.render();
+                }
+            );
+        }
+    };
+
     var BackupView = {
 
         init: function () {
@@ -4055,29 +4370,41 @@
     window.LockScreen = LockScreen;
     window.SettingsView = SettingsView;
     window.DemoData = DemoData;
+    window.ServerSync = ServerSync;
+    window.ServerSyncView = ServerSyncView;
 
     document.addEventListener("DOMContentLoaded", function () {
         Storage.init();
-        UI.init();
-        AccountsView.init();
-        TransactionsView.init();
-        DashboardView.render();
-        ReportsView.init();
-        BackupView.init();
-        SettingsView.init();
-        LockScreen.init();
-        ImportSmsView.init();
 
-        UI.viewRenderers.accounts = AccountsView.render;
-        UI.viewRenderers.transactions = TransactionsView.render;
-        UI.viewRenderers.dashboard = DashboardView.render;
-        UI.viewRenderers.reports = ReportsView.render;
-        // Re-populate the account-mapping dropdowns if the results table
-        // is already showing, in case an account was added/edited on
-        // another view since the last parse.
-        UI.viewRenderers.importSms = function () {
-            if (ImportSmsView.currentResults.length > 0) { ImportSmsView.renderMappingPanel(); }
-        };
+        // Attempt to reconnect to a previously configured server BEFORE any
+        // view renders, so the first paint reflects the server's data (the
+        // source of truth) rather than a stale localStorage snapshot. Falls
+        // back to localStorage automatically if no server is configured, or
+        // if the server can't be reached right now — see ServerSync.init().
+        ServerSync.init().then(function () {
+            UI.init();
+            AccountsView.init();
+            TransactionsView.init();
+            DashboardView.render();
+            ReportsView.init();
+            BackupView.init();
+            SettingsView.init();
+            ServerSyncView.init();
+            LockScreen.init();
+            ImportSmsView.init();
+
+            UI.viewRenderers.accounts = AccountsView.render;
+            UI.viewRenderers.transactions = TransactionsView.render;
+            UI.viewRenderers.dashboard = DashboardView.render;
+            UI.viewRenderers.reports = ReportsView.render;
+            UI.viewRenderers.settings = ServerSyncView.render;
+            // Re-populate the account-mapping dropdowns if the results table
+            // is already showing, in case an account was added/edited on
+            // another view since the last parse.
+            UI.viewRenderers.importSms = function () {
+                if (ImportSmsView.currentResults.length > 0) { ImportSmsView.renderMappingPanel(); }
+            };
+        });
     });
 })();
 </script>
