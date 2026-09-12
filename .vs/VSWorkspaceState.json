@@ -1,7 +1,12 @@
 {
   "ExpandedNodes": [
-    ""
+    "",
+    "\\FinanceDataApi",
+    "\\FinanceDataApi\\Functions",
+    "\\FinanceDataApi\\obj",
+    "\\FinanceDataApi\\obj\\Release",
+    "\\FinanceDataApi\\obj\\Release\\net8.0"
   ],
-  "SelectedNode": "\\FinanceManager.html",
+  "SelectedNode": "\\FinanceDataApi\\Program.cs",
   "PreviewInSolutionExplorer": false
 }

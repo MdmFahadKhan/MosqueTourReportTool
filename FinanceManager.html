@@ -546,6 +546,33 @@
         gap: 10px;
     }
 
+    .modal-box-lg {
+        max-width: 640px;
+    }
+
+    .form-card-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 16px;
+    }
+
+    .form-card-header h2 {
+        margin: 0;
+    }
+
+    .collapse-toggle-btn {
+        background: none;
+        border: none;
+        color: var(--color-gold);
+        font-size: 0.85rem;
+        padding: 4px 8px;
+    }
+
+    .collapsible-body.collapsed {
+        display: none;
+    }
+
     /* ---------- Lock Screen ---------- */
 
     #lock-overlay {
@@ -921,111 +948,68 @@
                     <p>Record and manage your income and expense entries.</p>
                 </div>
 
-                <div class="form-card">
-                    <h2 id="transaction-form-title">Add Transaction</h2>
-                    <form id="transaction-form" novalidate>
-                        <input type="hidden" id="transaction-id-input">
-                        <input type="hidden" id="transaction-created-at-input">
-                        <div class="form-row">
-                            <div class="form-group">
-                                <label for="transaction-date-input">Date</label>
-                                <input type="date" id="transaction-date-input">
-                                <div class="field-error" role="alert" id="transaction-date-error"></div>
-                            </div>
-                            <div class="form-group">
-                                <label for="transaction-type-input">Transaction Type</label>
-                                <select id="transaction-type-input">
-                                    <option value="expense">Expense</option>
-                                    <option value="income">Income</option>
-                                </select>
-                            </div>
-                            <div class="form-group">
-                                <label for="transaction-account-input">Account</label>
-                                <select id="transaction-account-input">
-                                    <option value="">Select account</option>
-                                </select>
-                                <div class="field-error" role="alert" id="transaction-account-error"></div>
-                            </div>
-                        </div>
-                        <div class="form-row">
-                            <div class="form-group">
-                                <label for="transaction-narration-input">Narration</label>
-                                <input type="text" id="transaction-narration-input" list="narration-suggestions" autocomplete="off">
-                                <datalist id="narration-suggestions"></datalist>
-                                <div class="field-error" role="alert" id="transaction-narration-error"></div>
-                            </div>
-                            <div class="form-group">
-                                <label for="transaction-amount-input">Amount (QAR)</label>
-                                <input type="number" id="transaction-amount-input" step="0.01" min="0">
-                                <div class="field-error" role="alert" id="transaction-amount-error"></div>
-                            </div>
-                        </div>
-                        <div class="form-row">
-                            <div class="form-group" style="flex-basis: 100%;">
-                                <label for="transaction-notes-input">Notes (optional)</label>
-                                <textarea id="transaction-notes-input" rows="2"></textarea>
-                            </div>
-                        </div>
-                        <div class="form-actions">
-                            <button type="submit" class="btn btn-primary" id="transaction-submit-btn">Save Transaction</button>
-                            <button type="button" class="btn btn-secondary" id="transaction-cancel-btn" style="display:none;">Cancel</button>
-                        </div>
-                    </form>
+                <div class="form-actions" style="margin-bottom: 16px;">
+                    <button type="button" class="btn btn-primary" id="transaction-add-btn">+ Add Transaction</button>
                 </div>
 
                 <div class="form-card" id="transaction-filter-card">
-                    <h2>Search &amp; Filter</h2>
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label for="filter-narration-input">Search Narration</label>
-                            <input type="text" id="filter-narration-input" placeholder="e.g. Grocery" autocomplete="off">
-                        </div>
-                        <div class="form-group">
-                            <label for="filter-account-input">Account</label>
-                            <select id="filter-account-input">
-                                <option value="">All Accounts</option>
-                            </select>
-                        </div>
-                        <div class="form-group">
-                            <label for="filter-type-input">Transaction Type</label>
-                            <select id="filter-type-input">
-                                <option value="">All</option>
-                                <option value="income">Income</option>
-                                <option value="expense">Expense</option>
-                            </select>
-                        </div>
+                    <div class="form-card-header">
+                        <h2>Search &amp; Filter</h2>
+                        <button type="button" class="collapse-toggle-btn" id="transaction-filter-toggle-btn">&#9662; Hide Filters</button>
                     </div>
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label for="filter-date-from-input">From Date</label>
-                            <input type="date" id="filter-date-from-input">
+                    <div id="transaction-filter-body" class="collapsible-body">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="filter-narration-input">Search Narration</label>
+                                <input type="text" id="filter-narration-input" placeholder="e.g. Grocery" autocomplete="off">
+                            </div>
+                            <div class="form-group">
+                                <label for="filter-account-input">Account</label>
+                                <select id="filter-account-input">
+                                    <option value="">All Accounts</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="filter-type-input">Transaction Type</label>
+                                <select id="filter-type-input">
+                                    <option value="">All</option>
+                                    <option value="income">Income</option>
+                                    <option value="expense">Expense</option>
+                                </select>
+                            </div>
                         </div>
-                        <div class="form-group">
-                            <label for="filter-date-to-input">To Date</label>
-                            <input type="date" id="filter-date-to-input">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="filter-date-from-input">From Date</label>
+                                <input type="date" id="filter-date-from-input">
+                            </div>
+                            <div class="form-group">
+                                <label for="filter-date-to-input">To Date</label>
+                                <input type="date" id="filter-date-to-input">
+                            </div>
+                            <div class="form-group">
+                                <label for="filter-amount-min-input">Minimum Amount</label>
+                                <input type="number" id="filter-amount-min-input" step="0.01" min="0">
+                            </div>
+                            <div class="form-group">
+                                <label for="filter-amount-max-input">Maximum Amount</label>
+                                <input type="number" id="filter-amount-max-input" step="0.01" min="0">
+                            </div>
                         </div>
-                        <div class="form-group">
-                            <label for="filter-amount-min-input">Minimum Amount</label>
-                            <input type="number" id="filter-amount-min-input" step="0.01" min="0">
+                        <div class="form-row">
+                            <div class="form-group" style="flex: 0 0 200px;">
+                                <label for="filter-sort-input">Sort By</label>
+                                <select id="filter-sort-input">
+                                    <option value="dateDesc">Newest first</option>
+                                    <option value="dateAsc">Oldest first</option>
+                                    <option value="amountDesc">Amount: high to low</option>
+                                    <option value="amountAsc">Amount: low to high</option>
+                                </select>
+                            </div>
                         </div>
-                        <div class="form-group">
-                            <label for="filter-amount-max-input">Maximum Amount</label>
-                            <input type="number" id="filter-amount-max-input" step="0.01" min="0">
+                        <div class="form-actions">
+                            <button type="button" class="btn btn-secondary" id="filter-clear-btn">Clear Filters</button>
                         </div>
-                    </div>
-                    <div class="form-row">
-                        <div class="form-group" style="flex: 0 0 200px;">
-                            <label for="filter-sort-input">Sort By</label>
-                            <select id="filter-sort-input">
-                                <option value="dateDesc">Newest first</option>
-                                <option value="dateAsc">Oldest first</option>
-                                <option value="amountDesc">Amount: high to low</option>
-                                <option value="amountAsc">Amount: low to high</option>
-                            </select>
-                        </div>
-                    </div>
-                    <div class="form-actions">
-                        <button type="button" class="btn btn-secondary" id="filter-clear-btn">Clear Filters</button>
                     </div>
                 </div>
 
@@ -1060,34 +1044,8 @@
                     <p>Manage the accounts your transactions belong to.</p>
                 </div>
 
-                <div class="form-card">
-                    <h2 id="account-form-title">Add Account</h2>
-                    <form id="account-form" novalidate>
-                        <input type="hidden" id="account-id-input">
-                        <div class="form-row">
-                            <div class="form-group">
-                                <label for="account-name-input">Account Name</label>
-                                <input type="text" id="account-name-input" autocomplete="off">
-                                <div class="field-error" role="alert" id="account-name-error"></div>
-                            </div>
-                            <div class="form-group">
-                                <label for="account-balance-input">Opening Balance (QAR)</label>
-                                <input type="number" id="account-balance-input" step="0.01" value="0">
-                                <div class="field-error" role="alert" id="account-balance-error"></div>
-                            </div>
-                            <div class="form-group" id="account-status-group" style="display:none;">
-                                <label for="account-status-input">Status</label>
-                                <select id="account-status-input">
-                                    <option value="active">Active</option>
-                                    <option value="inactive">Inactive</option>
-                                </select>
-                            </div>
-                        </div>
-                        <div class="form-actions">
-                            <button type="submit" class="btn btn-primary" id="account-submit-btn">Save Account</button>
-                            <button type="button" class="btn btn-secondary" id="account-cancel-btn" style="display:none;">Cancel</button>
-                        </div>
-                    </form>
+                <div class="form-actions" style="margin-bottom: 16px;">
+                    <button type="button" class="btn btn-primary" id="account-add-btn">+ Add Account</button>
                 </div>
 
                 <div class="data-table-wrap">
@@ -1368,6 +1326,100 @@
         <div id="bottom-nav-scroll"></div>
     </nav>
 
+</div>
+
+<!-- Add/Edit Transaction modal -->
+<div class="modal-overlay" id="transaction-modal">
+    <div class="modal-box modal-box-lg" role="dialog" aria-modal="true" aria-labelledby="transaction-form-title">
+        <div class="form-card-header">
+            <h2 id="transaction-form-title">Add Transaction</h2>
+            <button type="button" class="collapse-toggle-btn" id="transaction-modal-close-x" aria-label="Close">&#10005;</button>
+        </div>
+        <form id="transaction-form" novalidate>
+            <input type="hidden" id="transaction-id-input">
+            <input type="hidden" id="transaction-created-at-input">
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="transaction-date-input">Date</label>
+                    <input type="date" id="transaction-date-input">
+                    <div class="field-error" role="alert" id="transaction-date-error"></div>
+                </div>
+                <div class="form-group">
+                    <label for="transaction-type-input">Transaction Type</label>
+                    <select id="transaction-type-input">
+                        <option value="expense">Expense</option>
+                        <option value="income">Income</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="transaction-account-input">Account</label>
+                    <select id="transaction-account-input">
+                        <option value="">Select account</option>
+                    </select>
+                    <div class="field-error" role="alert" id="transaction-account-error"></div>
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="transaction-narration-input">Narration</label>
+                    <input type="text" id="transaction-narration-input" list="narration-suggestions" autocomplete="off">
+                    <datalist id="narration-suggestions"></datalist>
+                    <div class="field-error" role="alert" id="transaction-narration-error"></div>
+                </div>
+                <div class="form-group">
+                    <label for="transaction-amount-input">Amount (QAR)</label>
+                    <input type="number" id="transaction-amount-input" step="0.01" min="0">
+                    <div class="field-error" role="alert" id="transaction-amount-error"></div>
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-group" style="flex-basis: 100%;">
+                    <label for="transaction-notes-input">Notes (optional)</label>
+                    <textarea id="transaction-notes-input" rows="2"></textarea>
+                </div>
+            </div>
+            <div class="form-actions">
+                <button type="submit" class="btn btn-primary" id="transaction-submit-btn">Save Transaction</button>
+                <button type="button" class="btn btn-secondary" id="transaction-cancel-btn">Cancel</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Add/Edit Account modal -->
+<div class="modal-overlay" id="account-modal">
+    <div class="modal-box" role="dialog" aria-modal="true" aria-labelledby="account-form-title">
+        <div class="form-card-header">
+            <h2 id="account-form-title">Add Account</h2>
+            <button type="button" class="collapse-toggle-btn" id="account-modal-close-x" aria-label="Close">&#10005;</button>
+        </div>
+        <form id="account-form" novalidate>
+            <input type="hidden" id="account-id-input">
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="account-name-input">Account Name</label>
+                    <input type="text" id="account-name-input" autocomplete="off">
+                    <div class="field-error" role="alert" id="account-name-error"></div>
+                </div>
+                <div class="form-group">
+                    <label for="account-balance-input">Opening Balance (QAR)</label>
+                    <input type="number" id="account-balance-input" step="0.01" value="0">
+                    <div class="field-error" role="alert" id="account-balance-error"></div>
+                </div>
+                <div class="form-group" id="account-status-group" style="display:none;">
+                    <label for="account-status-input">Status</label>
+                    <select id="account-status-input">
+                        <option value="active">Active</option>
+                        <option value="inactive">Inactive</option>
+                    </select>
+                </div>
+            </div>
+            <div class="form-actions">
+                <button type="submit" class="btn btn-primary" id="account-submit-btn">Save Account</button>
+                <button type="button" class="btn btn-secondary" id="account-cancel-btn">Cancel</button>
+            </div>
+        </form>
+    </div>
 </div>
 
 <!-- Reusable confirmation modal -->
@@ -2001,6 +2053,36 @@
             confirmBtn.addEventListener("click", handleConfirm);
             cancelBtn.addEventListener("click", handleCancel);
             document.addEventListener("keydown", handleKeydown);
+        },
+
+        // Generic open/close for the Add/Edit form modals (Transaction,
+        // Account). Closes on Escape or on clicking the dark backdrop,
+        // same as UI.confirm above.
+        openModal: function (modalId, focusEl) {
+            var overlay = document.getElementById(modalId);
+            overlay.classList.add("open");
+            if (focusEl) { focusEl.focus(); }
+
+            function handleOverlayClick(event) {
+                if (event.target === overlay) { UI.closeModal(modalId); }
+            }
+            function handleKeydown(event) {
+                if (event.key === "Escape") { UI.closeModal(modalId); }
+            }
+
+            overlay._closeHandlers = { handleOverlayClick: handleOverlayClick, handleKeydown: handleKeydown };
+            overlay.addEventListener("click", handleOverlayClick);
+            document.addEventListener("keydown", handleKeydown);
+        },
+
+        closeModal: function (modalId) {
+            var overlay = document.getElementById(modalId);
+            overlay.classList.remove("open");
+            if (overlay._closeHandlers) {
+                overlay.removeEventListener("click", overlay._closeHandlers.handleOverlayClick);
+                document.removeEventListener("keydown", overlay._closeHandlers.handleKeydown);
+                overlay._closeHandlers = null;
+            }
         }
     };
 
@@ -2169,6 +2251,15 @@
         init: function () {
             document.getElementById("account-form").addEventListener("submit", AccountsView.handleSubmit);
             document.getElementById("account-cancel-btn").addEventListener("click", AccountsView.cancelEdit);
+
+            document.getElementById("account-add-btn").addEventListener("click", function () {
+                AccountsView.cancelEdit();
+                UI.openModal("account-modal", document.getElementById("account-name-input"));
+            });
+            document.getElementById("account-modal-close-x").addEventListener("click", function () {
+                UI.closeModal("account-modal");
+            });
+
             AccountsView.render();
         },
 
@@ -2318,9 +2409,8 @@
 
             document.getElementById("account-form-title").textContent = "Edit Account";
             document.getElementById("account-submit-btn").textContent = "Update Account";
-            document.getElementById("account-cancel-btn").style.display = "inline-block";
 
-            document.getElementById("account-form").scrollIntoView({ behavior: "smooth", block: "start" });
+            UI.openModal("account-modal", document.getElementById("account-name-input"));
         },
 
         cancelEdit: function () {
@@ -2332,7 +2422,7 @@
             document.getElementById("account-status-group").style.display = "none";
             document.getElementById("account-form-title").textContent = "Add Account";
             document.getElementById("account-submit-btn").textContent = "Save Account";
-            document.getElementById("account-cancel-btn").style.display = "none";
+            UI.closeModal("account-modal");
         },
 
         confirmDeactivate: function (id) {
@@ -2445,14 +2535,40 @@
             sortBy: "dateDesc"
         },
 
+        // Collapsed by default so the table has more room; toggled via
+        // #transaction-filter-toggle-btn (does not affect active filters).
+        filterCollapsed: true,
+
         init: function () {
             document.getElementById("transaction-form").addEventListener("submit", TransactionsView.handleSubmit);
             document.getElementById("transaction-cancel-btn").addEventListener("click", TransactionsView.cancelEdit);
             document.getElementById("transaction-select-all-checkbox").addEventListener("change", TransactionsView.handleSelectAllChange);
             document.getElementById("transaction-delete-selected-btn").addEventListener("click", TransactionsView.confirmDeleteSelected);
+
+            document.getElementById("transaction-add-btn").addEventListener("click", function () {
+                TransactionsView.cancelEdit();
+                UI.openModal("transaction-modal", document.getElementById("transaction-date-input"));
+            });
+            document.getElementById("transaction-modal-close-x").addEventListener("click", function () {
+                UI.closeModal("transaction-modal");
+            });
+            document.getElementById("transaction-filter-toggle-btn").addEventListener("click", TransactionsView.toggleFilterPanel);
+            TransactionsView.applyFilterCollapsedState();
+
             TransactionsView.resetDefaults();
             TransactionsView.bindFilterEvents();
             TransactionsView.render();
+        },
+
+        toggleFilterPanel: function () {
+            TransactionsView.filterCollapsed = !TransactionsView.filterCollapsed;
+            TransactionsView.applyFilterCollapsedState();
+        },
+
+        applyFilterCollapsedState: function () {
+            document.getElementById("transaction-filter-body").classList.toggle("collapsed", TransactionsView.filterCollapsed);
+            document.getElementById("transaction-filter-toggle-btn").innerHTML =
+                TransactionsView.filterCollapsed ? "&#9656; Show Filters" : "&#9662; Hide Filters";
         },
 
         bindFilterEvents: function () {
@@ -2849,9 +2965,8 @@
 
             document.getElementById("transaction-form-title").textContent = "Edit Transaction";
             document.getElementById("transaction-submit-btn").textContent = "Update Transaction";
-            document.getElementById("transaction-cancel-btn").style.display = "inline-block";
 
-            document.getElementById("transaction-form").scrollIntoView({ behavior: "smooth", block: "start" });
+            UI.openModal("transaction-modal", document.getElementById("transaction-date-input"));
         },
 
         cancelEdit: function () {
@@ -2864,7 +2979,7 @@
             TransactionsView.resetDefaults();
             document.getElementById("transaction-form-title").textContent = "Add Transaction";
             document.getElementById("transaction-submit-btn").textContent = "Save Transaction";
-            document.getElementById("transaction-cancel-btn").style.display = "none";
+            UI.closeModal("transaction-modal");
         },
 
         confirmDelete: function (id) {
