@@ -262,6 +262,15 @@
         color: var(--color-gold);
     }
 
+    .btn-danger {
+        background: var(--color-danger);
+        color: #fff;
+    }
+
+    .btn-danger:hover {
+        background: #d9634a;
+    }
+
     .btn-danger-text {
         background: none;
         border: none;
@@ -1020,10 +1029,16 @@
                     </div>
                 </div>
 
+                <div class="form-actions" id="transaction-bulk-actions" style="margin-bottom: 12px; display:none;">
+                    <span id="transaction-selected-count" style="align-self:center; font-size:0.85rem; color:var(--color-text-muted);"></span>
+                    <button type="button" class="btn btn-danger" id="transaction-delete-selected-btn">Delete Selected</button>
+                </div>
+
                 <div class="data-table-wrap">
                     <table class="data-table">
                         <thead>
                             <tr>
+                                <th><input type="checkbox" id="transaction-select-all-checkbox" aria-label="Select all transactions"></th>
                                 <th>S.No</th>
                                 <th>Date</th>
                                 <th>Type</th>
@@ -2188,6 +2203,7 @@
     var TransactionsView = {
 
         editingId: null,
+        selectedIds: {}, // map: transaction id -> true (bulk-delete selection)
 
         filters: {
             narration: "",
@@ -2203,6 +2219,8 @@
         init: function () {
             document.getElementById("transaction-form").addEventListener("submit", TransactionsView.handleSubmit);
             document.getElementById("transaction-cancel-btn").addEventListener("click", TransactionsView.cancelEdit);
+            document.getElementById("transaction-select-all-checkbox").addEventListener("change", TransactionsView.handleSelectAllChange);
+            document.getElementById("transaction-delete-selected-btn").addEventListener("click", TransactionsView.confirmDeleteSelected);
             TransactionsView.resetDefaults();
             TransactionsView.bindFilterEvents();
             TransactionsView.render();
@@ -2297,39 +2315,6 @@
             TransactionsView.refreshNarrationSuggestions();
         },
 
-        render: function () {
-            TransactionsView.refreshNarrationSuggestions();
-            // Refresh account dropdown too, in case accounts changed while
-            // this view was hidden (name edits, new accounts, deactivation).
-            var select = document.getElementById("transaction-account-input");
-            TransactionsView.refreshAccountOptions(select.value || null);
-            TransactionsView.refreshFilterAccountOptions();
-
-            var totalCount = Transactions.getAll().length;
-            var transactions = TransactionsView.getAccountAwareList();
-            var tbody = document.getElementById("transactions-table-body");
-            var cardsWrap = document.getElementById("transactions-cards");
-
-            if (transactions.length === 0) {
-                var emptyMsg = totalCount === 0
-                    ? "No transactions have been recorded yet.<br>Add your first income or expense transaction to get started."
-                    : "No transactions found.<br>Try adjusting or clearing your filters.";
-                tbody.innerHTML = '<tr><td colspan="7"><div class="empty-state">' + emptyMsg + "</div></td></tr>";
-                cardsWrap.innerHTML = '<div class="empty-state">' + emptyMsg + "</div>";
-                return;
-            }
-
-            tbody.innerHTML = transactions.map(TransactionsView.renderRow).join("");
-            cardsWrap.innerHTML = transactions.map(TransactionsView.renderCard).join("");
-
-            transactions.forEach(function (t) {
-                var editBtn = document.getElementById("txn-edit-" + t.id);
-                var deleteBtn = document.getElementById("txn-delete-" + t.id);
-                if (editBtn) { editBtn.addEventListener("click", function () { TransactionsView.startEdit(t.id); }); }
-                if (deleteBtn) { deleteBtn.addEventListener("click", function () { TransactionsView.confirmDelete(t.id); }); }
-            });
-        },
-
         // Applies the current filters, then sorts, then annotates with
         // S.No and resolved account name for display. Filters are combined
         // with AND, matching §13's example.
@@ -2372,12 +2357,133 @@
             });
         },
 
+        // ---- Bulk selection helpers ----
+
+        pruneSelection: function () {
+            var allIds = {};
+            Transactions.getAll().forEach(function (t) { allIds[t.id] = true; });
+            Object.keys(TransactionsView.selectedIds).forEach(function (id) {
+                if (!allIds[id]) { delete TransactionsView.selectedIds[id]; }
+            });
+        },
+
+        getSelectedCount: function () {
+            return Object.keys(TransactionsView.selectedIds).length;
+        },
+
+        toggleSelected: function (id, checked) {
+            if (checked) { TransactionsView.selectedIds[id] = true; }
+            else { delete TransactionsView.selectedIds[id]; }
+            TransactionsView.updateBulkActionsUi();
+            TransactionsView.updateSelectAllCheckboxState();
+        },
+
+        handleSelectAllChange: function (event) {
+            var checked = event.target.checked;
+            TransactionsView.getAccountAwareList().forEach(function (t) {
+                if (checked) { TransactionsView.selectedIds[t.id] = true; }
+                else { delete TransactionsView.selectedIds[t.id]; }
+            });
+            TransactionsView.render();
+        },
+
+        // Reflects only the currently filtered/visible rows, matching
+        // how every other control on this view is filter-scoped.
+        updateSelectAllCheckboxState: function () {
+            var checkbox = document.getElementById("transaction-select-all-checkbox");
+            var visibleList = TransactionsView.getAccountAwareList();
+            if (visibleList.length === 0) {
+                checkbox.checked = false;
+                checkbox.indeterminate = false;
+                return;
+            }
+            var selectedVisibleCount = visibleList.filter(function (t) {
+                return !!TransactionsView.selectedIds[t.id];
+            }).length;
+            checkbox.checked = selectedVisibleCount === visibleList.length;
+            checkbox.indeterminate = selectedVisibleCount > 0 && selectedVisibleCount < visibleList.length;
+        },
+
+        updateBulkActionsUi: function () {
+            var count = TransactionsView.getSelectedCount();
+            document.getElementById("transaction-bulk-actions").style.display = count > 0 ? "flex" : "none";
+            document.getElementById("transaction-selected-count").textContent = count + " transaction(s) selected";
+        },
+
+        confirmDeleteSelected: function () {
+            var count = TransactionsView.getSelectedCount();
+            if (count === 0) { return; }
+            UI.confirm(
+                "Delete Selected Transactions",
+                "Permanently delete " + count + " selected transaction(s)? This cannot be undone.",
+                function () {
+                    Object.keys(TransactionsView.selectedIds).forEach(function (id) {
+                        Transactions.remove(id);
+                    });
+                    TransactionsView.selectedIds = {};
+                    UI.showNotification(count + " transaction(s) deleted.", "success");
+                    TransactionsView.render();
+                    DashboardView.render();
+                    ReportsView.render();
+                }
+            );
+        },
+
+        render: function () {
+            TransactionsView.refreshNarrationSuggestions();
+            // Refresh account dropdown too, in case accounts changed while
+            // this view was hidden (name edits, new accounts, deactivation).
+            var select = document.getElementById("transaction-account-input");
+            TransactionsView.refreshAccountOptions(select.value || null);
+            TransactionsView.refreshFilterAccountOptions();
+            TransactionsView.pruneSelection();
+
+            var totalCount = Transactions.getAll().length;
+            var transactions = TransactionsView.getAccountAwareList();
+            var tbody = document.getElementById("transactions-table-body");
+            var cardsWrap = document.getElementById("transactions-cards");
+
+            if (transactions.length === 0) {
+                var emptyMsg = totalCount === 0
+                    ? "No transactions have been recorded yet.<br>Add your first income or expense transaction to get started."
+                    : "No transactions found.<br>Try adjusting or clearing your filters.";
+                tbody.innerHTML = '<tr><td colspan="8"><div class="empty-state">' + emptyMsg + "</div></td></tr>";
+                cardsWrap.innerHTML = '<div class="empty-state">' + emptyMsg + "</div>";
+                TransactionsView.updateBulkActionsUi();
+                TransactionsView.updateSelectAllCheckboxState();
+                return;
+            }
+
+            tbody.innerHTML = transactions.map(TransactionsView.renderRow).join("");
+            cardsWrap.innerHTML = transactions.map(TransactionsView.renderCard).join("");
+
+            transactions.forEach(function (t) {
+                var editBtn = document.getElementById("txn-edit-" + t.id);
+                var deleteBtn = document.getElementById("txn-delete-" + t.id);
+                var selectCheckbox = document.getElementById("txn-select-" + t.id);
+                var selectCheckboxCard = document.getElementById("txn-select-card-" + t.id);
+                if (editBtn) { editBtn.addEventListener("click", function () { TransactionsView.startEdit(t.id); }); }
+                if (deleteBtn) { deleteBtn.addEventListener("click", function () { TransactionsView.confirmDelete(t.id); }); }
+                if (selectCheckbox) {
+                    selectCheckbox.addEventListener("change", function () { TransactionsView.toggleSelected(t.id, selectCheckbox.checked); });
+                }
+                if (selectCheckboxCard) {
+                    selectCheckboxCard.addEventListener("change", function () { TransactionsView.toggleSelected(t.id, selectCheckboxCard.checked); });
+                }
+            });
+
+            TransactionsView.updateBulkActionsUi();
+            TransactionsView.updateSelectAllCheckboxState();
+        },
+
         renderRow: function (t) {
             var typeClass = t.type === "income" ? "type-income" : "type-expense";
             var typeLabel = t.type === "income" ? "Income" : "Expense";
             var amountClass = t.type === "income" ? "amount-income" : "amount-expense";
+            var isSelected = !!TransactionsView.selectedIds[t.id];
             return (
                 "<tr>" +
+                    '<td><input type="checkbox" id="txn-select-' + t.id + '"' + (isSelected ? " checked" : "") + '></td>' +
                     "<td>" + t.sNo + "</td>" +
                     "<td>" + Utilities.formatDateDisplay(t.date) + "</td>" +
                     '<td><span class="status-badge ' + typeClass + '">' + typeLabel + "</span></td>" +
@@ -2396,10 +2502,14 @@
             var typeClass = t.type === "income" ? "type-income" : "type-expense";
             var typeLabel = t.type === "income" ? "Income" : "Expense";
             var amountClass = t.type === "income" ? "amount-income" : "amount-expense";
+            var isSelected = !!TransactionsView.selectedIds[t.id];
             return (
                 '<div class="record-card">' +
                     '<div class="record-card-top">' +
-                        "<span class=\"record-card-title\">" + Utilities.escapeHtml(t.narration) + "</span>" +
+                        '<span style="display:flex; align-items:center; gap:8px;">' +
+                            '<input type="checkbox" id="txn-select-card-' + t.id + '"' + (isSelected ? " checked" : "") + '>' +
+                            '<span class="record-card-title">' + Utilities.escapeHtml(t.narration) + "</span>" +
+                        "</span>" +
                         '<span class="status-badge ' + typeClass + '">' + typeLabel + "</span>" +
                     "</div>" +
                     '<div class="record-card-row"><span>' + Utilities.formatDateDisplay(t.date) + '</span><span>' + Utilities.escapeHtml(t.accountName) + "</span></div>" +
