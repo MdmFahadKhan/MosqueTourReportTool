@@ -7,7 +7,7 @@
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
   <meta name="apple-mobile-web-app-title" content="Tour Report" />
-  <title>Mosque Tour Activity Report</title>
+  <title>Mosque Tour Activity Report - Group </title>
   <link rel="manifest" href="data:application/json;charset=utf-8,%7B%22name%22%3A%22Mosque%20Tour%20Activity%20Report%22%2C%22short_name%22%3A%22Tour%20Report%22%2C%22start_url%22%3A%22.%22%2C%22display%22%3A%22standalone%22%2C%22background_color%22%3A%22%23EEF2FF%22%2C%22theme_color%22%3A%22%231565C0%22%7D" />
 
   <style>
@@ -421,6 +421,7 @@
     }
     .vol-row:last-child { margin-bottom: 0; }
     .vol-row-name { font-size: 15px; font-weight: 700; color: var(--text-primary); word-break: break-word; padding-inline-end: 8px; }
+    .vol-row-time { font-size: 11px; font-weight: 600; color: var(--text-secondary); margin-top: 2px; }
     .vol-row-actions { display: flex; gap: 8px; flex-shrink: 0; }
     .vol-icon-btn {
       background: var(--white);
@@ -591,6 +592,27 @@
     }
     .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
 
+    /* ── Autosave indicator ── */
+    .autosave-indicator {
+      position: fixed;
+      bottom: 152px;
+      left: 16px;
+      background: rgba(13,27,42,0.72);
+      color: #fff;
+      font-size: 11px;
+      font-weight: 600;
+      padding: 5px 11px;
+      border-radius: 14px;
+      z-index: 150;
+      opacity: 0;
+      transform: translateY(6px);
+      transition: opacity .35s ease, transform .35s ease;
+      pointer-events: none;
+      white-space: nowrap;
+    }
+    .autosave-indicator.show { opacity: 1; transform: translateY(0); }
+    body.rtl .autosave-indicator { left: auto; right: 16px; }
+
     /* ── RTL ── */
     body.rtl .stepper-input { direction: ltr; }
     body.rtl .time-text-input { direction: ltr; text-align: right; }
@@ -610,9 +632,9 @@
 <!-- ═══ MAIN ═══ -->
 <main class="main">
 
-  <!-- Date & Time -->
+  <!-- Date -->
   <div class="card">
-    <div class="card-title" id="sect-datetime">Date &amp; Time</div>
+    <div class="card-title" id="sect-datetime">Date</div>
 
     <div class="field">
       <label for="f-date">
@@ -622,42 +644,9 @@
       <input type="date" id="f-date" />
       <div class="error-msg" id="err-date" data-en="Date is required" data-ar="التاريخ مطلوب">Date is required</div>
     </div>
-
-    <div class="time-row">
-      <!-- Shift Start -->
-      <div class="field">
-        <label>
-          <span class="lbl-icon"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" width="26" height="26" fill="none" stroke-linecap="round" stroke-linejoin="round"><circle cx="16" cy="16" r="12" fill="#E3F0FF" stroke="#1565C0" stroke-width="2"/><circle cx="16" cy="16" r="1.5" fill="#1565C0"/><line x1="16" y1="16" x2="16" y2="8"  stroke="#1565C0" stroke-width="2"/><line x1="16" y1="16" x2="10" y2="16" stroke="#1565C0" stroke-width="2"/><circle cx="16" cy="6"  r="1" fill="#1565C0"/><circle cx="16" cy="26" r="1" fill="#1565C0"/><circle cx="6"  cy="16" r="1" fill="#1565C0"/><circle cx="26" cy="16" r="1" fill="#1565C0"/></svg></span>
-          <span id="lbl-start">Shift Start</span><span class="req">*</span>
-        </label>
-        <div class="time-input-group" id="tig-start">
-          <input class="time-text-input" id="f-start-text" type="text"
-                 inputmode="numeric" maxlength="8" placeholder="09:00 AM"
-                 oninput="onTimeTextInput(this,'start')"
-                 onblur="onTimeTextBlur(this,'start')" />
-          <button class="time-picker-btn" onclick="openTimePicker('start')" title="Open picker"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="#1565C0" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="1.2" fill="#1565C0"/><line x1="12" y1="12" x2="12" y2="7"  stroke="#1565C0" stroke-width="2"/><line x1="12" y1="12" x2="16" y2="12" stroke="#1565C0" stroke-width="2"/></svg></button>
-        </div>
-        <div class="error-msg" id="err-start" data-en="Enter valid time (e.g. 09:00 AM)" data-ar="أدخل وقتاً صحيحاً (مثال: 09:00 AM)">Enter valid time</div>
-      </div>
-      <!-- Shift End -->
-      <div class="field">
-        <label>
-          <span class="lbl-icon"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" width="26" height="26" fill="none" stroke-linecap="round" stroke-linejoin="round"><circle cx="16" cy="16" r="12" fill="#E3F0FF" stroke="#1565C0" stroke-width="2"/><circle cx="16" cy="16" r="1.5" fill="#1565C0"/><line x1="16" y1="16" x2="16" y2="8"  stroke="#1565C0" stroke-width="2"/><line x1="16" y1="16" x2="22" y2="21" stroke="#1565C0" stroke-width="2"/><circle cx="16" cy="6"  r="1" fill="#1565C0"/><circle cx="16" cy="26" r="1" fill="#1565C0"/><circle cx="6"  cy="16" r="1" fill="#1565C0"/><circle cx="26" cy="16" r="1" fill="#1565C0"/></svg></span>
-          <span id="lbl-end">Shift End</span><span class="req">*</span>
-        </label>
-        <div class="time-input-group" id="tig-end">
-          <input class="time-text-input" id="f-end-text" type="text"
-                 inputmode="numeric" maxlength="8" placeholder="12:00 PM"
-                 oninput="onTimeTextInput(this,'end')"
-                 onblur="onTimeTextBlur(this,'end')" />
-          <button class="time-picker-btn" onclick="openTimePicker('end')" title="Open picker"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="#1565C0" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="1.2" fill="#1565C0"/><line x1="12" y1="12" x2="12" y2="7"  stroke="#1565C0" stroke-width="2"/><line x1="12" y1="12" x2="16" y2="12" stroke="#1565C0" stroke-width="2"/></svg></button>
-        </div>
-        <div class="error-msg" id="err-end" data-en="Must be after Shift Start" data-ar="يجب أن يكون بعد وقت البدء">Must be after Shift Start</div>
-      </div>
-    </div>
   </div>
 
-  <!-- Volunteers (dynamic list, each entry has its own volunteer count + stats) -->
+  <!-- Volunteers (dynamic list, each entry has its own shift time + stats) -->
   <div class="card">
     <div class="card-title" id="sect-volunteers">Volunteers</div>
     <div id="volList"></div>
@@ -727,9 +716,42 @@
     </div>
 
     <div class="field">
-      <label for="f-vol-name"><span id="lbl-volname">Volunteer Name</span><span class="req">*</span></label>
+      <label for="f-vol-name"><span id="lbl-volname">Volunteer Name/ Remarks</span><span class="req">*</span></label>
       <input type="text" class="plain-input" id="f-vol-name" maxlength="100" placeholder="Enter name" />
       <div class="error-msg" id="err-volname" data-en="Name is required" data-ar="الاسم مطلوب">Name is required</div>
+    </div>
+
+    <div class="time-row">
+      <!-- Shift Start (per volunteer — volunteers may work different times) -->
+      <div class="field">
+        <label>
+          <span class="lbl-icon"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" width="26" height="26" fill="none" stroke-linecap="round" stroke-linejoin="round"><circle cx="16" cy="16" r="12" fill="#E3F0FF" stroke="#1565C0" stroke-width="2"/><circle cx="16" cy="16" r="1.5" fill="#1565C0"/><line x1="16" y1="16" x2="16" y2="8"  stroke="#1565C0" stroke-width="2"/><line x1="16" y1="16" x2="10" y2="16" stroke="#1565C0" stroke-width="2"/><circle cx="16" cy="6"  r="1" fill="#1565C0"/><circle cx="16" cy="26" r="1" fill="#1565C0"/><circle cx="6"  cy="16" r="1" fill="#1565C0"/><circle cx="26" cy="16" r="1" fill="#1565C0"/></svg></span>
+          <span id="lbl-start">Shift Start</span><span class="req">*</span>
+        </label>
+        <div class="time-input-group" id="tig-start">
+          <input class="time-text-input" id="f-start-text" type="text"
+                 inputmode="numeric" maxlength="8" placeholder="09:00 AM"
+                 oninput="onTimeTextInput(this,'start')"
+                 onblur="onTimeTextBlur(this,'start')" />
+          <button class="time-picker-btn" onclick="openTimePicker('start')" title="Open picker"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="#1565C0" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="1.2" fill="#1565C0"/><line x1="12" y1="12" x2="12" y2="7"  stroke="#1565C0" stroke-width="2"/><line x1="12" y1="12" x2="16" y2="12" stroke="#1565C0" stroke-width="2"/></svg></button>
+        </div>
+        <div class="error-msg" id="err-start" data-en="Enter valid time (e.g. 09:00 AM)" data-ar="أدخل وقتاً صحيحاً (مثال: 09:00 AM)">Enter valid time</div>
+      </div>
+      <!-- Shift End (per volunteer) -->
+      <div class="field">
+        <label>
+          <span class="lbl-icon"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" width="26" height="26" fill="none" stroke-linecap="round" stroke-linejoin="round"><circle cx="16" cy="16" r="12" fill="#E3F0FF" stroke="#1565C0" stroke-width="2"/><circle cx="16" cy="16" r="1.5" fill="#1565C0"/><line x1="16" y1="16" x2="16" y2="8"  stroke="#1565C0" stroke-width="2"/><line x1="16" y1="16" x2="22" y2="21" stroke="#1565C0" stroke-width="2"/><circle cx="16" cy="6"  r="1" fill="#1565C0"/><circle cx="16" cy="26" r="1" fill="#1565C0"/><circle cx="6"  cy="16" r="1" fill="#1565C0"/><circle cx="26" cy="16" r="1" fill="#1565C0"/></svg></span>
+          <span id="lbl-end">Shift End</span><span class="req">*</span>
+        </label>
+        <div class="time-input-group" id="tig-end">
+          <input class="time-text-input" id="f-end-text" type="text"
+                 inputmode="numeric" maxlength="8" placeholder="12:00 PM"
+                 oninput="onTimeTextInput(this,'end')"
+                 onblur="onTimeTextBlur(this,'end')" />
+          <button class="time-picker-btn" onclick="openTimePicker('end')" title="Open picker"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="#1565C0" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="1.2" fill="#1565C0"/><line x1="12" y1="12" x2="12" y2="7"  stroke="#1565C0" stroke-width="2"/><line x1="12" y1="12" x2="16" y2="12" stroke="#1565C0" stroke-width="2"/></svg></button>
+        </div>
+        <div class="error-msg" id="err-end" data-en="Must be after Shift Start" data-ar="يجب أن يكون بعد وقت البدء">Must be after Shift Start</div>
+      </div>
     </div>
 
     <div class="field">
@@ -823,6 +845,8 @@
 
 <!-- Toast -->
 <div class="toast" id="toast"></div>
+<!-- Autosave indicator -->
+<div class="autosave-indicator" id="autosaveStatus"></div>
 
 <!-- ═══ SCRIPT ═══ -->
 <script>
@@ -833,7 +857,7 @@ const I18N = {
   en: {
     hdrTitle:      "Daily Tour Activity Report",
     hdrSub:        "Mosque Volunteer System",
-    sectDatetime:  "Date & Time",
+    sectDatetime:  "Date",
     sectStats:     "Statistics",
     sectVolunteers:"Volunteers",
     sectActions:   "Actions",
@@ -846,7 +870,7 @@ const I18N = {
     lblDia:        "Discussions / Dialogues",
     lblBro:        "Brochures Distributed",
     lblNm:         "New Muslims",
-    lblVolName:    "Volunteer Name",
+    lblVolName:    "Volunteer Name/ Remarks",
     phVolName:     "Enter name",
     btnSave:       "Save",
     btnCopy:       "Copy to Clipboard",
@@ -877,6 +901,7 @@ const I18N = {
     toastSelected: "✅ Text selected — long-press to copy",
     toastVolSaved: "✅ Volunteer saved",
     toastVolDeleted:"🗑️ Volunteer removed",
+    autosavedAt:   "Auto-saved",
     errTimeInvalid:"Enter valid time (e.g. 09:00 AM)",
     errEndTime:    "Shift End must be after Shift Start",
     errVolName:    "Name is required",
@@ -895,7 +920,7 @@ const I18N = {
   ar: {
     hdrTitle:      "تقرير نشاط الجولة اليومية",
     hdrSub:        "نظام المتطوعين في المسجد",
-    sectDatetime:  "التاريخ والوقت",
+    sectDatetime:  "التاريخ",
     sectStats:     "الإحصائيات",
     sectVolunteers:"المتطوعون",
     sectActions:   "الإجراءات",
@@ -908,7 +933,7 @@ const I18N = {
     lblDia:        "النقاشات / الحوارات",
     lblBro:        "الكتيبات الموزعة",
     lblNm:         "المسلمون الجدد",
-    lblVolName:    "اسم المتطوع",
+    lblVolName:    "اسم المتطوع / ملاحظات",
     phVolName:     "أدخل الاسم",
     btnSave:       "حفظ",
     btnCopy:       "نسخ إلى الحافظة",
@@ -939,6 +964,7 @@ const I18N = {
     toastSelected: "✅ تم التحديد — اضغط مطولاً للنسخ",
     toastVolSaved: "✅ تم حفظ المتطوع",
     toastVolDeleted:"🗑️ تم حذف المتطوع",
+    autosavedAt:   "تم الحفظ التلقائي",
     errTimeInvalid:"أدخل وقتاً صحيحاً (مثال: 09:00 AM)",
     errEndTime:    "يجب أن تكون نهاية الوردية بعد البداية",
     errVolName:    "الاسم مطلوب",
@@ -1016,7 +1042,7 @@ function toggleLang() {
   applyLang();
 }
 
-/* ══ Stepper (generic — reused by shift-level and per-volunteer fields) ══ */
+/* ══ Stepper (generic — reused by per-volunteer fields) ══ */
 function stepChange(inputId, delta, wid) {
   const inp = document.getElementById(inputId);
   inp.value = Math.max(0, (parseInt(inp.value,10)||0) + delta);
@@ -1026,11 +1052,11 @@ function onStepInput(inp, wid) { if (parseInt(inp.value,10) < 0) inp.value = 0; 
 function stepFocus(wid) { document.getElementById(wid).classList.add("focused"); }
 function stepBlur(wid)  { document.getElementById(wid).classList.remove("focused"); }
 
-/* ══ Time text input ═══════════════════════════════════════════════════
+/* ══ Time text input (per-volunteer Shift Start/End inside the modal) ═══
    Accepts:  "9", "09", "900", "9:00", "9:00 AM", "09:00 AM" etc.
    Auto-formats as user types digits.
 ═══════════════════════════════════════════════════════════════════════ */
-const timeValues = { start: "", end: "" }; // stores "HH:MM" 24h
+const timeValues = { start: "", end: "" }; // "HH:MM" 24h — scratch values for the volunteer modal currently open
 
 function onTimeTextInput(inp, which) {
   // allow only digits, colon, space, A, P, M
@@ -1057,7 +1083,7 @@ function onTimeTextBlur(inp, which) {
   } else if (inp.value.trim() === "") {
     timeValues[which] = "";
   } else {
-    // leave the typed value but mark invalid (will be caught by validate)
+    // leave the typed value but mark invalid (will be caught by validation)
     timeValues[which] = "";
   }
 }
@@ -1184,7 +1210,7 @@ function confirmTime() {
   closeTimePicker();
 }
 
-/* ══ Volunteers (one shift → many volunteers → each with own stats) ═════ */
+/* ══ Volunteers (each entry now carries its own Shift Start/End + stats) ═ */
 let volunteers = [];
 let editingVolIndex = null; // null = adding new, number = editing that index
 
@@ -1202,7 +1228,10 @@ function renderVolunteerList() {
   }
   container.innerHTML = volunteers.map((vol, i) => `
     <div class="vol-row">
-      <div class="vol-row-name">${escapeHtml(vol.name)} <span style="opacity:.6;font-weight:600;font-size:12px;">(${vol.count})</span></div>
+      <div>
+        <div class="vol-row-name">${escapeHtml(vol.name)} <span style="opacity:.6;font-weight:600;font-size:12px;">(${vol.count})</span></div>
+        <div class="vol-row-time">${vol.start ? fmtTime(vol.start) : "—"} – ${vol.end ? fmtTime(vol.end) : "—"}</div>
+      </div>
       <div class="vol-row-actions">
         <button class="vol-icon-btn" onclick="openVolunteerModal(${i})" title="Edit">✎</button>
         <button class="vol-icon-btn vol-icon-danger" onclick="deleteVolunteer(${i})" title="Delete">🗑</button>
@@ -1220,13 +1249,22 @@ function openVolunteerModal(index) {
   document.getElementById("volDeleteBtn").style.display = isEdit ? "flex" : "none";
   document.getElementById("volModalActions").style.gridTemplateColumns = isEdit ? "1fr 1fr" : "1fr";
 
-  const data = isEdit ? volunteers[editingVolIndex] : { name:"", count:0, visitors:0, dialogues:0, brochures:0, newmuslims:0 };
+  const data = isEdit ? volunteers[editingVolIndex] : { name:"", start:"", end:"", count:0, visitors:0, dialogues:0, brochures:0, newmuslims:0 };
   document.getElementById("f-vol-name").value = data.name;
   document.getElementById("f-vol-count").value = data.count;
   document.getElementById("f-vol-visitors").value = data.visitors;
   document.getElementById("f-vol-dialogues").value = data.dialogues;
   document.getElementById("f-vol-brochures").value = data.brochures;
   document.getElementById("f-vol-newmuslims").value = data.newmuslims;
+
+  timeValues.start = data.start || "";
+  timeValues.end   = data.end   || "";
+  document.getElementById("f-start-text").value = data.start ? fmtTime(data.start) : "";
+  document.getElementById("f-end-text").value   = data.end   ? fmtTime(data.end)   : "";
+  document.getElementById("tig-start").classList.remove("invalid");
+  document.getElementById("tig-end").classList.remove("invalid");
+  document.getElementById("err-start").classList.remove("visible");
+  document.getElementById("err-end").classList.remove("visible");
 
   document.getElementById("err-volname").classList.remove("visible");
   document.getElementById("f-vol-name").classList.remove("invalid");
@@ -1240,18 +1278,56 @@ function closeVolunteerModal() {
 function handleVolOverlayClick(e) {
   if (e.target === document.getElementById("volModalOverlay")) closeVolunteerModal();
 }
+
 function saveVolunteerModal() {
   const t = I18N[lang];
+  let ok = true;
+
   const nameEl = document.getElementById("f-vol-name");
   const name = nameEl.value.trim();
   if (!name) {
     document.getElementById("err-volname").textContent = t.errVolName;
     document.getElementById("err-volname").classList.add("visible");
     nameEl.classList.add("invalid");
-    return;
+    ok = false;
   }
+
+  // Resolve start/end from typed text if the blur handler hasn't fired yet
+  const startText = document.getElementById("f-start-text").value.trim();
+  if (startText && !timeValues.start) {
+    const p = parseTimeText(startText);
+    if (p) timeValues.start = p;
+  }
+  if (!timeValues.start) {
+    document.getElementById("err-start").textContent = t.errTimeInvalid;
+    document.getElementById("err-start").classList.add("visible");
+    document.getElementById("tig-start").classList.add("invalid");
+    ok = false;
+  }
+
+  const endText = document.getElementById("f-end-text").value.trim();
+  if (endText && !timeValues.end) {
+    const p = parseTimeText(endText);
+    if (p) timeValues.end = p;
+  }
+  if (!timeValues.end) {
+    document.getElementById("err-end").textContent = t.errTimeInvalid;
+    document.getElementById("err-end").classList.add("visible");
+    document.getElementById("tig-end").classList.add("invalid");
+    ok = false;
+  } else if (timeValues.start && timeValues.end <= timeValues.start) {
+    document.getElementById("err-end").textContent = t.errEndTime;
+    document.getElementById("err-end").classList.add("visible");
+    document.getElementById("tig-end").classList.add("invalid");
+    ok = false;
+  }
+
+  if (!ok) return;
+
   const entry = {
     name,
+    start: timeValues.start,
+    end:   timeValues.end,
     count:      parseInt(document.getElementById("f-vol-count").value,10)      || 0,
     visitors:   parseInt(document.getElementById("f-vol-visitors").value,10)   || 0,
     dialogues:  parseInt(document.getElementById("f-vol-dialogues").value,10)  || 0,
@@ -1262,6 +1338,7 @@ function saveVolunteerModal() {
   else volunteers.push(entry);
 
   renderVolunteerList();
+  saveToStorage(collectData());
   closeVolunteerModal();
   toast(t.toastVolSaved);
 }
@@ -1269,6 +1346,7 @@ function deleteVolunteer(index) {
   if (!confirm(I18N[lang].confirmDeleteVol)) return;
   volunteers.splice(index, 1);
   renderVolunteerList();
+  saveToStorage(collectData());
   toast(I18N[lang].toastVolDeleted);
 }
 function deleteVolunteerFromModal() {
@@ -1276,6 +1354,7 @@ function deleteVolunteerFromModal() {
   if (!confirm(I18N[lang].confirmDeleteVol)) return;
   volunteers.splice(editingVolIndex, 1);
   renderVolunteerList();
+  saveToStorage(collectData());
   closeVolunteerModal();
   toast(I18N[lang].toastVolDeleted);
 }
@@ -1299,26 +1378,24 @@ function fmtTime(val24) {
 function v(id) { return document.getElementById(id).value; }
 
 /* ══ Report ════════════════════════════════════════════════════════════
-   Parent  : Shift (date/start/end/volunteer count)
-   Child   : Volunteer name
-   Grand-child: that volunteer's stats, closed off with a Remarks: <name> line
+   Parent  : Shift date
+   Child   : Volunteer, each with its own Shift Start/End + stats,
+             closed off with a Remarks: <name> line
 ═══════════════════════════════════════════════════════════════════════ */
 function buildReportText(data) {
   const t = I18N[lang];
   const vols = data.volunteers || [];
-  const header = [
-    `${t.reportDate}: ${fmtDate(data.date)}`,
-    `${t.reportStart}: ${fmtTime(data.start)}`,
-    `${t.reportEnd}: ${fmtTime(data.end)}`,
-  ];
+  const dateLine = `${t.reportDate}: ${fmtDate(data.date)}`;
 
   if (!vols.length) {
-    // No volunteer entries yet — show shift header only
-    return [t.reportTitle, ...header].join("\n");
+    // No volunteer entries yet — show date only
+    return [t.reportTitle, dateLine].join("\n");
   }
 
   const blocks = vols.map(vol => [
-    ...header,
+    dateLine,
+    `${t.reportStart}: ${fmtTime(vol.start)}`,
+    `${t.reportEnd}: ${fmtTime(vol.end)}`,
     `${t.reportVol}: ${vol.count}`,
     `${t.reportVis}: ${vol.visitors}`,
     `${t.reportDia}: ${vol.dialogues}`,
@@ -1331,7 +1408,7 @@ function buildReportText(data) {
 }
 
 /* ══ Storage ═══════════════════════════════════════════════════════════ */
-const STORAGE_KEY = "mtar_report_v5"; // v5: volunteer count moved per-entry — no migration from v4
+const STORAGE_KEY = "mtar_report_v6"; // v6: Shift Start/End moved from shift-level to per-volunteer — no migration from v5
 function saveToStorage(d)   { localStorage.setItem(STORAGE_KEY, JSON.stringify(d)); }
 function loadFromStorage()  { const r = localStorage.getItem(STORAGE_KEY); return r ? JSON.parse(r) : null; }
 
@@ -1339,8 +1416,6 @@ function loadFromStorage()  { const r = localStorage.getItem(STORAGE_KEY); retur
 function collectData() {
   return {
     date:       v("f-date"),
-    start:      timeValues.start,
-    end:        timeValues.end,
     volunteers: volunteers,
   };
 }
@@ -1355,43 +1430,11 @@ function clearErrors() {
 
 function validate() {
   clearErrors();
-  const t = I18N[lang];
   let ok = true;
 
   if (!v("f-date")) {
     document.getElementById("err-date").classList.add("visible");
     document.getElementById("f-date").classList.add("invalid");
-    ok = false;
-  }
-
-  // Validate start time — try to parse typed text first
-  const startText = document.getElementById("f-start-text").value.trim();
-  if (startText && !timeValues.start) {
-    const p = parseTimeText(startText);
-    if (p) timeValues.start = p;
-  }
-  if (!timeValues.start) {
-    document.getElementById("err-start").textContent = t.errTimeInvalid;
-    document.getElementById("err-start").classList.add("visible");
-    document.getElementById("tig-start").classList.add("invalid");
-    ok = false;
-  }
-
-  // Validate end time
-  const endText = document.getElementById("f-end-text").value.trim();
-  if (endText && !timeValues.end) {
-    const p = parseTimeText(endText);
-    if (p) timeValues.end = p;
-  }
-  if (!timeValues.end) {
-    document.getElementById("err-end").textContent = t.errTimeInvalid;
-    document.getElementById("err-end").classList.add("visible");
-    document.getElementById("tig-end").classList.add("invalid");
-    ok = false;
-  } else if (timeValues.start && timeValues.end <= timeValues.start) {
-    document.getElementById("err-end").textContent = t.errEndTime;
-    document.getElementById("err-end").classList.add("visible");
-    document.getElementById("tig-end").classList.add("invalid");
     ok = false;
   }
 
@@ -1448,13 +1491,8 @@ function selectReportText() {
 }
 
 function clearForm() {
-  // Only resets shift-level fields — the volunteer list is left untouched
-  document.getElementById("f-date").value       = today();
-  timeValues.start = ""; timeValues.end = "";
-  document.getElementById("f-start-text").value = "";
-  document.getElementById("f-end-text").value   = "";
-  document.getElementById("tig-start").classList.remove("invalid");
-  document.getElementById("tig-end").classList.remove("invalid");
+  // Only resets the date — the volunteer list is left untouched
+  document.getElementById("f-date").value = today();
   clearErrors();
   toast(I18N[lang].toastCleared);
 }
@@ -1473,18 +1511,73 @@ function handleReportOverlayClick(e) {
 function loadSavedToForm() {
   const saved = loadFromStorage();
   if (!saved) { toast(I18N[lang].toastNoSaved); return; }
-  document.getElementById("f-date").value       = saved.date       || today();
-  ["start","end"].forEach(k => {
-    timeValues[k] = saved[k] || "";
-    const textEl = document.getElementById("f-"+k+"-text");
-    if (textEl) textEl.value = saved[k] ? fmtTime(saved[k]) : "";
-    document.getElementById("tig-"+k).classList.remove("invalid");
-  });
+  document.getElementById("f-date").value = saved.date || today();
   volunteers = Array.isArray(saved.volunteers) ? saved.volunteers : [];
   renderVolunteerList();
   closeReportModal();
   window.scrollTo({ top: 0, behavior: "smooth" });
   toast(I18N[lang].toastLoaded);
+}
+
+/* ══ Autosave — fires every 30s, no manual click needed ══════════════════
+   - "Individual" save: if the volunteer modal is open and has a name typed,
+     persist that volunteer entry (creates it on first tick, then updates
+     the same entry on later ticks instead of duplicating it).
+   - "Group" save: always persists the whole report (date + volunteers) to
+     localStorage, same as pressing the main Save button, but silently.
+═══════════════════════════════════════════════════════════════════════ */
+let autosaveTimer = null;
+
+function autosaveVolunteerModal() {
+  const nameEl = document.getElementById("f-vol-name");
+  if (!nameEl) return;
+  const name = nameEl.value.trim();
+  if (!name) return; // nothing worth saving yet
+
+  const entry = {
+    name,
+    start: timeValues.start || "",
+    end:   timeValues.end   || "",
+    count:      parseInt(document.getElementById("f-vol-count").value,10)      || 0,
+    visitors:   parseInt(document.getElementById("f-vol-visitors").value,10)   || 0,
+    dialogues:  parseInt(document.getElementById("f-vol-dialogues").value,10)  || 0,
+    brochures:  parseInt(document.getElementById("f-vol-brochures").value,10)  || 0,
+    newmuslims: parseInt(document.getElementById("f-vol-newmuslims").value,10) || 0,
+  };
+
+  if (editingVolIndex !== null) {
+    volunteers[editingVolIndex] = entry;
+  } else {
+    volunteers.push(entry);
+    editingVolIndex = volunteers.length - 1;
+    const t = I18N[lang];
+    document.getElementById("volDeleteBtn").style.display = "flex";
+    document.getElementById("volModalActions").style.gridTemplateColumns = "1fr 1fr";
+    set("mbtn-volsave", t.btnVolUpdate);
+    set("volModalTitle", t.volModalEdit);
+  }
+  renderVolunteerList();
+}
+
+function autosaveTick() {
+  if (document.getElementById("volModalOverlay").classList.contains("open")) {
+    autosaveVolunteerModal();
+  }
+  saveToStorage(collectData());
+  showAutosaveStatus();
+}
+
+function showAutosaveStatus() {
+  const el = document.getElementById("autosaveStatus");
+  if (!el) return;
+  const now = new Date();
+  const hh = String(now.getHours()).padStart(2,"0");
+  const mm = String(now.getMinutes()).padStart(2,"0");
+  const ss = String(now.getSeconds()).padStart(2,"0");
+  el.textContent = `${I18N[lang].autosavedAt} ${hh}:${mm}:${ss}`;
+  el.classList.add("show");
+  clearTimeout(showAutosaveStatus._t);
+  showAutosaveStatus._t = setTimeout(() => el.classList.remove("show"), 4000);
 }
 
 /* ══ Toast ═════════════════════════════════════════════════════════════ */
@@ -1502,17 +1595,11 @@ function toast(msg) {
   document.getElementById("f-date").value = today();
   const saved = loadFromStorage();
   if (saved) {
-    document.getElementById("f-date").value       = saved.date       || today();
-    ["start","end"].forEach(k => {
-      if (saved[k]) {
-        timeValues[k] = saved[k];
-        const textEl = document.getElementById("f-"+k+"-text");
-        if (textEl) textEl.value = fmtTime(saved[k]);
-      }
-    });
+    document.getElementById("f-date").value = saved.date || today();
     volunteers = Array.isArray(saved.volunteers) ? saved.volunteers : [];
   }
   applyLang();
+  autosaveTimer = setInterval(autosaveTick, 30000);
 })();
 
 /* ══ Scroll hint ═══════════════════════════════════════════════════════ */
