@@ -138,6 +138,28 @@
     }
     input[type="date"].invalid { border-color: var(--danger) !important; }
 
+    /* plain textarea (remarks) */
+    textarea.remarks-input {
+      width: 100%;
+      border: 2px solid var(--border);
+      border-radius: 10px;
+      padding: 13px 15px;
+      font-size: 15px;
+      font-family: inherit;
+      color: var(--text-primary);
+      background: var(--white);
+      outline: none;
+      resize: vertical;
+      min-height: 90px;
+      line-height: 1.5;
+      transition: border-color .2s, box-shadow .2s;
+      -webkit-appearance: none;
+    }
+    textarea.remarks-input:focus {
+      border-color: var(--blue-mid);
+      box-shadow: 0 0 0 3px rgba(25,118,210,0.14);
+    }
+
     /* ── Stepper ── */
     .stepper {
       display: flex;
@@ -537,6 +559,28 @@
     }
     .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
 
+    /* ── Autosave indicator ── */
+    .autosave-indicator {
+      position: fixed;
+      bottom: 96px;
+      left: 16px;
+      background: rgba(13,27,42,0.78);
+      color: #fff;
+      font-size: 11px;
+      font-weight: 600;
+      padding: 5px 11px;
+      border-radius: 14px;
+      z-index: 150;
+      opacity: 0;
+      transform: translateY(6px);
+      transition: opacity .3s ease, transform .3s ease;
+      pointer-events: none;
+      white-space: nowrap;
+    }
+    .autosave-indicator.show { opacity: 1; transform: translateY(0); }
+    .autosave-indicator .astime { color: #4ADE80; font-weight: 800; } /* green once saved */
+    body.rtl .autosave-indicator { left: auto; right: 16px; }
+
     /* ── RTL ── */
     body.rtl .stepper-input { direction: ltr; }
     body.rtl .time-text-input { direction: ltr; text-align: right; }
@@ -565,7 +609,7 @@
         <span class="lbl-icon"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" width="26" height="26" fill="none" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="26" height="24" rx="3" fill="#E3F0FF" stroke="#1565C0" stroke-width="2"/><line x1="3" y1="12" x2="29" y2="12" stroke="#1565C0" stroke-width="2"/><line x1="10" y1="2" x2="10" y2="8" stroke="#1565C0" stroke-width="2.5"/><line x1="22" y1="2" x2="22" y2="8" stroke="#1565C0" stroke-width="2.5"/><rect x="7"  y="16" width="4" height="4" rx="1" fill="#1565C0"/><rect x="14" y="16" width="4" height="4" rx="1" fill="#1565C0"/><rect x="21" y="16" width="4" height="4" rx="1" fill="#1565C0"/><rect x="7"  y="22" width="4" height="3" rx="1" fill="#1565C0"/><rect x="14" y="22" width="4" height="3" rx="1" fill="#1565C0"/></svg></span>
         <span id="lbl-date">Date</span><span class="req">*</span>
       </label>
-      <input type="date" id="f-date" />
+      <input type="date" id="f-date" oninput="markDirty()" />
       <div class="error-msg" id="err-date" data-en="Date is required" data-ar="التاريخ مطلوب">Date is required</div>
     </div>
 
@@ -683,6 +727,19 @@
     </div>
   </div>
 
+  <!-- Remarks -->
+  <div class="card">
+    <div class="card-title" id="sect-remarks">Remarks</div>
+    <div class="field" style="margin-bottom:0;">
+      <label for="f-remarks">
+        <span class="lbl-icon">📝</span>
+        <span id="lbl-remarks">Remarks</span>
+      </label>
+      <textarea class="remarks-input" id="f-remarks" maxlength="1000"
+                oninput="markDirty()"></textarea>
+    </div>
+  </div>
+
 </main>
 
 <!-- ═══ STICKY ACTION BAR ═══ -->
@@ -760,6 +817,8 @@
 
 <!-- Toast -->
 <div class="toast" id="toast"></div>
+<!-- Autosave indicator -->
+<div class="autosave-indicator" id="autosaveStatus"></div>
 
 <!-- ═══ SCRIPT ═══ -->
 <script>
@@ -772,6 +831,7 @@ const I18N = {
     hdrSub:        "Mosque Volunteer System",
     sectDatetime:  "Date & Time",
     sectStats:     "Statistics",
+    sectRemarks:   "Remarks",
     sectActions:   "Actions",
     modalTitle:    "Saved Report",
     lblDate:       "Date",
@@ -782,6 +842,8 @@ const I18N = {
     lblDia:        "Discussions / Dialogues",
     lblBro:        "Brochures Distributed",
     lblNm:         "New Muslims",
+    lblRemarks:    "Remarks",
+    phRemarks:     "Any additional notes about the shift…",
     btnSave:       "Save",
     btnCopy:       "Copy to Clipboard",
     btnClear:      "Clear Form",
@@ -801,6 +863,8 @@ const I18N = {
     toastNoSaved:  "No saved report found",
     toastLoaded:   "📂 Loaded — edit and save",
     toastSelected: "✅ Text selected — long-press to copy",
+    autosavePending: "Will auto-save in a few seconds…",
+    autosavedAt:     "Auto-saved",
     errTimeInvalid:"Enter valid time (e.g. 09:00 AM)",
     errEndTime:    "Shift End must be after Shift Start",
     reportTitle:   "Daily Tour Activity Report",
@@ -812,6 +876,7 @@ const I18N = {
     reportDia:     "Discussions/Dialogues",
     reportBro:     "Brochures Distributed",
     reportNm:      "New Muslims",
+    reportRemarks: "Remarks",
     langSwitch:    "العربية",
   },
   ar: {
@@ -819,6 +884,7 @@ const I18N = {
     hdrSub:        "نظام المتطوعين في المسجد",
     sectDatetime:  "التاريخ والوقت",
     sectStats:     "الإحصائيات",
+    sectRemarks:   "ملاحظات",
     sectActions:   "الإجراءات",
     modalTitle:    "التقرير المحفوظ",
     lblDate:       "التاريخ",
@@ -829,6 +895,8 @@ const I18N = {
     lblDia:        "النقاشات / الحوارات",
     lblBro:        "الكتيبات الموزعة",
     lblNm:         "المسلمون الجدد",
+    lblRemarks:    "ملاحظات",
+    phRemarks:     "أي ملاحظات إضافية حول الوردية…",
     btnSave:       "حفظ",
     btnCopy:       "نسخ إلى الحافظة",
     btnClear:      "مسح النموذج",
@@ -848,6 +916,8 @@ const I18N = {
     toastNoSaved:  "لا يوجد تقرير محفوظ",
     toastLoaded:   "📂 تم التحميل — عدّل واحفظ",
     toastSelected: "✅ تم التحديد — اضغط مطولاً للنسخ",
+    autosavePending: "سيتم الحفظ التلقائي خلال ثوانٍ…",
+    autosavedAt:     "تم الحفظ التلقائي",
     errTimeInvalid:"أدخل وقتاً صحيحاً (مثال: 09:00 AM)",
     errEndTime:    "يجب أن تكون نهاية الوردية بعد البداية",
     reportTitle:   "تقرير نشاط الجولة اليومية",
@@ -859,6 +929,7 @@ const I18N = {
     reportDia:     "النقاشات/الحوارات",
     reportBro:     "الكتيبات الموزعة",
     reportNm:      "المسلمون الجدد",
+    reportRemarks: "ملاحظات",
     langSwitch:    "English",
   }
 };
@@ -878,6 +949,7 @@ function applyLang() {
     "hdr-sub":          t.hdrSub,
     "sect-datetime":    t.sectDatetime,
     "sect-stats":       t.sectStats,
+    "sect-remarks":     t.sectRemarks,
     "sect-actions":     t.sectActions,
     "modal-title":      t.modalTitle,
     "lbl-date":         t.lblDate,
@@ -888,6 +960,7 @@ function applyLang() {
     "lbl-dia":          t.lblDia,
     "lbl-bro":          t.lblBro,
     "lbl-nm":           t.lblNm,
+    "lbl-remarks":      t.lblRemarks,
     "btn-save":         t.btnSave,
     "btn-copy":         t.btnCopy,
     "btn-clear":        t.btnClear,
@@ -902,6 +975,7 @@ function applyLang() {
   };
   Object.entries(ids).forEach(([id, txt]) => set(id, txt));
   document.getElementById("langBtn").textContent = t.langSwitch;
+  document.getElementById("f-remarks").placeholder = t.phRemarks;
 
   document.querySelectorAll(".error-msg").forEach(el => {
     if (el.dataset[lang]) el.textContent = el.dataset[lang];
@@ -922,8 +996,9 @@ function stepChange(inputId, delta, wid) {
   const inp = document.getElementById(inputId);
   inp.value = Math.max(0, (parseInt(inp.value,10)||0) + delta);
   document.getElementById(wid).classList.remove("invalid");
+  markDirty();
 }
-function onStepInput(inp, wid) { if (parseInt(inp.value,10) < 0) inp.value = 0; }
+function onStepInput(inp, wid) { if (parseInt(inp.value,10) < 0) inp.value = 0; markDirty(); }
 function stepFocus(wid) { document.getElementById(wid).classList.add("focused"); }
 function stepBlur(wid)  { document.getElementById(wid).classList.remove("focused"); }
 
@@ -937,6 +1012,7 @@ function onTimeTextInput(inp, which) {
   // allow only digits, colon, space, A, P, M
   let raw = inp.value.replace(/[^0-9:APMapm ]/g, "");
   inp.value = raw;
+  markDirty();
 }
 
 function onTimeTextBlur(inp, which) {
@@ -1082,6 +1158,7 @@ function confirmTime() {
     document.getElementById("err-end").classList.remove("visible");
   }
 
+  markDirty();
   closeTimePicker();
 }
 
@@ -1106,7 +1183,7 @@ function v(id) { return document.getElementById(id).value; }
 /* ══ Report ════════════════════════════════════════════════════════════ */
 function buildReportText(data) {
   const t = I18N[lang];
-  return [
+  const lines = [
     t.reportTitle, "",
     `${t.reportDate}: ${fmtDate(data.date)}`,
     `${t.reportStart}: ${fmtTime(data.start)}`,
@@ -1116,13 +1193,84 @@ function buildReportText(data) {
     `${t.reportDia}: ${data.dialogues}`,
     `${t.reportBro}: ${data.brochures}`,
     `${t.reportNm}: ${parseInt(data.newmuslims,10)||0}`,
-  ].join("\n");
+  ];
+  if (data.remarks && data.remarks.trim()) {
+    lines.push(`${t.reportRemarks}: ${data.remarks.trim()}`);
+  }
+  return lines.join("\n");
 }
 
 /* ══ Storage ═══════════════════════════════════════════════════════════ */
 const STORAGE_KEY = "mtar_report_v3";
 function saveToStorage(d)   { localStorage.setItem(STORAGE_KEY, JSON.stringify(d)); }
 function loadFromStorage()  { const r = localStorage.getItem(STORAGE_KEY); return r ? JSON.parse(r) : null; }
+
+/* ══ Autosave ══════════════════════════════════════════════════════════
+   - markDirty() fires on every field edit: shows a "will auto-save in a
+     few seconds" indicator, then silently saves after a short pause.
+   - A 30s heartbeat is a safety net for continuous editing (e.g. rapid
+     stepper taps) that never lets the pause fire.
+   - visibilitychange / beforeunload force an immediate save so nothing
+     is lost if the tab is closed or backgrounded mid-edit.
+   Autosave never validates — it persists a draft as-is; only the
+   explicit Save button validates and confirms.
+═══════════════════════════════════════════════════════════════════════ */
+const AUTOSAVE_DEBOUNCE_MS = 3000;
+const AUTOSAVE_HEARTBEAT_MS = 30000;
+let autosaveDebounceTimer = null;
+let autosaveStatusHideTimer = null;
+let isDirty = false;
+
+function markDirty() {
+  isDirty = true;
+  showAutosavePending();
+  if (autosaveDebounceTimer) clearTimeout(autosaveDebounceTimer);
+  autosaveDebounceTimer = setTimeout(performAutosave, AUTOSAVE_DEBOUNCE_MS);
+}
+
+function showAutosavePending() {
+  const el = document.getElementById("autosaveStatus");
+  if (!el) return;
+  clearTimeout(autosaveStatusHideTimer);
+  el.textContent = I18N[lang].autosavePending;
+  el.classList.add("show");
+}
+
+function performAutosave() {
+  if (autosaveDebounceTimer) { clearTimeout(autosaveDebounceTimer); autosaveDebounceTimer = null; }
+  saveToStorage(collectData());
+  isDirty = false;
+  showAutosaveDone();
+}
+
+function showAutosaveDone() {
+  const el = document.getElementById("autosaveStatus");
+  if (!el) return;
+  const now = new Date();
+  const hh = String(now.getHours()).padStart(2,"0");
+  const mm = String(now.getMinutes()).padStart(2,"0");
+  const ss = String(now.getSeconds()).padStart(2,"0");
+  el.innerHTML = `${I18N[lang].autosavedAt} <span class="astime">${hh}:${mm}:${ss}</span>`;
+  el.classList.add("show");
+  clearTimeout(autosaveStatusHideTimer);
+  autosaveStatusHideTimer = setTimeout(() => el.classList.remove("show"), 4000);
+}
+
+function hideAutosaveIndicator() {
+  const el = document.getElementById("autosaveStatus");
+  if (!el) return;
+  clearTimeout(autosaveStatusHideTimer);
+  el.classList.remove("show");
+}
+
+setInterval(() => { if (isDirty) performAutosave(); }, AUTOSAVE_HEARTBEAT_MS);
+
+document.addEventListener("visibilitychange", () => {
+  if (document.visibilityState === "hidden" && isDirty) performAutosave();
+});
+window.addEventListener("beforeunload", () => {
+  if (isDirty) saveToStorage(collectData());
+});
 
 /* ══ Collect ═══════════════════════════════════════════════════════════ */
 function collectData() {
@@ -1135,6 +1283,7 @@ function collectData() {
     dialogues:  v("f-dialogues"),
     brochures:  v("f-brochures"),
     newmuslims: v("f-newmuslims"),
+    remarks:    v("f-remarks"),
   };
 }
 
@@ -1205,7 +1354,9 @@ function validate() {
 /* ══ Actions ═══════════════════════════════════════════════════════════ */
 function saveReport() {
   if (!validate()) return;
+  if (autosaveDebounceTimer) { clearTimeout(autosaveDebounceTimer); autosaveDebounceTimer = null; }
   saveToStorage(collectData());
+  isDirty = false;
   toast(I18N[lang].toastSaved);
 }
 
@@ -1258,6 +1409,7 @@ function clearForm() {
   document.getElementById("f-dialogues").value  = 0;
   document.getElementById("f-brochures").value  = 0;
   document.getElementById("f-newmuslims").value = 0;
+  document.getElementById("f-remarks").value    = "";
   timeValues.start = ""; timeValues.end = "";
   document.getElementById("f-start-text").value = "";
   document.getElementById("f-end-text").value   = "";
@@ -1265,6 +1417,7 @@ function clearForm() {
   document.getElementById("tig-end").classList.remove("invalid");
   clearErrors();
   toast(I18N[lang].toastCleared);
+  markDirty();
 }
 
 function openReportModal() {
@@ -1287,12 +1440,16 @@ function loadSavedToForm() {
   document.getElementById("f-dialogues").value  = saved.dialogues  ?? 0;
   document.getElementById("f-brochures").value  = saved.brochures  ?? 0;
   document.getElementById("f-newmuslims").value = saved.newmuslims ?? 0;
+  document.getElementById("f-remarks").value    = saved.remarks    ?? "";
   ["start","end"].forEach(k => {
     timeValues[k] = saved[k] || "";
     const textEl = document.getElementById("f-"+k+"-text");
     if (textEl) textEl.value = saved[k] ? fmtTime(saved[k]) : "";
     document.getElementById("tig-"+k).classList.remove("invalid");
   });
+  if (autosaveDebounceTimer) { clearTimeout(autosaveDebounceTimer); autosaveDebounceTimer = null; }
+  isDirty = false;
+  hideAutosaveIndicator();
   closeReportModal();
   window.scrollTo({ top: 0, behavior: "smooth" });
   toast(I18N[lang].toastLoaded);
@@ -1319,6 +1476,7 @@ function toast(msg) {
     document.getElementById("f-dialogues").value  = saved.dialogues  ?? 0;
     document.getElementById("f-brochures").value  = saved.brochures  ?? 0;
     document.getElementById("f-newmuslims").value = saved.newmuslims ?? 0;
+    document.getElementById("f-remarks").value    = saved.remarks    ?? "";
     ["start","end"].forEach(k => {
       if (saved[k]) {
         timeValues[k] = saved[k];
