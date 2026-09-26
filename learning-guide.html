@@ -1,0 +1,779 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tips to Learn Effectively</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary: #4F46E5;
+            --secondary: #06B6D4;
+            --accent: #EC4899;
+            --dark: #1F2937;
+            --light: #F9FAFB;
+            --border: #E5E7EB;
+            --text: #374151;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            overflow: hidden;
+        }
+
+        header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 40px 30px;
+            text-align: center;
+        }
+
+        header h1 {
+            font-size: 32px;
+            margin-bottom: 10px;
+            font-weight: 700;
+        }
+
+        header p {
+            font-size: 16px;
+            opacity: 0.95;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        nav {
+            background: var(--light);
+            border-bottom: 1px solid var(--border);
+            padding: 0;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0;
+        }
+
+        nav a {
+            flex: 1;
+            min-width: 120px;
+            padding: 12px 15px;
+            text-decoration: none;
+            color: var(--text);
+            border-right: 1px solid var(--border);
+            text-align: center;
+            transition: all 0.3s;
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: 500;
+        }
+
+        nav a:hover {
+            background: var(--primary);
+            color: white;
+        }
+
+        nav a:last-child {
+            border-right: none;
+        }
+
+        .content {
+            padding: 30px;
+        }
+
+        .section-intro {
+            background: #F0F4FF;
+            border-left: 4px solid var(--primary);
+            padding: 20px;
+            margin-bottom: 30px;
+            border-radius: 6px;
+        }
+
+        .section-intro h2 {
+            color: var(--primary);
+            margin-bottom: 10px;
+            font-size: 18px;
+        }
+
+        .section-intro p {
+            color: var(--text);
+            line-height: 1.6;
+            font-size: 14px;
+        }
+
+        .accordion-item {
+            border: 1px solid var(--border);
+            margin-bottom: 12px;
+            border-radius: 8px;
+            overflow: hidden;
+            transition: all 0.3s;
+        }
+
+        .accordion-item:hover {
+            border-color: var(--primary);
+            box-shadow: 0 4px 12px rgba(79, 70, 229, 0.1);
+        }
+
+        .accordion-header {
+            background: var(--light);
+            padding: 18px;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: all 0.3s;
+        }
+
+        .accordion-header:hover {
+            background: #F3F4F6;
+        }
+
+        .accordion-header h3 {
+            color: var(--dark);
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+
+        .accordion-header .step-badge {
+            background: var(--primary);
+            color: white;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            margin-right: 12px;
+            min-width: 60px;
+            text-align: center;
+        }
+
+        .accordion-header .toggle-icon {
+            font-size: 20px;
+            color: var(--primary);
+            transition: transform 0.3s;
+        }
+
+        .accordion-item.active .accordion-header {
+            background: white;
+        }
+
+        .accordion-item.active .toggle-icon {
+            transform: rotate(180deg);
+        }
+
+        .accordion-content {
+            display: none;
+            padding: 0 18px;
+            max-height: 0;
+            overflow: hidden;
+            transition: all 0.3s ease;
+            background: white;
+        }
+
+        .accordion-item.active .accordion-content {
+            display: block;
+            max-height: 2000px;
+            padding: 18px;
+            border-top: 1px solid var(--border);
+        }
+
+        .accordion-content p {
+            color: var(--text);
+            line-height: 1.8;
+            margin-bottom: 12px;
+            font-size: 14px;
+        }
+
+        .accordion-content ul {
+            margin: 12px 0 12px 20px;
+            color: var(--text);
+        }
+
+        .accordion-content li {
+            margin-bottom: 8px;
+            line-height: 1.6;
+            font-size: 14px;
+        }
+
+        .accordion-content strong {
+            color: var(--primary);
+        }
+
+        .key-rule {
+            background: #FEF3C7;
+            border-left: 4px solid #F59E0B;
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 6px;
+        }
+
+        .key-rule h4 {
+            color: #92400E;
+            margin-bottom: 8px;
+            font-size: 15px;
+        }
+
+        .key-rule p {
+            color: #78350F;
+            font-size: 14px;
+            line-height: 1.6;
+        }
+
+        .learning-loop {
+            background: #F0FFF4;
+            border: 2px solid var(--secondary);
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+
+        .learning-loop h4 {
+            color: var(--secondary);
+            margin-bottom: 15px;
+            font-size: 15px;
+        }
+
+        .loop-steps {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 12px;
+        }
+
+        .loop-step {
+            background: white;
+            border: 1px solid var(--secondary);
+            padding: 12px;
+            border-radius: 6px;
+            text-align: center;
+            font-size: 13px;
+            color: var(--text);
+            font-weight: 500;
+        }
+
+        .loop-step strong {
+            display: block;
+            color: var(--secondary);
+            margin-bottom: 4px;
+        }
+
+        footer {
+            background: var(--light);
+            border-top: 1px solid var(--border);
+            padding: 30px;
+            text-align: center;
+            color: var(--text);
+        }
+
+        footer p {
+            font-size: 13px;
+            line-height: 1.8;
+            max-width: 700px;
+            margin: 0 auto;
+        }
+
+        .footer-highlight {
+            background: #DBEAFE;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 20px 0;
+            border-left: 4px solid #0284C7;
+        }
+
+        .footer-highlight strong {
+            color: #0C4A6E;
+        }
+
+        @media (max-width: 768px) {
+            header h1 {
+                font-size: 24px;
+            }
+
+            nav a {
+                min-width: 100px;
+                font-size: 12px;
+            }
+
+            .content {
+                padding: 20px;
+            }
+
+            .accordion-header h3 {
+                font-size: 14px;
+            }
+
+            .loop-steps {
+                grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            }
+        }
+
+        .scroll-to-top {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            background: var(--primary);
+            color: white;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            box-shadow: 0 4px 12px rgba(79, 70, 229, 0.4);
+            font-size: 20px;
+            transition: all 0.3s;
+            z-index: 1000;
+        }
+
+        .scroll-to-top:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 20px rgba(79, 70, 229, 0.6);
+        }
+
+        .scroll-to-top.show {
+            display: flex;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>📚 Tips to Learn Effectively</h1>
+            <p>A repeatable method that works for almost any subject or skill — from defining your goal to mastering complex concepts.</p>
+        </header>
+
+        <nav>
+            <a onclick="scrollToSection('intro')">Overview</a>
+            <a onclick="scrollToSection('steps')">16 Steps</a>
+            <a onclick="scrollToSection('loop')">Learning Loop</a>
+            <a onclick="scrollToSection('rule')">Key Rule</a>
+            <a onclick="scrollToSection('footer')">Summary</a>
+        </nav>
+
+        <div class="content">
+            <div id="intro" class="section-intro">
+                <h2>The Learning Cycle</h2>
+                <p><strong>Define → Map → Learn → Practice → Test → Correct → Apply → Review</strong></p>
+                <p style="margin-top: 10px;">The important point is that studying is not the same as learning. Reading and watching gives you exposure; learning happens when you can recall, explain, and use the knowledge.</p>
+            </div>
+
+            <div id="steps">
+                <div class="accordion-item">
+                    <div class="accordion-header" onclick="toggleAccordion(this)">
+                        <div>
+                            <div class="step-badge">Step 1</div>
+                            <h3>Clearly Define What You Want to Learn</h3>
+                        </div>
+                        <i class="fas fa-chevron-down toggle-icon"></i>
+                    </div>
+                    <div class="accordion-content">
+                        <p><strong>Don't start by searching for tutorials.</strong> First answer: "What exactly should I be able to do after learning this?"</p>
+                        <p><strong>Make the goal observable.</strong></p>
+                        <ul>
+                            <li>❌ <em>Weak:</em> I want to learn SQL.</li>
+                            <li>✅ <em>Better:</em> I want to write SQL queries involving joins, subqueries, aggregations, CTEs and window functions.</li>
+                            <li>✅ <em>Even better:</em> I want to independently solve typical SQL problems without looking at examples.</li>
+                        </ul>
+                        <p><strong>Use this format:</strong> <em>"I want to learn [subject/skill] so that I can [specific outcome]."</em></p>
+                    </div>
+                </div>
+
+                <div class="accordion-item">
+                    <div class="accordion-header" onclick="toggleAccordion(this)">
+                        <div>
+                            <div class="step-badge">Step 2</div>
+                            <h3>Determine Your Starting Point</h3>
+                        </div>
+                        <i class="fas fa-chevron-down toggle-icon"></i>
+                    </div>
+                    <div class="accordion-content">
+                        <p><strong>Before learning, identify what you already know.</strong> Create three lists:</p>
+                        <ul>
+                            <li><strong>Already know</strong> — Concepts I understand</li>
+                            <li><strong>Partially know</strong> — Concepts I recognize but can't use</li>
+                            <li><strong>Don't know</strong> — Completely new concepts</li>
+                        </ul>
+                        <p>This prevents wasting time studying things you already understand.</p>
+                        <p><strong>Also identify prerequisites.</strong> You don't need to master everything, but know what you're missing.</p>
+                    </div>
+                </div>
+
+                <div class="accordion-item">
+                    <div class="accordion-header" onclick="toggleAccordion(this)">
+                        <div>
+                            <div class="step-badge">Step 3</div>
+                            <h3>Build a Learning Map</h3>
+                        </div>
+                        <i class="fas fa-chevron-down toggle-icon"></i>
+                    </div>
+                    <div class="accordion-content">
+                        <p><strong>Before going deep, get the big picture.</strong> Your goal is simply to answer: <em>What are the major things I need to learn?</em></p>
+                        <p>Create a simple structure with Foundation, Concepts, and Practical sections. You don't need detailed notes yet.</p>
+                        <p>This prevents random learning where you jump from one video to another without knowing where you're going.</p>
+                    </div>
+                </div>
+
+                <div class="accordion-item">
+                    <div class="accordion-header" onclick="toggleAccordion(this)">
+                        <div>
+                            <div class="step-badge">Step 4</div>
+                            <h3>Learn the Minimum Theory</h3>
+                        </div>
+                        <i class="fas fa-chevron-down toggle-icon"></i>
+                    </div>
+                    <div class="accordion-content">
+                        <p><strong>For each topic, follow this order:</strong></p>
+                        <ol style="margin-left: 20px;">
+                            <li><strong>Understand</strong> — What is it?</li>
+                            <li><strong>Understand the purpose</strong> — Why does it exist?</li>
+                            <li><strong>Understand how it works</strong> — How does it work?</li>
+                            <li><strong>See an example</strong> — What does it look like in practice?</li>
+                            <li><strong>Try it yourself</strong> — Can I do it without copying?</li>
+                        </ol>
+                        <p>This is more effective than simply reading documentation.</p>
+                    </div>
+                </div>
+
+                <div class="accordion-item">
+                    <div class="accordion-header" onclick="toggleAccordion(this)">
+                        <div>
+                            <div class="step-badge">Step 5</div>
+                            <h3>Use the "Explain → Recall → Practice" Cycle</h3>
+                        </div>
+                        <i class="fas fa-chevron-down toggle-icon"></i>
+                    </div>
+                    <div class="accordion-content">
+                        <p><strong>For every small topic:</strong></p>
+                        <ul>
+                            <li><strong>Learn</strong> — Read/watch for 20–30 minutes only</li>
+                            <li><strong>Close the material</strong> — Try to recall without looking</li>
+                            <li><strong>Recall</strong> — What did I learn? What problem does it solve?</li>
+                            <li><strong>Explain</strong> — Teach someone who knows nothing about it</li>
+                            <li><strong>Practice</strong> — Immediately use it</li>
+                            <li><strong>Check</strong> — Verify your understanding</li>
+                        </ul>
+                        <p>If you cannot explain it simply, your understanding isn't complete.</p>
+                    </div>
+                </div>
+
+                <div class="accordion-item">
+                    <div class="accordion-header" onclick="toggleAccordion(this)">
+                        <div>
+                            <div class="step-badge">Step 6</div>
+                            <h3>Practice from Easy → Medium → Difficult</h3>
+                        </div>
+                        <i class="fas fa-chevron-down toggle-icon"></i>
+                    </div>
+                    <div class="accordion-content">
+                        <p><strong>Use three progressive levels:</strong></p>
+                        <ul>
+                            <li><strong>Level 1 — Follow:</strong> You follow an example. Purpose: understand the mechanics.</li>
+                            <li><strong>Level 2 — Guided:</strong> You receive a problem but must decide how to solve it.</li>
+                            <li><strong>Level 3 — Independent:</strong> You receive only the requirement. This is where genuine skill develops.</li>
+                        </ul>
+                        <p>Don't immediately jump into difficult problems.</p>
+                    </div>
+                </div>
+
+                <div class="accordion-item">
+                    <div class="accordion-header" onclick="toggleAccordion(this)">
+                        <div>
+                            <div class="step-badge">Step 7</div>
+                            <h3>Stop Looking at the Solution Too Early</h3>
+                        </div>
+                        <i class="fas fa-chevron-down toggle-icon"></i>
+                    </div>
+                    <div class="accordion-content">
+                        <p><strong>One of the biggest learning mistakes:</strong> Problem → stuck 30 seconds → Google → copy solution.</p>
+                        <p><strong>Instead:</strong> Try → Struggle → Think → Try again → Check hint → Try again → See solution</p>
+                        <p><strong>Practical rule: Struggle productively, not endlessly.</strong> Some struggle is useful; your brain needs to attempt retrieval before receiving the answer.</p>
+                    </div>
+                </div>
+
+                <div class="accordion-item">
+                    <div class="accordion-header" onclick="toggleAccordion(this)">
+                        <div>
+                            <div class="step-badge">Step 8</div>
+                            <h3>Make Mistakes Deliberately</h3>
+                        </div>
+                        <i class="fas fa-chevron-down toggle-icon"></i>
+                    </div>
+                    <div class="accordion-content">
+                        <p><strong>When you get something wrong, don't simply correct it.</strong> Find out: <em>Why was I wrong?</em></p>
+                        <p><strong>Create an error log:</strong></p>
+                        <ul>
+                            <li>Problem | My mistake | Correct understanding</li>
+                            <li>SQL JOIN | Used INNER JOIN | Needed LEFT JOIN because unmatched records must remain</li>
+                            <li>C# async | Blocked with .Result | Await the async operation</li>
+                        </ul>
+                        <p>Your mistakes become a personalized study guide.</p>
+                    </div>
+                </div>
+
+                <div class="accordion-item">
+                    <div class="accordion-header" onclick="toggleAccordion(this)">
+                        <div>
+                            <div class="step-badge">Step 9</div>
+                            <h3>Test Yourself Without Assistance</h3>
+                        </div>
+                        <i class="fas fa-chevron-down toggle-icon"></i>
+                    </div>
+                    <div class="accordion-content">
+                        <p><strong>This is one of the most important steps.</strong> After learning several topics, remove your resources and attempt:</p>
+                        <ul>
+                            <li>Questions and exercises</li>
+                            <li>Coding problems and diagrams</li>
+                            <li>Explanations and real-world scenarios</li>
+                            <li>Mini-projects</li>
+                        </ul>
+                        <p><strong>Ask yourself:</strong> Could I do this tomorrow without looking at my notes?</p>
+                        <p>If the answer is no, you haven't mastered it yet.</p>
+                    </div>
+                </div>
+
+                <div class="accordion-item">
+                    <div class="accordion-header" onclick="toggleAccordion(this)">
+                        <div>
+                            <div class="step-badge">Step 10</div>
+                            <h3>Use Active Recall</h3>
+                        </div>
+                        <i class="fas fa-chevron-down toggle-icon"></i>
+                    </div>
+                    <div class="accordion-content">
+                        <p><strong>Instead of repeatedly reading, ask yourself questions.</strong></p>
+                        <p>For example, instead of reading about SQL indexes:</p>
+                        <ul>
+                            <li>What is an index?</li>
+                            <li>Why is it needed?</li>
+                            <li>When can it improve performance?</li>
+                            <li>When can it hurt performance?</li>
+                            <li>How would I decide whether to create one?</li>
+                        </ul>
+                        <p>Then answer from memory. This is considerably more useful than passive rereading.</p>
+                    </div>
+                </div>
+
+                <div class="accordion-item">
+                    <div class="accordion-header" onclick="toggleAccordion(this)">
+                        <div>
+                            <div class="step-badge">Step 11</div>
+                            <h3>Review Using Spaced Repetition</h3>
+                        </div>
+                        <i class="fas fa-chevron-down toggle-icon"></i>
+                    </div>
+                    <div class="accordion-content">
+                        <p><strong>Don't learn something once and assume it's permanently stored.</strong> Review at increasing intervals:</p>
+                        <ul>
+                            <li>Day 0 → Learn</li>
+                            <li>Day 1 → Review</li>
+                            <li>Day 3 → Review</li>
+                            <li>Day 7 → Review</li>
+                            <li>Day 14 → Review</li>
+                            <li>Day 30 → Review</li>
+                        </ul>
+                        <p><strong>At each review: Recall first, then check afterward.</strong> Don't simply reread.</p>
+                    </div>
+                </div>
+
+                <div class="accordion-item">
+                    <div class="accordion-header" onclick="toggleAccordion(this)">
+                        <div>
+                            <div class="step-badge">Step 12</div>
+                            <h3>Connect New Knowledge to Old Knowledge</h3>
+                        </div>
+                        <i class="fas fa-chevron-down toggle-icon"></i>
+                    </div>
+                    <div class="accordion-content">
+                        <p><strong>Knowledge becomes stronger when connected to what you already know.</strong></p>
+                        <p><strong>Ask yourself:</strong></p>
+                        <ul>
+                            <li>What does this remind me of?</li>
+                            <li>How is this different from something I already know?</li>
+                            <li>Where would I use this?</li>
+                            <li>What problem does it solve compared to the old approach?</li>
+                        </ul>
+                        <p><strong>Example:</strong> Learn EF Core by connecting it to your existing understanding of databases and EF6, not as an isolated subject.</p>
+                    </div>
+                </div>
+
+                <div class="accordion-item">
+                    <div class="accordion-header" onclick="toggleAccordion(this)">
+                        <div>
+                            <div class="step-badge">Step 13</div>
+                            <h3>Build Something Real</h3>
+                        </div>
+                        <i class="fas fa-chevron-down toggle-icon"></i>
+                    </div>
+                    <div class="accordion-content">
+                        <p><strong>Once you understand the fundamentals, stop studying temporarily and build something.</strong></p>
+                        <p><strong>Progression:</strong></p>
+                        <ul>
+                            <li>Learn concept</li>
+                            <li>Small exercise</li>
+                            <li>Another exercise</li>
+                            <li>Mini project</li>
+                            <li>Real project</li>
+                        </ul>
+                        <p>A project exposes gaps that tutorials hide. You'll discover: "I thought I understood this, but I don't know how to handle this scenario." That discovery is valuable.</p>
+                    </div>
+                </div>
+
+                <div class="accordion-item">
+                    <div class="accordion-header" onclick="toggleAccordion(this)">
+                        <div>
+                            <div class="step-badge">Step 14</div>
+                            <h3>Teach the Subject</h3>
+                        </div>
+                        <i class="fas fa-chevron-down toggle-icon"></i>
+                    </div>
+                    <div class="accordion-content">
+                        <p><strong>Teaching is an extremely powerful test.</strong> Explain without notes using this structure:</p>
+                        <ul>
+                            <li>What is it?</li>
+                            <li>Why do we need it?</li>
+                            <li>How does it work?</li>
+                            <li>Example</li>
+                            <li>Common mistakes</li>
+                            <li>When should we use it?</li>
+                            <li>When shouldn't we use it?</li>
+                        </ul>
+                        <p>If you get stuck, you've identified a knowledge gap. Go back, learn that gap, and explain it again.</p>
+                    </div>
+                </div>
+
+                <div class="accordion-item">
+                    <div class="accordion-header" onclick="toggleAccordion(this)">
+                        <div>
+                            <div class="step-badge">Step 15</div>
+                            <h3>Create a Final "Cheat Sheet"</h3>
+                        </div>
+                        <i class="fas fa-chevron-down toggle-icon"></i>
+                    </div>
+                    <div class="accordion-content">
+                        <p><strong>After completing a topic, create one concise reference.</strong></p>
+                        <p><strong>Example structure:</strong></p>
+                        <ul>
+                            <li>What it is</li>
+                            <li>When to use</li>
+                            <li>Key concepts and features</li>
+                            <li>Common mistakes</li>
+                            <li>Useful examples</li>
+                        </ul>
+                        <p><strong>Important:</strong> Write in your own words. The act of compressing knowledge forces you to determine what's actually important.</p>
+                    </div>
+                </div>
+
+                <div class="accordion-item">
+                    <div class="accordion-header" onclick="toggleAccordion(this)">
+                        <div>
+                            <div class="step-badge">Step 16</div>
+                            <h3>Measure Competence, Not Study Time</h3>
+                        </div>
+                        <i class="fas fa-chevron-down toggle-icon"></i>
+                    </div>
+                    <div class="accordion-content">
+                        <p><strong>Don't measure: "I studied for 10 hours."</strong></p>
+                        <p><strong>Measure: "What can I do now that I couldn't do before?"</strong></p>
+                        <p><strong>Competence levels:</strong></p>
+                        <ul>
+                            <li><strong>Beginner:</strong> I recognize the terminology</li>
+                            <li><strong>Basic:</strong> I can follow examples</li>
+                            <li><strong>Intermediate:</strong> I can solve common problems independently</li>
+                            <li><strong>Advanced:</strong> I can solve unfamiliar problems and explain trade-offs</li>
+                            <li><strong>Mastery:</strong> I can design solutions, identify edge cases, teach others, and recognize when common approaches are inappropriate</li>
+                        </ul>
+                        <p>The goal is to move toward independent performance, not accumulate hours.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div id="loop" class="learning-loop">
+                <h4>⭐ A Complete Learning Loop</h4>
+                <div class="loop-steps">
+                    <div class="loop-step"><strong>DEFINE</strong> What exactly?</div>
+                    <div class="loop-step"><strong>ASSESS</strong> What do I know?</div>
+                    <div class="loop-step"><strong>MAP</strong> Major topics</div>
+                    <div class="loop-step"><strong>LEARN</strong> Understand</div>
+                    <div class="loop-step"><strong>RECALL</strong> Close material</div>
+                    <div class="loop-step"><strong>EXPLAIN</strong> In your words</div>
+                    <div class="loop-step"><strong>PRACTICE</strong> Use it</div>
+                    <div class="loop-step"><strong>TEST</strong> Without help?</div>
+                    <div class="loop-step"><strong>CORRECT</strong> Identify mistakes</div>
+                    <div class="loop-step"><strong>APPLY</strong> Real project</div>
+                    <div class="loop-step"><strong>REVIEW</strong> Spaced intervals</div>
+                    <div class="loop-step"><strong>TEACH</strong> Explain to others</div>
+                    <div class="loop-step"><strong>REASSESS</strong> Can I do it?</div>
+                    <div class="loop-step"><strong>ADVANCE</strong> Next level</div>
+                </div>
+            </div>
+
+            <div id="rule" class="key-rule">
+                <h4>🎯 The Most Important Rule</h4>
+                <p><strong>Don't spend most of your learning time consuming information. Spend a significant portion trying to retrieve, explain, solve, and create without assistance.</strong></p>
+                <p style="margin-top: 12px;"><strong>Useful rough allocation:</strong> 20–30% learning + 70–80% active practice, recall, problem-solving and application.</p>
+                <p style="margin-top: 12px;"><strong>Key distinction:</strong> Knowing how something works is not the same as being able to use it.</p>
+                <p style="margin-top: 12px;"><strong>Genuine learning progression:</strong> I have seen it → I understand it → I can explain it → I can reproduce it → I can use it → I can solve unfamiliar problems with it → I can teach it.</p>
+            </div>
+        </div>
+
+        <footer id="footer">
+            <h2 style="margin-bottom: 20px; color: var(--primary);">Summary</h2>
+            <div class="footer-highlight">
+                <strong>Learning is a process, not an outcome of passive consumption.</strong> The 16-step framework provides a structured path from defining your goal to achieving mastery. Each step builds on the previous one, creating a complete learning system that works for almost any subject.
+            </div>
+            <p>Remember: Active practice, recall, and teaching are far more important than hours spent consuming content. Start small, build gradually, and focus on demonstrable capability rather than study time.</p>
+        </footer>
+    </div>
+
+    <div class="scroll-to-top" onclick="scrollToTop()">
+        <i class="fas fa-arrow-up"></i>
+    </div>
+
+    <script>
+        function toggleAccordion(header) {
+            const item = header.parentElement;
+            item.classList.toggle('active');
+        }
+
+        function scrollToSection(sectionId) {
+            const section = document.getElementById(sectionId);
+            if (section) {
+                section.scrollIntoView({ behavior: 'smooth' });
+            }
+        }
+
+        function scrollToTop() {
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        window.addEventListener('scroll', () => {
+            const scrollBtn = document.querySelector('.scroll-to-top');
+            if (window.pageYOffset > 300) {
+                scrollBtn.classList.add('show');
+            } else {
+                scrollBtn.classList.remove('show');
+            }
+        });
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const firstItem = document.querySelector('.accordion-item');
+            if (firstItem) {
+                firstItem.classList.add('active');
+            }
+        });
+    </script>
+</body>
+</html>
