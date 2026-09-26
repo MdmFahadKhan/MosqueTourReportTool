@@ -1,0 +1,1161 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Learning Roadmap</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary: #20b2aa;
+            --accent: #daa520;
+            --dark-bg: #0a0e27;
+            --surface: #1a1f3a;
+            --surface-light: #252d47;
+            --text: #e0e0e0;
+            --text-muted: #9e9e9e;
+            --success: #4caf50;
+            --warning: #ff9800;
+            --error: #f44336;
+            --border: #404854;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: var(--dark-bg);
+            color: var(--text);
+            line-height: 1.5;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        header {
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid var(--border);
+        }
+
+        h1 {
+            color: var(--accent);
+            font-size: 28px;
+            margin-bottom: 5px;
+        }
+
+        .goal-display {
+            color: var(--text-muted);
+            font-size: 14px;
+        }
+
+        .goal-display strong {
+            color: var(--primary);
+        }
+
+        .tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 30px;
+            border-bottom: 1px solid var(--border);
+            flex-wrap: wrap;
+        }
+
+        .tab-btn {
+            padding: 12px 20px;
+            background: transparent;
+            border: none;
+            color: var(--text-muted);
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            border-bottom: 3px solid transparent;
+            transition: all 0.2s;
+        }
+
+        .tab-btn:hover {
+            color: var(--primary);
+        }
+
+        .tab-btn.active {
+            color: var(--accent);
+            border-bottom-color: var(--accent);
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        /* Define Path Tab */
+        .path-section {
+            background: var(--surface);
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+
+        .path-section h3 {
+            color: var(--primary);
+            font-size: 16px;
+            margin-bottom: 15px;
+        }
+
+        .template-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .template-card {
+            background: var(--surface-light);
+            padding: 15px;
+            border: 2px solid var(--border);
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .template-card:hover {
+            border-color: var(--primary);
+            background: rgba(32, 178, 170, 0.1);
+        }
+
+        .template-card.selected {
+            border-color: var(--accent);
+            background: rgba(218, 165, 32, 0.1);
+        }
+
+        .template-card-title {
+            color: var(--accent);
+            font-weight: 600;
+            margin-bottom: 5px;
+        }
+
+        .template-card-desc {
+            font-size: 12px;
+            color: var(--text-muted);
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-size: 14px;
+            font-weight: 500;
+            color: var(--text);
+        }
+
+        input[type="text"],
+        textarea,
+        select {
+            width: 100%;
+            padding: 10px;
+            background: var(--surface-light);
+            border: 1px solid var(--border);
+            color: var(--text);
+            border-radius: 4px;
+            font-family: inherit;
+            font-size: 14px;
+        }
+
+        textarea {
+            resize: vertical;
+            min-height: 60px;
+        }
+
+        .topic-list {
+            margin-top: 15px;
+        }
+
+        .topic-item {
+            background: var(--surface-light);
+            padding: 12px;
+            margin-bottom: 10px;
+            border-radius: 4px;
+            border-left: 3px solid var(--primary);
+        }
+
+        .topic-item-title {
+            font-weight: 600;
+            color: var(--primary);
+            margin-bottom: 5px;
+        }
+
+        .topic-item-subtopics {
+            font-size: 13px;
+            color: var(--text-muted);
+            margin-left: 10px;
+        }
+
+        .btn {
+            padding: 10px 16px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            transition: all 0.2s;
+        }
+
+        .btn-primary {
+            background: var(--primary);
+            color: var(--dark-bg);
+        }
+
+        .btn-primary:hover {
+            background: #1a9f99;
+        }
+
+        .btn-secondary {
+            background: var(--surface-light);
+            color: var(--text);
+            border: 1px solid var(--border);
+        }
+
+        .btn-secondary:hover {
+            border-color: var(--primary);
+        }
+
+        .btn-danger {
+            background: var(--error);
+            color: white;
+        }
+
+        .btn-danger:hover {
+            background: #e53935;
+        }
+
+        .btn-sm {
+            padding: 6px 12px;
+            font-size: 12px;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-top: 20px;
+        }
+
+        /* Roadmap Tab */
+        .roadmap {
+            position: relative;
+            padding: 40px 0;
+        }
+
+        .roadmap-path {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .roadmap-item {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .roadmap-circle {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            flex-shrink: 0;
+            border: 2px solid var(--border);
+        }
+
+        .roadmap-circle.not-started {
+            background: rgba(158, 158, 158, 0.2);
+            border-color: var(--border);
+            color: var(--text-muted);
+        }
+
+        .roadmap-circle.in-progress {
+            background: rgba(218, 165, 32, 0.3);
+            border-color: var(--accent);
+            color: var(--accent);
+        }
+
+        .roadmap-circle.completed {
+            background: rgba(76, 175, 80, 0.3);
+            border-color: var(--success);
+            color: var(--success);
+        }
+
+        .roadmap-content {
+            flex: 1;
+            background: var(--surface);
+            padding: 15px;
+            border-radius: 6px;
+        }
+
+        .roadmap-title {
+            color: var(--primary);
+            font-weight: 600;
+            margin-bottom: 5px;
+        }
+
+        .roadmap-subtopics {
+            font-size: 13px;
+            color: var(--text-muted);
+            margin-bottom: 10px;
+        }
+
+        .roadmap-progress {
+            font-size: 12px;
+            color: var(--text-muted);
+            margin-bottom: 10px;
+        }
+
+        .progress-bar {
+            height: 6px;
+            background: var(--surface-light);
+            border-radius: 3px;
+            overflow: hidden;
+            margin-bottom: 10px;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--primary), var(--accent));
+            border-radius: 3px;
+        }
+
+        .status-buttons {
+            display: flex;
+            gap: 8px;
+        }
+
+        .status-btn {
+            padding: 6px 12px;
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            background: transparent;
+            color: var(--text-muted);
+            cursor: pointer;
+            font-size: 12px;
+            transition: all 0.2s;
+        }
+
+        .status-btn:hover {
+            border-color: var(--primary);
+        }
+
+        .status-btn.active {
+            background: var(--primary);
+            color: var(--dark-bg);
+            border-color: var(--primary);
+        }
+
+        /* Progress Tab */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+
+        .stat-card {
+            background: var(--surface);
+            padding: 20px;
+            border-radius: 8px;
+            border-left: 4px solid var(--primary);
+        }
+
+        .stat-value {
+            font-size: 32px;
+            font-weight: 700;
+            color: var(--accent);
+            margin-bottom: 5px;
+        }
+
+        .stat-label {
+            font-size: 13px;
+            color: var(--text-muted);
+        }
+
+        .progress-timeline {
+            margin-top: 30px;
+        }
+
+        .progress-timeline h3 {
+            color: var(--primary);
+            margin-bottom: 15px;
+        }
+
+        .timeline-item {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 15px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .timeline-item:last-child {
+            border-bottom: none;
+        }
+
+        .timeline-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            font-size: 18px;
+        }
+
+        .timeline-icon.completed {
+            background: rgba(76, 175, 80, 0.2);
+            color: var(--success);
+        }
+
+        .timeline-icon.in-progress {
+            background: rgba(218, 165, 32, 0.2);
+            color: var(--accent);
+        }
+
+        .timeline-content h4 {
+            color: var(--primary);
+            font-size: 14px;
+            margin-bottom: 3px;
+        }
+
+        .timeline-content p {
+            font-size: 12px;
+            color: var(--text-muted);
+        }
+
+        /* Tips Tab */
+        .tips-selector {
+            margin-bottom: 20px;
+        }
+
+        .tips-list {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .tip-card {
+            background: var(--surface);
+            padding: 15px;
+            border-radius: 6px;
+            border-left: 4px solid var(--primary);
+        }
+
+        .tip-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 10px;
+        }
+
+        .tip-topic {
+            font-weight: 600;
+            color: var(--primary);
+            font-size: 14px;
+        }
+
+        .tip-level {
+            background: var(--surface-light);
+            color: var(--accent);
+            padding: 2px 8px;
+            border-radius: 3px;
+            font-size: 11px;
+        }
+
+        .tip-text {
+            color: var(--text);
+            font-size: 14px;
+            margin-bottom: 10px;
+            line-height: 1.6;
+        }
+
+        .tip-actions {
+            display: flex;
+            gap: 8px;
+            margin-top: 10px;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 40px 20px;
+            color: var(--text-muted);
+        }
+
+        .empty-state-icon {
+            font-size: 48px;
+            margin-bottom: 15px;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 15px;
+            }
+
+            h1 {
+                font-size: 22px;
+            }
+
+            .tabs {
+                gap: 5px;
+            }
+
+            .tab-btn {
+                padding: 10px 15px;
+                font-size: 13px;
+            }
+
+            .template-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .roadmap-item {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .status-buttons {
+                flex-wrap: wrap;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>📚 Learning Roadmap</h1>
+            <div class="goal-display">
+                <span id="goalDisplay">No learning goal defined yet</span>
+            </div>
+        </header>
+
+        <div class="tabs">
+            <button class="tab-btn active" data-tab="define-path">Define Path</button>
+            <button class="tab-btn" data-tab="roadmap">Roadmap</button>
+            <button class="tab-btn" data-tab="progress">Progress</button>
+            <button class="tab-btn" data-tab="tips">Tips & Tricks</button>
+        </div>
+
+        <!-- Define Path Tab -->
+        <div id="define-path" class="tab-content active">
+            <div class="path-section">
+                <h3>Select a Template</h3>
+                <div class="template-grid" id="templateGrid"></div>
+            </div>
+
+            <div class="path-section">
+                <h3>Learning Goal</h3>
+                <div class="form-group">
+                    <label for="goalName">Goal Name</label>
+                    <input type="text" id="goalName" placeholder="e.g., Learn ASP.NET Core">
+                </div>
+                <div class="form-group">
+                    <label for="goalDescription">Description</label>
+                    <textarea id="goalDescription" placeholder="Why are you learning this?"></textarea>
+                </div>
+            </div>
+
+            <div class="path-section">
+                <h3>Learning Path</h3>
+                <div id="topicList" class="topic-list"></div>
+                <button class="btn btn-secondary btn-sm" id="addTopicBtn">+ Add Topic</button>
+            </div>
+
+            <div class="button-group">
+                <button class="btn btn-primary" id="savePath">Save Learning Path</button>
+                <button class="btn btn-secondary" id="resetPath">Reset</button>
+            </div>
+        </div>
+
+        <!-- Roadmap Tab -->
+        <div id="roadmap" class="tab-content">
+            <div class="roadmap" id="roadmapContainer">
+                <div class="empty-state">
+                    <div class="empty-state-icon">🗺️</div>
+                    <p>Define your learning path first</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Progress Tab -->
+        <div id="progress" class="tab-content">
+            <div class="stats-grid" id="statsGrid"></div>
+            <div class="progress-timeline">
+                <h3>Progress Timeline</h3>
+                <div id="progressTimeline"></div>
+            </div>
+        </div>
+
+        <!-- Tips Tab -->
+        <div id="tips" class="tab-content">
+            <div class="tips-selector">
+                <label for="tipsTopic">Show tips for:</label>
+                <select id="tipsTopic" style="margin-top: 5px;">
+                    <option value="all">All Topics</option>
+                </select>
+            </div>
+            <div class="tips-list" id="tipsList">
+                <div class="empty-state">
+                    <div class="empty-state-icon">💡</div>
+                    <p>No tips yet. Define your learning path first.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Templates with topics and pre-loaded tips
+        const TEMPLATES = {
+            csharp: {
+                name: 'Learn C#',
+                description: 'Complete C# fundamentals',
+                topics: [
+                    {
+                        name: 'Fundamentals',
+                        subtopics: ['Variables', 'Data Types', 'Operators'],
+                        tips: [
+                            { level: 'Beginner', text: 'Start with int, string, and bool types before exploring complex types.' },
+                            { level: 'Intermediate', text: 'Understand value vs reference types early—it shapes your entire C# journey.' }
+                        ]
+                    },
+                    {
+                        name: 'Object-Oriented Programming',
+                        subtopics: ['Classes', 'Inheritance', 'Polymorphism', 'Encapsulation'],
+                        tips: [
+                            { level: 'Beginner', text: 'Master single inheritance before exploring interfaces and abstract classes.' },
+                            { level: 'Intermediate', text: 'Use composition over inheritance when you find yourself questioning the design.' }
+                        ]
+                    },
+                    {
+                        name: 'Advanced Concepts',
+                        subtopics: ['LINQ', 'Async/Await', 'Delegates', 'Events'],
+                        tips: [
+                            { level: 'Intermediate', text: 'Learn LINQ fundamentals (Select, Where, Join) before attempting complex queries.' },
+                            { level: 'Advanced', text: 'Never block async code with .Result—it defeats the purpose and risks deadlocks.' }
+                        ]
+                    }
+                ]
+            },
+            aspnetcore: {
+                name: 'Learn ASP.NET Core',
+                description: 'Web development with ASP.NET Core',
+                topics: [
+                    {
+                        name: 'Foundations',
+                        subtopics: ['HTTP', 'Routing', 'Middleware'],
+                        tips: [
+                            { level: 'Beginner', text: 'Understand HTTP request/response cycle before diving into middleware.' },
+                            { level: 'Intermediate', text: 'Middleware order matters—log early, authenticate next, then business logic.' }
+                        ]
+                    },
+                    {
+                        name: 'MVC & Controllers',
+                        subtopics: ['Controllers', 'Views', 'Models', 'Data Binding'],
+                        tips: [
+                            { level: 'Beginner', text: 'Keep controllers thin—move business logic to services.' },
+                            { level: 'Intermediate', text: 'Use model validation attributes to reduce boilerplate in controllers.' }
+                        ]
+                    },
+                    {
+                        name: 'Data Access',
+                        subtopics: ['Entity Framework Core', 'DbContext', 'Migrations', 'Relationships'],
+                        tips: [
+                            { level: 'Beginner', text: 'Start with simple models before tackling complex relationships.' },
+                            { level: 'Intermediate', text: 'Always use parameterized queries—never concatenate SQL strings.' }
+                        ]
+                    },
+                    {
+                        name: 'Authentication & Security',
+                        subtopics: ['Identity', 'Roles', 'Claims', 'HTTPS'],
+                        tips: [
+                            { level: 'Intermediate', text: 'Use ASP.NET Core Identity for standard auth—don\'t reinvent the wheel.' },
+                            { level: 'Advanced', text: 'Implement role-based access control through claims and policies, not role strings.' }
+                        ]
+                    }
+                ]
+            },
+            sql: {
+                name: 'Learn SQL',
+                description: 'Database querying and design',
+                topics: [
+                    {
+                        name: 'Basics',
+                        subtopics: ['SELECT', 'WHERE', 'ORDER BY', 'LIMIT'],
+                        tips: [
+                            { level: 'Beginner', text: 'Master SELECT and WHERE before touching JOINs.' },
+                            { level: 'Beginner', text: 'Always use ORDER BY when you need predictable results.' }
+                        ]
+                    },
+                    {
+                        name: 'Joins & Relationships',
+                        subtopics: ['INNER JOIN', 'LEFT JOIN', 'Multiple Joins'],
+                        tips: [
+                            { level: 'Beginner', text: 'Start with INNER JOIN, then learn LEFT JOIN—OUTER joins can wait.' },
+                            { level: 'Intermediate', text: 'Draw your table relationships before writing complex multi-table queries.' }
+                        ]
+                    },
+                    {
+                        name: 'Aggregation & Grouping',
+                        subtopics: ['GROUP BY', 'HAVING', 'COUNT', 'SUM', 'AVG'],
+                        tips: [
+                            { level: 'Beginner', text: 'Use GROUP BY only after you understand what it does with your data.' },
+                            { level: 'Intermediate', text: 'HAVING filters grouped results; WHERE filters raw data—use appropriately.' }
+                        ]
+                    },
+                    {
+                        name: 'Advanced Topics',
+                        subtopics: ['Window Functions', 'CTEs', 'Subqueries'],
+                        tips: [
+                            { level: 'Intermediate', text: 'Learn window functions (ROW_NUMBER, RANK, LAG, LEAD) for complex analytics.' },
+                            { level: 'Advanced', text: 'CTEs make complex queries readable—use them liberally for clarity.' }
+                        ]
+                    }
+                ]
+            },
+            javascript: {
+                name: 'Learn JavaScript',
+                description: 'Core JavaScript fundamentals',
+                topics: [
+                    {
+                        name: 'Basics',
+                        subtopics: ['Variables', 'Types', 'Operators', 'Control Flow'],
+                        tips: [
+                            { level: 'Beginner', text: 'Use const by default, let when needed, and avoid var.' },
+                            { level: 'Beginner', text: 'Understand falsy values (0, "", null, undefined, false, NaN) early.' }
+                        ]
+                    },
+                    {
+                        name: 'Functions & Scope',
+                        subtopics: ['Functions', 'Closures', 'Scope', 'This'],
+                        tips: [
+                            { level: 'Beginner', text: 'Functions are first-class objects—pass them around like any other value.' },
+                            { level: 'Intermediate', text: 'Master closures; they\'re fundamental to JavaScript patterns.' }
+                        ]
+                    },
+                    {
+                        name: 'Async JavaScript',
+                        subtopics: ['Callbacks', 'Promises', 'Async/Await'],
+                        tips: [
+                            { level: 'Intermediate', text: 'Avoid callback hell—use promises or async/await instead.' },
+                            { level: 'Intermediate', text: 'Async/await is syntactic sugar over promises—understand both.' }
+                        ]
+                    },
+                    {
+                        name: 'DOM & Events',
+                        subtopics: ['DOM Manipulation', 'Event Listeners', 'Event Delegation'],
+                        tips: [
+                            { level: 'Beginner', text: 'Cache DOM queries in variables—don\'t query the DOM repeatedly.' },
+                            { level: 'Intermediate', text: 'Use event delegation for dynamically added elements.' }
+                        ]
+                    }
+                ]
+            },
+            efcore: {
+                name: 'Learn Entity Framework Core',
+                description: 'ORM for .NET applications',
+                topics: [
+                    {
+                        name: 'Fundamentals',
+                        subtopics: ['DbContext', 'DbSet', 'Models', 'Configuration'],
+                        tips: [
+                            { level: 'Beginner', text: 'DbContext is your gateway to the database—keep it lightweight.' },
+                            { level: 'Intermediate', text: 'Configure relationships explicitly; don\'t rely on conventions for complex scenarios.' }
+                        ]
+                    },
+                    {
+                        name: 'Relationships',
+                        subtopics: ['One-to-Many', 'Many-to-Many', 'Cascading', 'Navigation Properties'],
+                        tips: [
+                            { level: 'Beginner', text: 'Start with one-to-many before tackling many-to-many relationships.' },
+                            { level: 'Intermediate', text: 'Use shadow properties for foreign keys in many-to-many joins.' }
+                        ]
+                    },
+                    {
+                        name: 'LINQ & Queries',
+                        subtopics: ['LINQ to Entities', 'Eager Loading', 'Lazy Loading', 'Projections'],
+                        tips: [
+                            { level: 'Beginner', text: 'Eager load only what you need—avoid over-fetching data.' },
+                            { level: 'Intermediate', text: 'Use Select projections to fetch only required columns from large tables.' }
+                        ]
+                    },
+                    {
+                        name: 'Advanced',
+                        subtopics: ['Change Tracking', 'Raw SQL', 'Migrations', 'Performance'],
+                        tips: [
+                            { level: 'Intermediate', text: 'Understand change tracking to avoid unexpected updates.' },
+                            { level: 'Advanced', text: 'Use AsNoTracking() for read-only queries to improve performance.' }
+                        ]
+                    }
+                ]
+            }
+        };
+
+        // Application State
+        let appState = {
+            selectedTemplate: null,
+            goalName: '',
+            goalDescription: '',
+            topics: [],
+            progress: {} // topicIndex -> 'not-started' | 'in-progress' | 'completed'
+        };
+
+        // Load state from localStorage
+        function loadState() {
+            const saved = localStorage.getItem('learningRoadmapState');
+            if (saved) {
+                appState = JSON.parse(saved);
+            }
+        }
+
+        // Save state to localStorage
+        function saveState() {
+            localStorage.setItem('learningRoadmapState', JSON.stringify(appState));
+        }
+
+        // Render templates
+        function renderTemplates() {
+            const grid = document.getElementById('templateGrid');
+            grid.innerHTML = Object.entries(TEMPLATES).map(([key, template]) => `
+                <div class="template-card ${appState.selectedTemplate === key ? 'selected' : ''}" data-template="${key}">
+                    <div class="template-card-title">${template.name}</div>
+                    <div class="template-card-desc">${template.description}</div>
+                </div>
+            `).join('');
+
+            grid.querySelectorAll('.template-card').forEach(card => {
+                card.addEventListener('click', selectTemplate);
+            });
+        }
+
+        function selectTemplate(e) {
+            const templateKey = e.currentTarget.dataset.template;
+            appState.selectedTemplate = templateKey;
+
+            const template = TEMPLATES[templateKey];
+            appState.topics = template.topics.map((topic, idx) => ({
+                ...topic,
+                id: idx
+            }));
+
+            renderTemplates();
+            renderTopicList();
+            updateGoalDisplay();
+        }
+
+        // Render topic list
+        function renderTopicList() {
+            const list = document.getElementById('topicList');
+            if (appState.topics.length === 0) {
+                list.innerHTML = '<p style="color: var(--text-muted); text-align: center;">Select a template first</p>';
+                return;
+            }
+
+            list.innerHTML = appState.topics.map((topic, idx) => `
+                <div class="topic-item">
+                    <div class="topic-item-title">${idx + 1}. ${topic.name}</div>
+                    <div class="topic-item-subtopics">
+                        ${topic.subtopics.join(' • ')}
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // Update goal display in header
+        function updateGoalDisplay() {
+            const display = document.getElementById('goalDisplay');
+            if (appState.goalName) {
+                display.innerHTML = `Learning: <strong>${appState.goalName}</strong>`;
+            } else {
+                display.textContent = 'No learning goal defined yet';
+            }
+        }
+
+        // Save learning path
+        function savePath() {
+            appState.goalName = document.getElementById('goalName').value;
+            appState.goalDescription = document.getElementById('goalDescription').value;
+
+            if (!appState.goalName || appState.topics.length === 0) {
+                alert('Please define a goal name and select a template');
+                return;
+            }
+
+            // Initialize progress if needed
+            appState.topics.forEach((_, idx) => {
+                if (!appState.progress[idx]) {
+                    appState.progress[idx] = 'not-started';
+                }
+            });
+
+            saveState();
+            updateGoalDisplay();
+            renderRoadmap();
+            renderProgress();
+            renderTips();
+            alert('Learning path saved!');
+        }
+
+        // Render roadmap
+        function renderRoadmap() {
+            const container = document.getElementById('roadmapContainer');
+
+            if (appState.topics.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-state-icon">🗺️</div>
+                        <p>Define your learning path first</p>
+                    </div>
+                `;
+                return;
+            }
+
+            const totalTopics = appState.topics.length;
+            const completedTopics = Object.values(appState.progress).filter(s => s === 'completed').length;
+
+            container.innerHTML = `
+                <div style="margin-bottom: 20px; padding-bottom: 20px; border-bottom: 1px solid var(--border);">
+                    <div style="color: var(--text-muted); font-size: 14px; margin-bottom: 8px;">Overall Progress</div>
+                    <div class="progress-bar">
+                        <div class="progress-fill" style="width: ${(completedTopics / totalTopics) * 100}%"></div>
+                    </div>
+                    <div style="color: var(--text); font-size: 14px;">${completedTopics} of ${totalTopics} completed</div>
+                </div>
+
+                <div class="roadmap-path">
+                    ${appState.topics.map((topic, idx) => {
+                        const status = appState.progress[idx] || 'not-started';
+                        const statusEmoji = {
+                            'not-started': '○',
+                            'in-progress': '◐',
+                            'completed': '●'
+                        }[status];
+
+                        return `
+                            <div class="roadmap-item">
+                                <div class="roadmap-circle ${status}">
+                                    ${statusEmoji}
+                                </div>
+                                <div class="roadmap-content">
+                                    <div class="roadmap-title">${idx + 1}. ${topic.name}</div>
+                                    <div class="roadmap-subtopics">${topic.subtopics.join(' • ')}</div>
+                                    <div class="roadmap-progress">Status: <strong>${status.charAt(0).toUpperCase() + status.slice(1).replace('-', ' ')}</strong></div>
+                                    <div class="status-buttons">
+                                        <button class="status-btn ${status === 'not-started' ? 'active' : ''}" data-topic="${idx}" data-status="not-started">Not Started</button>
+                                        <button class="status-btn ${status === 'in-progress' ? 'active' : ''}" data-topic="${idx}" data-status="in-progress">In Progress</button>
+                                        <button class="status-btn ${status === 'completed' ? 'active' : ''}" data-topic="${idx}" data-status="completed">Completed</button>
+                                    </div>
+                                </div>
+                            </div>
+                        `;
+                    }).join('')}
+                </div>
+            `;
+
+            // Attach status button listeners
+            container.querySelectorAll('.status-btn').forEach(btn => {
+                btn.addEventListener('click', updateTopicStatus);
+            });
+        }
+
+        function updateTopicStatus(e) {
+            const topicIdx = parseInt(e.currentTarget.dataset.topic);
+            const newStatus = e.currentTarget.dataset.status;
+            appState.progress[topicIdx] = newStatus;
+            saveState();
+            renderRoadmap();
+            renderProgress();
+        }
+
+        // Render progress tab
+        function renderProgress() {
+            const totalTopics = appState.topics.length;
+            const completedTopics = Object.values(appState.progress).filter(s => s === 'completed').length;
+            const inProgressTopics = Object.values(appState.progress).filter(s => s === 'in-progress').length;
+            const percentComplete = totalTopics > 0 ? Math.round((completedTopics / totalTopics) * 100) : 0;
+
+            const statsGrid = document.getElementById('statsGrid');
+            statsGrid.innerHTML = `
+                <div class="stat-card">
+                    <div class="stat-value">${percentComplete}%</div>
+                    <div class="stat-label">Overall Progress</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">${completedTopics}</div>
+                    <div class="stat-label">Completed Topics</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">${inProgressTopics}</div>
+                    <div class="stat-label">In Progress</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">${totalTopics - completedTopics - inProgressTopics}</div>
+                    <div class="stat-label">Not Started</div>
+                </div>
+            `;
+
+            // Progress timeline
+            const timeline = document.getElementById('progressTimeline');
+            if (appState.topics.length === 0) {
+                timeline.innerHTML = '<p style="color: var(--text-muted); text-align: center;">Define your learning path first</p>';
+                return;
+            }
+
+            timeline.innerHTML = appState.topics.map((topic, idx) => {
+                const status = appState.progress[idx] || 'not-started';
+                const isCompleted = status === 'completed';
+                const isInProgress = status === 'in-progress';
+
+                return `
+                    <div class="timeline-item">
+                        <div class="timeline-icon ${isCompleted ? 'completed' : isInProgress ? 'in-progress' : ''}">
+                            ${isCompleted ? '✓' : isInProgress ? '→' : '○'}
+                        </div>
+                        <div class="timeline-content">
+                            <h4>${topic.name}</h4>
+                            <p>${topic.subtopics.slice(0, 2).join(', ')}${topic.subtopics.length > 2 ? '...' : ''}</p>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // Render tips
+        function renderTips() {
+            const topicSelect = document.getElementById('tipsTopic');
+            topicSelect.innerHTML = '<option value="all">All Topics</option>' +
+                appState.topics.map((topic, idx) =>
+                    `<option value="${idx}">${topic.name}</option>`
+                ).join('');
+
+            updateTipsDisplay();
+            topicSelect.addEventListener('change', updateTipsDisplay);
+        }
+
+        function updateTipsDisplay() {
+            const selectedTopic = document.getElementById('tipsTopic').value;
+            const tipsList = document.getElementById('tipsList');
+
+            if (appState.topics.length === 0) {
+                tipsList.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-state-icon">💡</div>
+                        <p>No tips yet. Define your learning path first.</p>
+                    </div>
+                `;
+                return;
+            }
+
+            let allTips = [];
+            appState.topics.forEach((topic, idx) => {
+                if (selectedTopic === 'all' || selectedTopic === String(idx)) {
+                    if (topic.tips) {
+                        allTips = allTips.concat(
+                            topic.tips.map(tip => ({
+                                ...tip,
+                                topicName: topic.name,
+                                topicIdx: idx
+                            }))
+                        );
+                    }
+                }
+            });
+
+            if (allTips.length === 0) {
+                tipsList.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-state-icon">💡</div>
+                        <p>No tips for this topic yet.</p>
+                    </div>
+                `;
+                return;
+            }
+
+            tipsList.innerHTML = allTips.map((tip, idx) => `
+                <div class="tip-card">
+                    <div class="tip-header">
+                        <div>
+                            <div class="tip-topic">${tip.topicName}</div>
+                        </div>
+                        <span class="tip-level">${tip.level}</span>
+                    </div>
+                    <div class="tip-text">${tip.text}</div>
+                    <div class="tip-actions">
+                        <button class="btn btn-secondary btn-sm">📝 Edit</button>
+                        <button class="btn btn-danger btn-sm">🗑 Delete</button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // Tab navigation
+        document.querySelectorAll('.tab-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+                document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+
+                btn.classList.add('active');
+                const tabId = btn.dataset.tab;
+                document.getElementById(tabId).classList.add('active');
+            });
+        });
+
+        // Event listeners
+        document.getElementById('savePath').addEventListener('click', savePath);
+        document.getElementById('resetPath').addEventListener('click', () => {
+            if (confirm('Reset all progress? This cannot be undone.')) {
+                appState = {
+                    selectedTemplate: null,
+                    goalName: '',
+                    goalDescription: '',
+                    topics: [],
+                    progress: {}
+                };
+                saveState();
+                document.getElementById('goalName').value = '';
+                document.getElementById('goalDescription').value = '';
+                renderTemplates();
+                renderTopicList();
+                updateGoalDisplay();
+                alert('Reset complete');
+            }
+        });
+
+        // Initialize
+        loadState();
+        renderTemplates();
+        renderTopicList();
+        if (appState.goalName) {
+            document.getElementById('goalName').value = appState.goalName;
+            document.getElementById('goalDescription').value = appState.goalDescription;
+            renderRoadmap();
+            renderProgress();
+            renderTips();
+        }
+        updateGoalDisplay();
+    </script>
+</body>
+</html>
