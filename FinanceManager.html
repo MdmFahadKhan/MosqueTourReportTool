@@ -54,16 +54,23 @@
     #app {
         display: flex;
         min-height: 100vh;
+        margin-left: var(--nav-width);
     }
 
     #sidebar {
+        position: fixed;
+        left: 0;
+        top: 0;
         width: var(--nav-width);
+        height: 100vh;
         flex-shrink: 0;
         background: var(--color-bg-elevated);
         border-right: 1px solid var(--color-border);
         display: flex;
         flex-direction: column;
         padding: 20px 0;
+        overflow-y: auto;
+        z-index: 100;
     }
 
     #sidebar .brand {
@@ -157,7 +164,13 @@
     }
 
     .view-header {
+        position: sticky;
+        top: 0;
+        z-index: 90;
+        background: var(--color-bg);
+        padding: 0 0 20px 0;
         margin-bottom: 20px;
+        border-bottom: 1px solid var(--color-border);
     }
 
     .view-header h1 {
@@ -820,6 +833,7 @@
     }
 </style>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 </head>
 <body>
 
@@ -985,6 +999,7 @@
                 <div class="form-actions" style="margin-bottom: 16px;">
                     <button type="button" class="btn btn-primary" id="transaction-add-btn">+ Add Transaction</button>
                     <button type="button" class="btn btn-secondary" id="transaction-screenshot-btn">📷 Screenshot</button>
+                    <button type="button" class="btn btn-secondary" id="transaction-export-pdf-btn">📄 Export PDF</button>
                 </div>
 
                 <div class="form-card" id="transaction-summary-card">
@@ -2603,6 +2618,7 @@
             document.getElementById("transaction-filter-toggle-btn").addEventListener("click", TransactionsView.toggleFilterPanel);
             document.getElementById("transaction-summary-toggle-btn").addEventListener("click", TransactionsView.toggleSummaryPanel);
             document.getElementById("transaction-screenshot-btn").addEventListener("click", TransactionsView.handleScreenshot);
+            document.getElementById("transaction-export-pdf-btn").addEventListener("click", TransactionsView.handleExportPdf);
             TransactionsView.applyFilterCollapsedState();
             TransactionsView.applySummarCollapsedState();
 
@@ -2820,6 +2836,139 @@
                 console.error("Screenshot error:", error);
                 document.body.removeChild(screenshotDiv);
                 UI.showNotification("Error capturing screenshot. Please try again.", "error");
+            });
+        },
+
+        handleExportPdf: function () {
+            var filtered = TransactionsView.getAccountAwareList();
+            var summary = TransactionsView.calculateSummary();
+
+            // Create temporary HTML container for PDF
+            var pdfDiv = document.createElement("div");
+            pdfDiv.style.position = "absolute";
+            pdfDiv.style.left = "-9999px";
+            pdfDiv.style.backgroundColor = "white";
+            pdfDiv.style.color = "black";
+            pdfDiv.style.padding = "20px";
+            pdfDiv.style.width = "900px";
+
+            // Build HTML content
+            var pdfHtml = '<div style="font-family: Arial, sans-serif;">';
+
+            // Title
+            pdfHtml += '<h1 style="margin: 0 0 20px 0; color: black; font-size: 24px; border-bottom: 2px solid #333; padding-bottom: 10px;">Transaction Report</h1>';
+
+            // Summary section
+            pdfHtml += '<div style="margin-bottom: 30px;">';
+            pdfHtml += '<h2 style="margin: 0 0 15px 0; color: #333; font-size: 16px;">Summary</h2>';
+            pdfHtml += '<table style="width: 100%; border-collapse: collapse; margin-bottom: 20px;">';
+            pdfHtml += '<tr style="background-color: #f0f0f0;">';
+            pdfHtml += '<td style="border: 1px solid #ccc; padding: 8px; font-weight: 600; color: black;">Account</td>';
+            pdfHtml += '<td style="border: 1px solid #ccc; padding: 8px; color: black;">' + Utilities.escapeHtml(summary.account) + '</td>';
+            pdfHtml += '</tr>';
+            pdfHtml += '<tr>';
+            pdfHtml += '<td style="border: 1px solid #ccc; padding: 8px; font-weight: 600; color: black;">Type</td>';
+            pdfHtml += '<td style="border: 1px solid #ccc; padding: 8px; color: black;">' + Utilities.escapeHtml(summary.type) + '</td>';
+            pdfHtml += '</tr>';
+            pdfHtml += '<tr style="background-color: #f9f9f9;">';
+            pdfHtml += '<td style="border: 1px solid #ccc; padding: 8px; font-weight: 600; color: black;">From Date</td>';
+            pdfHtml += '<td style="border: 1px solid #ccc; padding: 8px; color: black;">' + (summary.fromDate === "N/A" ? "N/A" : Utilities.formatDateDisplay(summary.fromDate)) + '</td>';
+            pdfHtml += '</tr>';
+            pdfHtml += '<tr>';
+            pdfHtml += '<td style="border: 1px solid #ccc; padding: 8px; font-weight: 600; color: black;">To Date</td>';
+            pdfHtml += '<td style="border: 1px solid #ccc; padding: 8px; color: black;">' + (summary.toDate === "N/A" ? "N/A" : Utilities.formatDateDisplay(summary.toDate)) + '</td>';
+            pdfHtml += '</tr>';
+            pdfHtml += '<tr style="background-color: #f9f9f9;">';
+            pdfHtml += '<td style="border: 1px solid #ccc; padding: 8px; font-weight: 600; color: black;">Total Credit</td>';
+            pdfHtml += '<td style="border: 1px solid #ccc; padding: 8px; color: green; font-weight: 600;">' + Utilities.formatCurrency(summary.totalCredit) + '</td>';
+            pdfHtml += '</tr>';
+            pdfHtml += '<tr>';
+            pdfHtml += '<td style="border: 1px solid #ccc; padding: 8px; font-weight: 600; color: black;">Total Debit</td>';
+            pdfHtml += '<td style="border: 1px solid #ccc; padding: 8px; color: red; font-weight: 600;">' + Utilities.formatCurrency(summary.totalDebit) + '</td>';
+            pdfHtml += '</tr>';
+            pdfHtml += '<tr style="background-color: #f9f9f9;">';
+            pdfHtml += '<td style="border: 1px solid #ccc; padding: 8px; font-weight: 600; color: black;">Closing Balance</td>';
+            pdfHtml += '<td style="border: 1px solid #ccc; padding: 8px; color: ' + (summary.closingBalance < 0 ? 'red' : 'black') + '; font-weight: 600;">' + Utilities.formatCurrency(summary.closingBalance) + '</td>';
+            pdfHtml += '</tr>';
+            pdfHtml += '</table>';
+            pdfHtml += '<p style="color: #666; font-size: 12px; margin: 10px 0 0 0;">Generated on: ' + new Date().toLocaleString() + '</p>';
+            pdfHtml += '</div>';
+
+            // Transactions table
+            pdfHtml += '<div>';
+            pdfHtml += '<h2 style="margin: 0 0 15px 0; color: #333; font-size: 16px;">All Filtered Transactions (' + filtered.length + ')</h2>';
+            pdfHtml += '<table style="width: 100%; border-collapse: collapse; font-size: 11px;">';
+            pdfHtml += '<thead><tr style="background-color: #333; color: white;">';
+            pdfHtml += '<th style="border: 1px solid #ccc; padding: 8px; text-align: left;">S.No</th>';
+            pdfHtml += '<th style="border: 1px solid #ccc; padding: 8px; text-align: left;">Date</th>';
+            pdfHtml += '<th style="border: 1px solid #ccc; padding: 8px; text-align: left;">Type</th>';
+            pdfHtml += '<th style="border: 1px solid #ccc; padding: 8px; text-align: left;">Narration</th>';
+            pdfHtml += '<th style="border: 1px solid #ccc; padding: 8px; text-align: left;">Account</th>';
+            pdfHtml += '<th style="border: 1px solid #ccc; padding: 8px; text-align: right;">Amount</th>';
+            pdfHtml += '</tr></thead>';
+            pdfHtml += '<tbody>';
+
+            filtered.forEach(function (t, idx) {
+                var typeLabel = t.type === "income" ? "Income" : "Expense";
+                var amountColor = t.type === "income" ? "green" : "red";
+                var rowBg = idx % 2 === 0 ? "white" : "#f9f9f9";
+                pdfHtml += '<tr style="background-color: ' + rowBg + ';">';
+                pdfHtml += '<td style="border: 1px solid #ccc; padding: 8px; color: black;">' + t.sNo + '</td>';
+                pdfHtml += '<td style="border: 1px solid #ccc; padding: 8px; color: black;">' + Utilities.formatDateDisplay(t.date) + '</td>';
+                pdfHtml += '<td style="border: 1px solid #ccc; padding: 8px; color: black;">' + typeLabel + '</td>';
+                pdfHtml += '<td style="border: 1px solid #ccc; padding: 8px; color: black;">' + Utilities.escapeHtml(t.narration) + '</td>';
+                pdfHtml += '<td style="border: 1px solid #ccc; padding: 8px; color: black;">' + Utilities.escapeHtml(t.accountName) + '</td>';
+                pdfHtml += '<td style="border: 1px solid #ccc; padding: 8px; text-align: right; color: ' + amountColor + '; font-weight: 600;">' + Utilities.formatCurrency(t.amount) + '</td>';
+                pdfHtml += '</tr>';
+            });
+
+            pdfHtml += '</tbody></table>';
+            pdfHtml += '</div>';
+            pdfHtml += '</div>';
+
+            pdfDiv.innerHTML = pdfHtml;
+            document.body.appendChild(pdfDiv);
+
+            // Use html2canvas and jsPDF to create PDF
+            html2canvas(pdfDiv, {
+                backgroundColor: "white",
+                scale: 2
+            }).then(function (canvas) {
+                var imgData = canvas.toDataURL("image/png");
+                var jsPDFLib = window.jspdf.jsPDF;
+                var pdf = new jsPDFLib({
+                    orientation: "portrait",
+                    unit: "mm",
+                    format: "a4"
+                });
+
+                var imgWidth = 190; // A4 width minus margins
+                var pageHeight = pdf.internal.pageSize.getHeight();
+                var imgHeight = (canvas.height * imgWidth) / canvas.width;
+                var heightLeft = imgHeight;
+                var position = 10;
+
+                // Add image to PDF with pagination
+                pdf.addImage(imgData, "PNG", 10, position, imgWidth, imgHeight);
+                heightLeft -= (pageHeight - 20);
+
+                while (heightLeft > 0) {
+                    position = heightLeft - imgHeight + 10;
+                    pdf.addPage();
+                    pdf.addImage(imgData, "PNG", 10, position, imgWidth, imgHeight);
+                    heightLeft -= (pageHeight - 20);
+                }
+
+                // Download PDF
+                var today = Utilities.getTodayIso();
+                pdf.save("transactions-" + today + ".pdf");
+
+                document.body.removeChild(pdfDiv);
+                UI.showNotification("PDF exported successfully.", "success");
+            }).catch(function (error) {
+                console.error("PDF export error:", error);
+                document.body.removeChild(pdfDiv);
+                UI.showNotification("Error exporting PDF. Please try again.", "error");
             });
         },
 
