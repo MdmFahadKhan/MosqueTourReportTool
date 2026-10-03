@@ -1,0 +1,1280 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Invoice & Receipt Generator</title>
+<style>
+  :root{
+    --bg-0:#071e20; --bg-1:#0d3538; --bg-2:#124547;
+    --gold:#c9a34e; --gold-bright:#f0cf85;
+    --cream:#f3ecdd; --cream-dim:#cfc6b3;
+    --line:rgba(201,163,78,0.22); --shadow:rgba(0,0,0,0.35);
+    --success:#4ade80; --warning:#facc15;
+  }
+  *{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:radial-gradient(120% 140% at 50% -10%, var(--bg-2) 0%, var(--bg-1) 45%, var(--bg-0) 100%);
+    color:var(--cream);
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",system-ui,sans-serif;
+    min-height:100vh; padding-bottom:50px;
+  }
+
+  header{ text-align:center; padding:30px 20px 0; }
+  header .eyebrow{ font-size:11px; letter-spacing:.24em; text-transform:uppercase; color:var(--gold); opacity:.8; margin-bottom:6px;}
+  header h1{ font-family:Georgia,serif; font-size:24px; margin:0 0 20px; font-weight:600;}
+
+  .tabs{
+    display:flex; gap:0; justify-content:center; padding:0 20px 20px;
+    border-bottom:1px solid var(--line);
+  }
+  .tabs button{
+    background:transparent; border:none; color:var(--cream-dim); padding:12px 24px;
+    font-size:14px; font-weight:600; cursor:pointer; position:relative;
+    transition:color .2s ease;
+  }
+  .tabs button:hover{ color:var(--gold); }
+  .tabs button.active{
+    color:var(--gold-bright);
+  }
+  .tabs button.active::after{
+    content:''; position:absolute; bottom:-1px; left:0; right:0;
+    height:2px; background:var(--gold);
+  }
+
+  main{ max-width:640px; margin:0 auto; padding:14px 18px; }
+  .page{ display:none; }
+  .page.active{ display:block; }
+
+  .card{
+    background:linear-gradient(180deg, rgba(255,255,255,0.03), rgba(255,255,255,0.01));
+    border:1px solid var(--line); border-radius:16px;
+    padding:16px 18px 18px; margin-bottom:16px;
+    box-shadow:0 8px 24px var(--shadow);
+  }
+  .card h2{ font-size:13px; text-transform:uppercase; letter-spacing:.14em; color:var(--gold); margin:0 0 12px; font-weight:600;}
+
+  .grid2{ display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+  @media(max-width:480px){ .grid2{ grid-template-columns:1fr; } }
+
+  label{ font-size:11.5px; color:var(--cream-dim); display:block; margin-bottom:4px; }
+  input[type=text], input[type=number], input[type=date], textarea, select{
+    width:100%; background:rgba(255,255,255,0.04); border:1px solid var(--line);
+    border-radius:10px; padding:9px 11px; color:var(--cream); font-size:14px;
+    margin-bottom:10px; font-family:inherit;
+  }
+  textarea{ resize:vertical; min-height:60px; }
+  input::placeholder, textarea::placeholder{ color:var(--cream-dim); opacity:.55; }
+  select{ cursor:pointer; }
+  select option{ background:var(--bg-0); color:var(--cream); }
+
+  /* line items */
+  .item-row{
+    display:grid; grid-template-columns:1fr 60px 80px 80px 28px;
+    gap:6px; align-items:center; margin-bottom:8px;
+  }
+  .item-row input{ margin-bottom:0; font-size:13px; padding:8px; }
+  .item-row .amt{ text-align:right; color:var(--gold-bright); font-size:13px; padding:0 4px; }
+  .item-row .del{ background:transparent; border:none; color:var(--cream-dim); font-size:16px; opacity:.7; cursor:pointer;}
+  .item-head{
+    display:grid; grid-template-columns:1fr 60px 80px 80px 28px; gap:6px;
+    font-size:10px; text-transform:uppercase; letter-spacing:.06em; color:var(--cream-dim);
+    margin-bottom:6px; opacity:.7;
+  }
+  .add-item-btn, .generate-btn, .out-actions button{
+    border-radius:10px; padding:9px; width:100%; font-size:13px; font-weight:600;
+  }
+  .add-item-btn{
+    background:transparent; border:1px dashed var(--line); color:var(--gold); margin-top:4px; cursor:pointer;
+  }
+  .generate-btn{
+    background:var(--gold); color:var(--bg-0); border:none; font-size:15px; padding:14px; margin-top:4px; cursor:pointer;
+  }
+  .out-actions button{
+    background:transparent; border:1px solid var(--gold); color:var(--gold-bright); padding:10px;
+    font-size:13px; cursor:pointer;
+  }
+  .out-actions button.primary{ background:var(--gold); color:var(--bg-0); border:none;}
+
+  .totals{ margin-top:12px; border-top:1px solid var(--line); padding-top:10px; }
+  .totals .row{ display:flex; justify-content:space-between; font-size:13.5px; padding:4px 0; }
+  .totals .row.grand{ font-size:17px; font-weight:700; color:var(--gold-bright); border-top:1px solid var(--line); margin-top:4px; padding-top:8px; }
+  .tax-row input, .amountpaid-row input{ width:70px; display:inline-block; margin:0 0 0 6px; padding:5px 8px; font-size:13px; }
+
+  #outputCard, #invOutputCard, #recOutputCard{ display:none; }
+  #outputText, #invOutputText, #recOutputText{
+    width:100%; min-height:360px; background:rgba(0,0,0,0.25); border:1px solid var(--line);
+    border-radius:10px; padding:14px; color:var(--cream); font-family:"SF Mono", Menlo, Consolas, monospace;
+    font-size:12.5px; white-space:pre; overflow-x:auto; line-height:1.5;
+  }
+  .out-actions{ display:flex; gap:10px; margin-top:10px; }
+  .out-actions button{ flex:1; }
+
+  .save-bar{
+    display:flex; align-items:center; justify-content:space-between;
+    max-width:640px; margin:0 auto; padding:0 18px 4px; font-size:11.5px; color:var(--cream-dim);
+  }
+  .save-bar #saveStatus{ color:var(--gold-bright); opacity:0; transition:opacity .3s ease; }
+  .save-bar #saveStatus.show{ opacity:1; }
+  .save-bar button{
+    background:transparent; border:1px solid var(--line); color:var(--cream-dim);
+    border-radius:8px; padding:5px 10px; font-size:11px; cursor:pointer;
+  }
+
+  .archive-header{ display:flex; justify-content:space-between; align-items:center; margin-bottom:14px; }
+  .archive-header h3{ margin:0; font-size:15px; }
+
+  .archive-list{
+    display:flex; flex-direction:column; gap:10px;
+  }
+  .archive-item{
+    background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
+    border:1px solid var(--line); border-radius:12px; padding:12px 14px;
+    cursor:pointer; transition:all .2s ease;
+  }
+  .archive-item:hover{
+    background:linear-gradient(180deg, rgba(255,255,255,0.04), rgba(255,255,255,0.02));
+    border-color:var(--gold);
+  }
+  .archive-item-row{
+    display:flex; justify-content:space-between; align-items:center; font-size:13px; margin-bottom:6px;
+  }
+  .archive-item-row:last-child{ margin-bottom:0; }
+  .archive-item-num{ font-weight:600; color:var(--gold-bright); }
+  .archive-item-meta{ font-size:11px; color:var(--cream-dim); }
+  .archive-item-status{
+    display:inline-block; font-size:10px; padding:2px 6px; border-radius:4px;
+    background:rgba(74,222,128,0.15); color:var(--success); text-transform:uppercase; font-weight:600;
+  }
+  .archive-item-status.partial{
+    background:rgba(250,204,21,0.15); color:var(--warning);
+  }
+  .archive-empty{
+    text-align:center; padding:30px 20px; color:var(--cream-dim);
+  }
+
+  footer{ text-align:center; color:var(--cream-dim); font-size:11px; opacity:.55; padding:16px 20px 0;}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="eyebrow">Financial Documents</div>
+  <h1>Invoice & Receipt Generator</h1>
+</header>
+
+<div class="tabs">
+  <button class="tab-btn active" data-page="invoice">Invoice Generator</button>
+  <button class="tab-btn" data-page="receipt">Receipt Generator</button>
+</div>
+
+<div class="save-bar">
+  <span id="saveStatus">Saved</span>
+  <button id="clearSavedBtn">Clear all data</button>
+</div>
+
+<!-- ============ INVOICE PAGE ============ -->
+<main id="invoice-page" class="page active">
+
+  <div class="card">
+    <h2>Invoice details</h2>
+    <div class="grid2">
+      <div><label>Invoice number</label><input type="text" id="invNumber" placeholder="INV-1001"></div>
+      <div><label>Invoice date</label><input type="date" id="invDate"></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>Service / product provider (you)</h2>
+    <label>Name / business name</label><input type="text" id="invProvName" placeholder="Fahad Ahmed">
+    <label>Address</label><textarea id="invProvAddress" placeholder="Street, City, Country"></textarea>
+    <div class="grid2">
+      <div><label>Phone</label><input type="text" id="invProvPhone" placeholder="+974 xxxx xxxx"></div>
+      <div><label>Email</label><input type="text" id="invProvEmail" placeholder="you@example.com"></div>
+    </div>
+    <label>Tax / registration ID (optional)</label><input type="text" id="invProvTaxId" placeholder="e.g. VAT / CR number">
+  </div>
+
+  <div class="card">
+    <h2>Customer</h2>
+    <label>Name</label><input type="text" id="invCustName" placeholder="Customer name">
+    <label>Address</label><textarea id="invCustAddress" placeholder="Street, City, Country"></textarea>
+    <div class="grid2">
+      <div><label>Phone</label><input type="text" id="invCustPhone" placeholder="Phone"></div>
+      <div><label>Email</label><input type="text" id="invCustEmail" placeholder="Email"></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>Products / services</h2>
+    <div class="item-head">
+      <span>Description</span><span>Qty</span><span>Unit price</span><span>Amount</span><span></span>
+    </div>
+    <div id="invItemsWrap"></div>
+    <button class="add-item-btn" id="invAddItemBtn">+ Add line item</button>
+
+    <div class="totals">
+      <div class="row"><span>Subtotal</span><span id="invSubtotalOut">0.00</span></div>
+      <div class="row tax-row"><span>Discount %</span><span><input type="number" id="invDiscountPct" value="0" min="0" step="0.1"></span></div>
+      <div class="row"><span>Discount amount</span><span id="invDiscountOut">0.00</span></div>
+      <div class="row tax-row"><span>Tax %</span><span><input type="number" id="invTaxPct" value="0" min="0" step="0.1"></span></div>
+      <div class="row"><span>Tax amount</span><span id="invTaxOut">0.00</span></div>
+      <div class="row grand"><span>Total due</span><span id="invTotalOut">0.00</span></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>Notes (optional)</h2>
+    <textarea id="invNotes" placeholder="Payment terms, bank details, thank-you note, etc."></textarea>
+  </div>
+
+  <button class="generate-btn" id="invGenerateBtn">Generate invoice</button>
+
+  <div class="card" id="invOutputCard">
+    <h2>Invoice output</h2>
+    <textarea id="invOutputText" readonly></textarea>
+    <div class="out-actions">
+      <button class="primary" id="invCopyBtn">Copy text</button>
+      <button id="invDownloadBtn">Download as image</button>
+    </div>
+  </div>
+
+  <canvas id="invRenderCanvas" style="display:none;"></canvas>
+
+</main>
+
+<!-- ============ RECEIPT PAGE ============ -->
+<main id="receipt-page" class="page">
+
+  <div class="card">
+    <h2>Receipt details</h2>
+    <div class="grid2">
+      <div><label>Receipt number</label><input type="text" id="recNumber" placeholder="REC-1001" readonly></div>
+      <div><label>Receipt date</label><input type="date" id="recDate"></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>Invoice reference (optional)</h2>
+    <label>Link to invoice number</label>
+    <div style="display:flex; gap:8px; margin-bottom:10px;">
+      <input type="text" id="recInvoiceRef" placeholder="INV-1001 (leave blank if standalone)" style="flex:1;">
+      <button id="recSearchInvoiceBtn" type="button" style="background:transparent; border:1px solid var(--gold); color:var(--gold-bright); border-radius:10px; padding:9px 14px; font-size:13px; font-weight:600; cursor:pointer; white-space:nowrap;">Search</button>
+    </div>
+    <div style="font-size:11px; color:var(--cream-dim); margin-top:-6px; margin-bottom:10px;">Press Enter or click Search to load line items from an invoice.</div>
+  </div>
+
+  <div class="card">
+    <h2>Service / product provider (you)</h2>
+    <label>Name / business name</label><input type="text" id="recProvName" placeholder="Fahad Ahmed">
+    <label>Address</label><textarea id="recProvAddress" placeholder="Street, City, Country"></textarea>
+    <div class="grid2">
+      <div><label>Phone</label><input type="text" id="recProvPhone" placeholder="+974 xxxx xxxx"></div>
+      <div><label>Email</label><input type="text" id="recProvEmail" placeholder="you@example.com"></div>
+    </div>
+    <label>Tax / registration ID (optional)</label><input type="text" id="recProvTaxId" placeholder="e.g. VAT / CR number">
+  </div>
+
+  <div class="card">
+    <h2>Customer</h2>
+    <label>Name</label><input type="text" id="recCustName" placeholder="Customer name">
+    <label>Address</label><textarea id="recCustAddress" placeholder="Street, City, Country"></textarea>
+    <div class="grid2">
+      <div><label>Phone</label><input type="text" id="recCustPhone" placeholder="Phone"></div>
+      <div><label>Email</label><input type="text" id="recCustEmail" placeholder="Email"></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>Products / services</h2>
+    <div class="item-head">
+      <span>Description</span><span>Qty</span><span>Unit price</span><span>Amount</span><span></span>
+    </div>
+    <div id="recItemsWrap"></div>
+    <button class="add-item-btn" id="recAddItemBtn">+ Add line item</button>
+
+    <div class="totals">
+      <div class="row"><span>Subtotal</span><span id="recSubtotalOut">0.00</span></div>
+      <div class="row tax-row"><span>Discount %</span><span><input type="number" id="recDiscountPct" value="0" min="0" step="0.1"></span></div>
+      <div class="row"><span>Discount amount</span><span id="recDiscountOut">0.00</span></div>
+      <div class="row tax-row"><span>Tax %</span><span><input type="number" id="recTaxPct" value="0" min="0" step="0.1"></span></div>
+      <div class="row"><span>Tax amount</span><span id="recTaxOut">0.00</span></div>
+      <div class="row grand"><span>Total due</span><span id="recTotalOut">0.00</span></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>Payment details</h2>
+    <label>Payment method</label>
+    <select id="recPaymentMethod">
+      <option value="">-- Select payment method --</option>
+      <option value="Cash">Cash</option>
+      <option value="Bank Transfer">Bank Transfer</option>
+      <option value="Card">Card</option>
+    </select>
+    <label>Other method (if not listed above)</label>
+    <input type="text" id="recPaymentMethodOther" placeholder="e.g., Cheque">
+
+    <div class="grid2">
+      <div><label>Amount paid</label><input type="number" id="recAmountPaid" min="0" step="0.01" value="0"></div>
+      <div><label>Amount due</label><input type="number" id="recAmountDue" readonly value="0"></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>Notes (optional)</h2>
+    <textarea id="recNotes" placeholder="Thank you note, next steps, etc."></textarea>
+  </div>
+
+  <button class="generate-btn" id="recGenerateBtn">Generate receipt</button>
+
+  <div class="card" id="recOutputCard">
+    <h2>Receipt output</h2>
+    <textarea id="recOutputText" readonly></textarea>
+    <div class="out-actions">
+      <button class="primary" id="recCopyBtn">Copy text</button>
+      <button id="recDownloadBtn">Download as image</button>
+    </div>
+  </div>
+
+  <div class="card" id="recArchiveCard" style="display:none; margin-top:20px;">
+    <h2>Receipt archive</h2>
+    <div class="archive-list" id="recArchiveList"></div>
+  </div>
+
+  <canvas id="recRenderCanvas" style="display:none;"></canvas>
+
+</main>
+
+<footer>All data stays in your browser. Nothing is uploaded anywhere.</footer>
+
+<script>
+(function(){
+  'use strict';
+
+  const STORAGE_INV = 'simple_invoice_v1';
+  const STORAGE_REC = 'simple_receipt_v1';
+  const STORAGE_REC_COUNTER = 'simple_receipt_counter';
+  const STORAGE_PROVIDER = 'simple_provider_info_v1';
+
+  let suppressSave = false;
+  let currentPage = 'invoice';
+
+  // ============ TAB NAVIGATION ============
+  document.querySelectorAll('.tab-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const page = btn.dataset.page;
+      document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+      document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+
+      document.getElementById(page + '-page').classList.add('active');
+      btn.classList.add('active');
+      currentPage = page;
+    });
+  });
+
+  // ============ GENERAL UTILITIES ============
+  function val(id) { return document.getElementById(id).value.trim(); }
+  function flashSaved() {
+    const el = document.getElementById('saveStatus');
+    el.textContent = 'Saved';
+    el.classList.add('show');
+    clearTimeout(flashSaved._t);
+    flashSaved._t = setTimeout(() => el.classList.remove('show'), 1400);
+  }
+
+  // Provider info persistence
+  function saveProviderInfo() {
+    if(suppressSave) return;
+    try {
+      const provider = {
+        name: val('invProvName'),
+        address: val('invProvAddress'),
+        phone: val('invProvPhone'),
+        email: val('invProvEmail'),
+        taxId: val('invProvTaxId')
+      };
+      localStorage.setItem(STORAGE_PROVIDER, JSON.stringify(provider));
+    } catch(e) {}
+  }
+
+  function loadProviderInfo() {
+    try {
+      const stored = localStorage.getItem(STORAGE_PROVIDER);
+      if(stored) {
+        const provider = JSON.parse(stored);
+        suppressSave = true;
+        document.getElementById('invProvName').value = provider.name || '';
+        document.getElementById('invProvAddress').value = provider.address || '';
+        document.getElementById('invProvPhone').value = provider.phone || '';
+        document.getElementById('invProvEmail').value = provider.email || '';
+        document.getElementById('invProvTaxId').value = provider.taxId || '';
+        document.getElementById('recProvName').value = provider.name || '';
+        document.getElementById('recProvAddress').value = provider.address || '';
+        document.getElementById('recProvPhone').value = provider.phone || '';
+        document.getElementById('recProvEmail').value = provider.email || '';
+        document.getElementById('recProvTaxId').value = provider.taxId || '';
+        suppressSave = false;
+      }
+    } catch(e) {}
+  }
+
+  // ============ INVOICE LOGIC ============
+  const invoice = {
+    itemCount: 0,
+    itemsWrap: document.getElementById('invItemsWrap'),
+
+    addItem(desc, qty, price) {
+      this.itemCount++;
+      const row = document.createElement('div');
+      row.className = 'item-row';
+      row.dataset.id = this.itemCount;
+      row.innerHTML =
+        '<input type="text" class="i-desc" placeholder="e.g. Web development service" value="'+(desc||'')+'">' +
+        '<input type="number" class="i-qty" min="0" step="1" value="'+(qty!=null?qty:1)+'">' +
+        '<input type="number" class="i-price" min="0" step="0.01" value="'+(price!=null?price:0)+'">' +
+        '<span class="amt">0.00</span>' +
+        '<button class="del" type="button">✕</button>';
+      this.itemsWrap.appendChild(row);
+      this.bindRow(row);
+      this.recalc();
+    },
+
+    bindRow(row) {
+      row.querySelectorAll('input').forEach(inp => {
+        inp.addEventListener('input', () => { this.recalc(); saveState(); });
+      });
+      row.querySelector('.del').addEventListener('click', () => {
+        row.remove();
+        this.recalc();
+        saveState();
+      });
+    },
+
+    recalc() {
+      let subtotal = 0;
+      this.itemsWrap.querySelectorAll('.item-row').forEach(row => {
+        const qty = parseFloat(row.querySelector('.i-qty').value) || 0;
+        const price = parseFloat(row.querySelector('.i-price').value) || 0;
+        const amt = qty * price;
+        row.querySelector('.amt').textContent = amt.toFixed(2);
+        subtotal += amt;
+      });
+      const discountPct = parseFloat(document.getElementById('invDiscountPct').value) || 0;
+      const discountAmt = subtotal * (discountPct / 100);
+      const subtotalAfterDiscount = subtotal - discountAmt;
+      const taxPct = parseFloat(document.getElementById('invTaxPct').value) || 0;
+      const taxAmt = subtotalAfterDiscount * (taxPct / 100);
+      const total = subtotalAfterDiscount + taxAmt;
+      document.getElementById('invSubtotalOut').textContent = subtotal.toFixed(2);
+      document.getElementById('invDiscountOut').textContent = discountAmt.toFixed(2);
+      document.getElementById('invTaxOut').textContent = taxAmt.toFixed(2);
+      document.getElementById('invTotalOut').textContent = total.toFixed(2);
+    },
+
+    generateText() {
+      const invNumber = val('invNumber') || '(not set)';
+      const invDate = val('invDate') || '(not set)';
+      const provName = val('invProvName') || '(not set)';
+      const provAddress = val('invProvAddress');
+      const provPhone = val('invProvPhone');
+      const provEmail = val('invProvEmail');
+      const provTaxId = val('invProvTaxId');
+      const custName = val('invCustName') || '(not set)';
+      const custAddress = val('invCustAddress');
+      const custPhone = val('invCustPhone');
+      const custEmail = val('invCustEmail');
+      const notes = val('invNotes');
+      const taxPct = parseFloat(document.getElementById('invTaxPct').value) || 0;
+
+      let items = [];
+      this.itemsWrap.querySelectorAll('.item-row').forEach(row => {
+        const desc = row.querySelector('.i-desc').value.trim();
+        const qty = parseFloat(row.querySelector('.i-qty').value) || 0;
+        const price = parseFloat(row.querySelector('.i-price').value) || 0;
+        if(desc || qty || price) {
+          items.push({desc: desc || '(unnamed item)', qty, price, amt: qty*price});
+        }
+      });
+
+      let subtotal = items.reduce((s,i)=>s+i.amt,0);
+      const discountPct = parseFloat(document.getElementById('invDiscountPct').value) || 0;
+      let discountAmt = subtotal * (discountPct / 100);
+      let subtotalAfterDiscount = subtotal - discountAmt;
+      let taxAmt = subtotalAfterDiscount*(taxPct/100);
+      let total = subtotalAfterDiscount+taxAmt;
+
+      const line = '─'.repeat(46);
+      let out = '';
+      out += line + '\n';
+      out += 'INVOICE\n';
+      out += line + '\n';
+      out += 'Invoice #: ' + invNumber + '\n';
+      out += 'Date: ' + invDate + '\n\n';
+
+      out += 'FROM (Service / Product Provider)\n';
+      out += provName + '\n';
+      if(provAddress) out += provAddress.replace(/\n+/g,'\n') + '\n';
+      if(provPhone) out += 'Phone: ' + provPhone + '\n';
+      if(provEmail) out += 'Email: ' + provEmail + '\n';
+      if(provTaxId) out += 'Tax/Reg ID: ' + provTaxId + '\n';
+      out += '\n';
+
+      out += 'BILL TO (Customer)\n';
+      out += custName + '\n';
+      if(custAddress) out += custAddress.replace(/\n+/g,'\n') + '\n';
+      if(custPhone) out += 'Phone: ' + custPhone + '\n';
+      if(custEmail) out += 'Email: ' + custEmail + '\n';
+      out += '\n';
+
+      out += line + '\n';
+      out += 'DESCRIPTION'.padEnd(22) + 'QTY'.padStart(6) + 'PRICE'.padStart(10) + 'AMOUNT'.padStart(10) + '\n';
+      out += line + '\n';
+      if(items.length === 0){
+        out += '(no items added)\n';
+      } else {
+        items.forEach(i=>{
+          let desc = i.desc.length > 20 ? i.desc.slice(0,19)+'…' : i.desc;
+          out += desc.padEnd(22) + String(i.qty).padStart(6) + i.price.toFixed(2).padStart(10) + i.amt.toFixed(2).padStart(10) + '\n';
+        });
+      }
+      out += line + '\n';
+      out += 'Subtotal'.padEnd(38) + subtotal.toFixed(2).padStart(8) + '\n';
+      if(discountPct > 0) {
+        out += ('Discount (' + discountPct + '%)').padEnd(38) + '-' + discountAmt.toFixed(2).padStart(7) + '\n';
+      }
+      out += ('Tax (' + taxPct + '%)').padEnd(38) + taxAmt.toFixed(2).padStart(8) + '\n';
+      out += 'TOTAL DUE'.padEnd(38) + total.toFixed(2).padStart(8) + '\n';
+      out += line + '\n';
+
+      if(notes){
+        out += '\nNotes:\n' + notes + '\n';
+      }
+
+      return out;
+    },
+
+    downloadImage(filename) {
+      const text = document.getElementById('invOutputText').value;
+      if(!text) return;
+      const invNumber = val('invNumber') || 'invoice';
+      this.renderToImage(text, invNumber.replace(/[^a-z0-9\-_]/gi,'_') + '.png');
+    },
+
+    renderToImage(text, filename) {
+      const lines = text.split('\n');
+      const fontSize = 15;
+      const lineHeight = fontSize * 1.55;
+      const paddingX = 30;
+      const paddingY = 30;
+
+      const canvas = document.getElementById('invRenderCanvas');
+      const ctx = canvas.getContext('2d');
+      ctx.font = fontSize + 'px "SF Mono", Menlo, Consolas, monospace';
+
+      let maxWidth = 0;
+      lines.forEach(l=>{
+        const w = ctx.measureText(l).width;
+        if(w > maxWidth) maxWidth = w;
+      });
+
+      const width = Math.ceil(maxWidth + paddingX*2);
+      const height = Math.ceil(lines.length*lineHeight + paddingY*2);
+      const scale = 2;
+
+      canvas.width = width*scale;
+      canvas.height = height*scale;
+      ctx.scale(scale, scale);
+
+      ctx.fillStyle = '#071e20';
+      ctx.fillRect(0,0,width,height);
+      ctx.strokeStyle = 'rgba(201,163,78,0.35)';
+      ctx.lineWidth = 1;
+      ctx.strokeRect(0.5,0.5, width-1, height-1);
+
+      ctx.font = fontSize + 'px "SF Mono", Menlo, Consolas, monospace';
+      ctx.textBaseline = 'top';
+
+      lines.forEach((line, i)=>{
+        const y = paddingY + i*lineHeight;
+        if(/^INVOICE$/.test(line.trim())){
+          ctx.fillStyle = '#f0cf85';
+          ctx.font = 'bold ' + (fontSize+2) + 'px "SF Mono", Menlo, Consolas, monospace';
+        } else if(/^(FROM|BILL TO|Notes:)/.test(line.trim())){
+          ctx.fillStyle = '#c9a34e';
+          ctx.font = 'bold ' + fontSize + 'px "SF Mono", Menlo, Consolas, monospace';
+        } else if(/^TOTAL DUE/.test(line)){
+          ctx.fillStyle = '#f0cf85';
+          ctx.font = 'bold ' + fontSize + 'px "SF Mono", Menlo, Consolas, monospace';
+        } else if(/^─+$/.test(line.trim())){
+          ctx.fillStyle = 'rgba(201,163,78,0.4)';
+          ctx.font = fontSize + 'px "SF Mono", Menlo, Consolas, monospace';
+        } else {
+          ctx.fillStyle = '#f3ecdd';
+          ctx.font = fontSize + 'px "SF Mono", Menlo, Consolas, monospace';
+        }
+        ctx.fillText(line, paddingX, y);
+      });
+
+      canvas.toBlob(blob=>{
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = filename;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+      }, 'image/png');
+    }
+  };
+
+  // Provider info fields (save automatically for all invoices/receipts)
+  const PROVIDER_FIELDS = ['invProvName', 'invProvAddress', 'invProvPhone', 'invProvEmail', 'invProvTaxId'];
+  PROVIDER_FIELDS.forEach(id => {
+    const el = document.getElementById(id);
+    if(el) el.addEventListener('change', () => {
+      saveProviderInfo();
+      // Also update receipt provider fields
+      const recId = id.replace('inv', 'rec');
+      document.getElementById(recId).value = document.getElementById(id).value;
+    });
+  });
+
+  // Invoice event handlers
+  document.getElementById('invAddItemBtn').addEventListener('click', () => { invoice.addItem(); saveState(); });
+  document.getElementById('invDiscountPct').addEventListener('input', () => { invoice.recalc(); saveState(); });
+  document.getElementById('invTaxPct').addEventListener('input', () => { invoice.recalc(); saveState(); });
+
+  document.getElementById('invGenerateBtn').addEventListener('click', () => {
+    const text = invoice.generateText();
+    document.getElementById('invOutputText').value = text;
+    document.getElementById('invOutputCard').style.display = 'block';
+    document.getElementById('invOutputCard').scrollIntoView({behavior:'smooth', block:'start'});
+  });
+
+  document.getElementById('invCopyBtn').addEventListener('click', () => {
+    const ta = document.getElementById('invOutputText');
+    ta.select();
+    document.execCommand('copy');
+    const btn = document.getElementById('invCopyBtn');
+    const original = btn.textContent;
+    btn.textContent = 'Copied!';
+    setTimeout(() => btn.textContent = original, 1200);
+  });
+
+  document.getElementById('invDownloadBtn').addEventListener('click', () => {
+    invoice.downloadImage(val('invNumber') || 'invoice');
+  });
+
+  // ============ RECEIPT LOGIC ============
+  const receipt = {
+    itemCount: 0,
+    itemsWrap: document.getElementById('recItemsWrap'),
+
+    initReceiptNumber() {
+      let counter = 1;
+      try {
+        const stored = localStorage.getItem(STORAGE_REC_COUNTER);
+        if(stored) counter = parseInt(stored) + 1;
+        localStorage.setItem(STORAGE_REC_COUNTER, counter);
+      } catch(e) {}
+      document.getElementById('recNumber').value = 'REC-' + String(counter).padStart(4, '0');
+    },
+
+    addItem(desc, qty, price) {
+      this.itemCount++;
+      const row = document.createElement('div');
+      row.className = 'item-row';
+      row.dataset.id = this.itemCount;
+      row.innerHTML =
+        '<input type="text" class="i-desc" placeholder="e.g. Web development service" value="'+(desc||'')+'">' +
+        '<input type="number" class="i-qty" min="0" step="1" value="'+(qty!=null?qty:1)+'">' +
+        '<input type="number" class="i-price" min="0" step="0.01" value="'+(price!=null?price:0)+'">' +
+        '<span class="amt">0.00</span>' +
+        '<button class="del" type="button">✕</button>';
+      this.itemsWrap.appendChild(row);
+      this.bindRow(row);
+      this.recalc();
+    },
+
+    bindRow(row) {
+      row.querySelectorAll('input').forEach(inp => {
+        inp.addEventListener('input', () => { this.recalc(); saveState(); });
+      });
+      row.querySelector('.del').addEventListener('click', () => {
+        row.remove();
+        this.recalc();
+        saveState();
+      });
+    },
+
+    recalc() {
+      let subtotal = 0;
+      this.itemsWrap.querySelectorAll('.item-row').forEach(row => {
+        const qty = parseFloat(row.querySelector('.i-qty').value) || 0;
+        const price = parseFloat(row.querySelector('.i-price').value) || 0;
+        const amt = qty * price;
+        row.querySelector('.amt').textContent = amt.toFixed(2);
+        subtotal += amt;
+      });
+      const discountPct = parseFloat(document.getElementById('recDiscountPct').value) || 0;
+      const discountAmt = subtotal * (discountPct / 100);
+      const subtotalAfterDiscount = subtotal - discountAmt;
+      const taxPct = parseFloat(document.getElementById('recTaxPct').value) || 0;
+      const taxAmt = subtotalAfterDiscount * (taxPct / 100);
+      const total = subtotalAfterDiscount + taxAmt;
+
+      document.getElementById('recSubtotalOut').textContent = subtotal.toFixed(2);
+      document.getElementById('recDiscountOut').textContent = discountAmt.toFixed(2);
+      document.getElementById('recTaxOut').textContent = taxAmt.toFixed(2);
+      document.getElementById('recTotalOut').textContent = total.toFixed(2);
+
+      const amountPaid = parseFloat(document.getElementById('recAmountPaid').value) || 0;
+      const amountDue = Math.max(0, total - amountPaid);
+      document.getElementById('recAmountDue').value = amountDue.toFixed(2);
+    },
+
+    loadInvoiceData(invoiceNumber) {
+      if(!invoiceNumber) return;
+      let invoices;
+      try {
+        const raw = localStorage.getItem(STORAGE_INV);
+        invoices = raw ? JSON.parse(raw) : {};
+      } catch(e) {
+        return;
+      }
+
+      const inv = invoices[invoiceNumber];
+      if(!inv) {
+        alert('Invoice not found: ' + invoiceNumber);
+        return;
+      }
+
+      suppressSave = true;
+      document.getElementById('recProvName').value = inv.provName || '';
+      document.getElementById('recProvAddress').value = inv.provAddress || '';
+      document.getElementById('recProvPhone').value = inv.provPhone || '';
+      document.getElementById('recProvEmail').value = inv.provEmail || '';
+      document.getElementById('recProvTaxId').value = inv.provTaxId || '';
+
+      document.getElementById('recCustName').value = inv.custName || '';
+      document.getElementById('recCustAddress').value = inv.custAddress || '';
+      document.getElementById('recCustPhone').value = inv.custPhone || '';
+      document.getElementById('recCustEmail').value = inv.custEmail || '';
+
+      document.getElementById('recDiscountPct').value = inv.discountPct || '0';
+      document.getElementById('recTaxPct').value = inv.taxPct || '0';
+
+      this.itemsWrap.innerHTML = '';
+      this.itemCount = 0;
+      if(inv.items && inv.items.length) {
+        inv.items.forEach(it => this.addItem(it.desc, it.qty, it.price));
+      }
+
+      suppressSave = false;
+      this.recalc();
+      alert('Invoice data loaded. Adjust as needed and save the receipt.');
+    },
+
+    generateText() {
+      const recNumber = val('recNumber') || '(not set)';
+      const recDate = val('recDate') || '(not set)';
+      const invoiceRef = val('recInvoiceRef');
+      const provName = val('recProvName') || '(not set)';
+      const provAddress = val('recProvAddress');
+      const provPhone = val('recProvPhone');
+      const provEmail = val('recProvEmail');
+      const provTaxId = val('recProvTaxId');
+      const custName = val('recCustName') || '(not set)';
+      const custAddress = val('recCustAddress');
+      const custPhone = val('recCustPhone');
+      const custEmail = val('recCustEmail');
+      const notes = val('recNotes');
+      const taxPct = parseFloat(document.getElementById('recTaxPct').value) || 0;
+      const amountPaid = parseFloat(document.getElementById('recAmountPaid').value) || 0;
+
+      let items = [];
+      this.itemsWrap.querySelectorAll('.item-row').forEach(row => {
+        const desc = row.querySelector('.i-desc').value.trim();
+        const qty = parseFloat(row.querySelector('.i-qty').value) || 0;
+        const price = parseFloat(row.querySelector('.i-price').value) || 0;
+        if(desc || qty || price) {
+          items.push({desc: desc || '(unnamed item)', qty, price, amt: qty*price});
+        }
+      });
+
+      let subtotal = items.reduce((s,i)=>s+i.amt,0);
+      const discountPct = parseFloat(document.getElementById('recDiscountPct').value) || 0;
+      let discountAmt = subtotal * (discountPct / 100);
+      let subtotalAfterDiscount = subtotal - discountAmt;
+      let taxAmt = subtotalAfterDiscount*(taxPct/100);
+      let total = subtotalAfterDiscount+taxAmt;
+      let amountDue = Math.max(0, total - amountPaid);
+
+      const paymentMethod = val('recPaymentMethod') || val('recPaymentMethodOther') || 'Not specified';
+
+      const line = '─'.repeat(46);
+      let out = '';
+      out += line + '\n';
+      out += 'RECEIPT\n';
+      out += line + '\n';
+      out += 'Receipt #: ' + recNumber + '\n';
+      out += 'Date: ' + recDate + '\n';
+      if(invoiceRef) out += 'Related Invoice: ' + invoiceRef + '\n';
+      out += '\n';
+
+      out += 'FROM (Service / Product Provider)\n';
+      out += provName + '\n';
+      if(provAddress) out += provAddress.replace(/\n+/g,'\n') + '\n';
+      if(provPhone) out += 'Phone: ' + provPhone + '\n';
+      if(provEmail) out += 'Email: ' + provEmail + '\n';
+      if(provTaxId) out += 'Tax/Reg ID: ' + provTaxId + '\n';
+      out += '\n';
+
+      out += 'BILL TO (Customer)\n';
+      out += custName + '\n';
+      if(custAddress) out += custAddress.replace(/\n+/g,'\n') + '\n';
+      if(custPhone) out += 'Phone: ' + custPhone + '\n';
+      if(custEmail) out += 'Email: ' + custEmail + '\n';
+      out += '\n';
+
+      out += line + '\n';
+      out += 'DESCRIPTION'.padEnd(22) + 'QTY'.padStart(6) + 'PRICE'.padStart(10) + 'AMOUNT'.padStart(10) + '\n';
+      out += line + '\n';
+      if(items.length === 0){
+        out += '(no items added)\n';
+      } else {
+        items.forEach(i=>{
+          let desc = i.desc.length > 20 ? i.desc.slice(0,19)+'…' : i.desc;
+          out += desc.padEnd(22) + String(i.qty).padStart(6) + i.price.toFixed(2).padStart(10) + i.amt.toFixed(2).padStart(10) + '\n';
+        });
+      }
+      out += line + '\n';
+      out += 'Subtotal'.padEnd(38) + subtotal.toFixed(2).padStart(8) + '\n';
+      if(discountPct > 0) {
+        out += ('Discount (' + discountPct + '%)').padEnd(38) + '-' + discountAmt.toFixed(2).padStart(7) + '\n';
+      }
+      out += ('Tax (' + taxPct + '%)').padEnd(38) + taxAmt.toFixed(2).padStart(8) + '\n';
+      out += 'TOTAL DUE'.padEnd(38) + total.toFixed(2).padStart(8) + '\n';
+      out += 'Amount Paid'.padEnd(38) + amountPaid.toFixed(2).padStart(8) + '\n';
+      out += 'Balance Due'.padEnd(38) + amountDue.toFixed(2).padStart(8) + '\n';
+      out += line + '\n';
+
+      out += '\nPayment Method: ' + paymentMethod + '\n';
+
+      if(notes){
+        out += '\nNotes:\n' + notes + '\n';
+      }
+
+      return out;
+    },
+
+    downloadImage(filename) {
+      const text = document.getElementById('recOutputText').value;
+      if(!text) return;
+      const recNumber = val('recNumber') || 'receipt';
+      this.renderToImage(text, recNumber.replace(/[^a-z0-9\-_]/gi,'_') + '.png');
+    },
+
+    renderToImage(text, filename) {
+      const lines = text.split('\n');
+      const fontSize = 15;
+      const lineHeight = fontSize * 1.55;
+      const paddingX = 30;
+      const paddingY = 30;
+
+      const canvas = document.getElementById('recRenderCanvas');
+      const ctx = canvas.getContext('2d');
+      ctx.font = fontSize + 'px "SF Mono", Menlo, Consolas, monospace';
+
+      let maxWidth = 0;
+      lines.forEach(l=>{
+        const w = ctx.measureText(l).width;
+        if(w > maxWidth) maxWidth = w;
+      });
+
+      const width = Math.ceil(maxWidth + paddingX*2);
+      const height = Math.ceil(lines.length*lineHeight + paddingY*2);
+      const scale = 2;
+
+      canvas.width = width*scale;
+      canvas.height = height*scale;
+      ctx.scale(scale, scale);
+
+      ctx.fillStyle = '#071e20';
+      ctx.fillRect(0,0,width,height);
+      ctx.strokeStyle = 'rgba(201,163,78,0.35)';
+      ctx.lineWidth = 1;
+      ctx.strokeRect(0.5,0.5, width-1, height-1);
+
+      ctx.font = fontSize + 'px "SF Mono", Menlo, Consolas, monospace';
+      ctx.textBaseline = 'top';
+
+      lines.forEach((line, i)=>{
+        const y = paddingY + i*lineHeight;
+        if(/^RECEIPT$/.test(line.trim())){
+          ctx.fillStyle = '#f0cf85';
+          ctx.font = 'bold ' + (fontSize+2) + 'px "SF Mono", Menlo, Consolas, monospace';
+        } else if(/^(FROM|BILL TO|Notes:|Payment Method)/.test(line.trim())){
+          ctx.fillStyle = '#c9a34e';
+          ctx.font = 'bold ' + fontSize + 'px "SF Mono", Menlo, Consolas, monospace';
+        } else if(/^(TOTAL DUE|Balance Due)/.test(line)){
+          ctx.fillStyle = '#f0cf85';
+          ctx.font = 'bold ' + fontSize + 'px "SF Mono", Menlo, Consolas, monospace';
+        } else if(/^─+$/.test(line.trim())){
+          ctx.fillStyle = 'rgba(201,163,78,0.4)';
+          ctx.font = fontSize + 'px "SF Mono", Menlo, Consolas, monospace';
+        } else {
+          ctx.fillStyle = '#f3ecdd';
+          ctx.font = fontSize + 'px "SF Mono", Menlo, Consolas, monospace';
+        }
+        ctx.fillText(line, paddingX, y);
+      });
+
+      canvas.toBlob(blob=>{
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = filename;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+      }, 'image/png');
+    },
+
+    saveReceipt() {
+      let receipts;
+      try {
+        const raw = localStorage.getItem(STORAGE_REC);
+        receipts = raw ? JSON.parse(raw) : {};
+      } catch(e) {
+        receipts = {};
+      }
+
+      const recNumber = val('recNumber');
+      if(!recNumber) {
+        alert('Receipt number is required');
+        return;
+      }
+
+      const items = [];
+      this.itemsWrap.querySelectorAll('.item-row').forEach(row => {
+        items.push({
+          desc: row.querySelector('.i-desc').value,
+          qty: row.querySelector('.i-qty').value,
+          price: row.querySelector('.i-price').value
+        });
+      });
+
+      receipts[recNumber] = {
+        recNumber,
+        recDate: val('recDate'),
+        invoiceRef: val('recInvoiceRef'),
+        provName: val('recProvName'),
+        provAddress: val('recProvAddress'),
+        provPhone: val('recProvPhone'),
+        provEmail: val('recProvEmail'),
+        provTaxId: val('recProvTaxId'),
+        custName: val('recCustName'),
+        custAddress: val('recCustAddress'),
+        custPhone: val('recCustPhone'),
+        custEmail: val('recCustEmail'),
+        items,
+        discountPct: val('recDiscountPct'),
+        taxPct: val('recTaxPct'),
+        amountPaid: parseFloat(document.getElementById('recAmountPaid').value) || 0,
+        paymentMethod: val('recPaymentMethod') || val('recPaymentMethodOther'),
+        notes: val('recNotes'),
+        savedAt: new Date().toISOString()
+      };
+
+      try {
+        localStorage.setItem(STORAGE_REC, JSON.stringify(receipts));
+        return true;
+      } catch(e) {
+        alert('Failed to save receipt');
+        return false;
+      }
+    },
+
+    populateArchive() {
+      let receipts;
+      try {
+        const raw = localStorage.getItem(STORAGE_REC);
+        receipts = raw ? JSON.parse(raw) : {};
+      } catch(e) {
+        receipts = {};
+      }
+
+      const archiveList = document.getElementById('recArchiveList');
+      const archiveCard = document.getElementById('recArchiveCard');
+
+      if(Object.keys(receipts).length === 0) {
+        archiveCard.style.display = 'none';
+        return;
+      }
+
+      archiveCard.style.display = 'block';
+      archiveList.innerHTML = '';
+
+      const sorted = Object.values(receipts).sort((a, b) => new Date(b.savedAt) - new Date(a.savedAt));
+
+      sorted.forEach(rec => {
+        const total = rec.items.reduce((s, i) => s + (parseFloat(i.qty) * parseFloat(i.price)), 0);
+        const totalWithTax = total + (total * parseFloat(rec.taxPct) / 100);
+        const amountPaid = rec.amountPaid || 0;
+        const amountDue = Math.max(0, totalWithTax - amountPaid);
+        const status = amountDue === 0 ? 'Full' : 'Partial';
+
+        const item = document.createElement('div');
+        item.className = 'archive-item';
+        item.innerHTML =
+          '<div class="archive-item-row">' +
+            '<span class="archive-item-num">' + rec.recNumber + '</span>' +
+            '<span style="color:var(--gold-bright); font-weight:600;">' + totalWithTax.toFixed(2) + '</span>' +
+          '</div>' +
+          '<div class="archive-item-row">' +
+            '<span class="archive-item-meta">' + rec.custName + ' • ' + rec.recDate + '</span>' +
+            '<span class="archive-item-status' + (status === 'Partial' ? ' partial' : '') + '">' + status + '</span>' +
+          '</div>' +
+          '<div class="archive-item-row">' +
+            '<span class="archive-item-meta">Paid: ' + amountPaid.toFixed(2) + ' • Due: ' + amountDue.toFixed(2) + '</span>' +
+          '</div>';
+
+        item.addEventListener('click', () => receipt.loadFromArchive(rec));
+        archiveList.appendChild(item);
+      });
+    },
+
+    loadFromArchive(rec) {
+      suppressSave = true;
+
+      document.getElementById('recNumber').value = rec.recNumber;
+      document.getElementById('recDate').value = rec.recDate;
+      document.getElementById('recInvoiceRef').value = rec.invoiceRef || '';
+      document.getElementById('recProvName').value = rec.provName || '';
+      document.getElementById('recProvAddress').value = rec.provAddress || '';
+      document.getElementById('recProvPhone').value = rec.provPhone || '';
+      document.getElementById('recProvEmail').value = rec.provEmail || '';
+      document.getElementById('recProvTaxId').value = rec.provTaxId || '';
+      document.getElementById('recCustName').value = rec.custName || '';
+      document.getElementById('recCustAddress').value = rec.custAddress || '';
+      document.getElementById('recCustPhone').value = rec.custPhone || '';
+      document.getElementById('recCustEmail').value = rec.custEmail || '';
+      document.getElementById('recDiscountPct').value = rec.discountPct || '0';
+      document.getElementById('recTaxPct').value = rec.taxPct || '0';
+      document.getElementById('recAmountPaid').value = (rec.amountPaid || 0).toFixed(2);
+      document.getElementById('recPaymentMethod').value = '';
+      document.getElementById('recPaymentMethodOther').value = rec.paymentMethod || '';
+      document.getElementById('recNotes').value = rec.notes || '';
+
+      this.itemsWrap.innerHTML = '';
+      this.itemCount = 0;
+      if(rec.items && rec.items.length) {
+        rec.items.forEach(it => this.addItem(it.desc, it.qty, it.price));
+      }
+
+      suppressSave = false;
+      this.recalc();
+      window.scrollTo(0, 0);
+    }
+  };
+
+  // Receipt provider info fields (synced with invoice fields)
+  const REC_PROVIDER_FIELDS = ['recProvName', 'recProvAddress', 'recProvPhone', 'recProvEmail', 'recProvTaxId'];
+  REC_PROVIDER_FIELDS.forEach(id => {
+    const el = document.getElementById(id);
+    if(el) el.addEventListener('change', () => {
+      saveProviderInfo();
+      // Also update invoice provider fields
+      const invId = id.replace('rec', 'inv');
+      document.getElementById(invId).value = document.getElementById(id).value;
+    });
+  });
+
+  // Receipt event handlers
+  document.getElementById('recAddItemBtn').addEventListener('click', () => { receipt.addItem(); saveState(); });
+  document.getElementById('recDiscountPct').addEventListener('input', () => { receipt.recalc(); saveState(); });
+  document.getElementById('recTaxPct').addEventListener('input', () => { receipt.recalc(); saveState(); });
+  document.getElementById('recAmountPaid').addEventListener('input', () => { receipt.recalc(); saveState(); });
+
+  function loadInvoiceFromRef() {
+    const invoiceNum = document.getElementById('recInvoiceRef').value.trim();
+    if(invoiceNum) {
+      if(confirm('Load line items from this invoice?')) {
+        receipt.loadInvoiceData(invoiceNum);
+      }
+    }
+  }
+
+  document.getElementById('recInvoiceRef').addEventListener('keydown', function(e) {
+    if(e.key === 'Enter') {
+      e.preventDefault();
+      loadInvoiceFromRef();
+    }
+  });
+
+  document.getElementById('recSearchInvoiceBtn').addEventListener('click', loadInvoiceFromRef);
+
+  document.getElementById('recGenerateBtn').addEventListener('click', () => {
+    if(!val('recNumber')) {
+      alert('Receipt number is required');
+      return;
+    }
+    if(!val('recDate')) {
+      alert('Receipt date is required');
+      return;
+    }
+    if(!val('recPaymentMethod') && !val('recPaymentMethodOther')) {
+      alert('Payment method is required');
+      return;
+    }
+    if(parseFloat(document.getElementById('recAmountPaid').value) === 0) {
+      alert('Amount paid must be greater than 0');
+      return;
+    }
+
+    if(receipt.saveReceipt()) {
+      const text = receipt.generateText();
+      document.getElementById('recOutputText').value = text;
+      document.getElementById('recOutputCard').style.display = 'block';
+      receipt.populateArchive();
+      document.getElementById('recOutputCard').scrollIntoView({behavior:'smooth', block:'start'});
+    }
+  });
+
+  document.getElementById('recCopyBtn').addEventListener('click', () => {
+    const ta = document.getElementById('recOutputText');
+    ta.select();
+    document.execCommand('copy');
+    const btn = document.getElementById('recCopyBtn');
+    const original = btn.textContent;
+    btn.textContent = 'Copied!';
+    setTimeout(() => btn.textContent = original, 1200);
+  });
+
+  document.getElementById('recDownloadBtn').addEventListener('click', () => {
+    receipt.downloadImage(val('recNumber') || 'receipt');
+  });
+
+  // ============ STORAGE ============
+  const INVOICE_FIELDS = ['invNumber','invDate','invProvName','invProvAddress','invProvPhone','invProvEmail','invProvTaxId',
+                          'invCustName','invCustAddress','invCustPhone','invCustEmail','invNotes','invDiscountPct','invTaxPct'];
+
+  let saveTimer = null;
+  function saveState() {
+    if(suppressSave) return;
+    clearTimeout(saveTimer);
+    saveTimer = setTimeout(() => {
+      try {
+        if(currentPage === 'invoice' || document.getElementById('invNumber').value) {
+          let invoices;
+          try {
+            const raw = localStorage.getItem(STORAGE_INV);
+            invoices = raw ? JSON.parse(raw) : {};
+          } catch(e) {
+            invoices = {};
+          }
+
+          const invNumber = val('invNumber') || 'temp';
+          invoices[invNumber] = {
+            invNumber,
+            invDate: val('invDate'),
+            provName: val('invProvName'),
+            provAddress: val('invProvAddress'),
+            provPhone: val('invProvPhone'),
+            provEmail: val('invProvEmail'),
+            provTaxId: val('invProvTaxId'),
+            custName: val('invCustName'),
+            custAddress: val('invCustAddress'),
+            custPhone: val('invCustPhone'),
+            custEmail: val('invCustEmail'),
+            items: Array.from(document.querySelectorAll('#invItemsWrap .item-row')).map(row => ({
+              desc: row.querySelector('.i-desc').value,
+              qty: row.querySelector('.i-qty').value,
+              price: row.querySelector('.i-price').value
+            })),
+            discountPct: val('invDiscountPct'),
+            taxPct: val('invTaxPct'),
+            notes: val('invNotes')
+          };
+          localStorage.setItem(STORAGE_INV, JSON.stringify(invoices));
+        }
+
+        flashSaved();
+      } catch(e) {
+        console.error('save failed', e);
+      }
+    }, 300);
+  }
+
+  INVOICE_FIELDS.forEach(id => {
+    const el = document.getElementById(id);
+    if(el) el.addEventListener('input', saveState);
+  });
+
+  function loadState() {
+    try {
+      let invoices = {};
+      const rawInv = localStorage.getItem(STORAGE_INV);
+      if(rawInv) invoices = JSON.parse(rawInv);
+
+      const tempInv = invoices['temp'];
+      if(tempInv) {
+        suppressSave = true;
+        document.getElementById('invNumber').value = tempInv.invNumber || '';
+        document.getElementById('invDate').value = tempInv.invDate || '';
+        document.getElementById('invProvName').value = tempInv.provName || '';
+        document.getElementById('invProvAddress').value = tempInv.provAddress || '';
+        document.getElementById('invProvPhone').value = tempInv.provPhone || '';
+        document.getElementById('invProvEmail').value = tempInv.provEmail || '';
+        document.getElementById('invProvTaxId').value = tempInv.provTaxId || '';
+        document.getElementById('invCustName').value = tempInv.custName || '';
+        document.getElementById('invCustAddress').value = tempInv.custAddress || '';
+        document.getElementById('invCustPhone').value = tempInv.custPhone || '';
+        document.getElementById('invCustEmail').value = tempInv.custEmail || '';
+        document.getElementById('invDiscountPct').value = tempInv.discountPct || '0';
+        document.getElementById('invTaxPct').value = tempInv.taxPct || '0';
+        document.getElementById('invNotes').value = tempInv.notes || '';
+
+        if(tempInv.items && tempInv.items.length) {
+          tempInv.items.forEach(it => invoice.addItem(it.desc, it.qty, it.price));
+        } else {
+          invoice.addItem();
+          invoice.addItem();
+        }
+        suppressSave = false;
+      } else {
+        document.getElementById('invDate').value = new Date().toISOString().slice(0,10);
+        invoice.addItem();
+        invoice.addItem();
+      }
+      invoice.recalc();
+    } catch(e) {
+      console.error('load failed', e);
+    }
+  }
+
+  loadState();
+  loadProviderInfo();
+  receipt.initReceiptNumber();
+  document.getElementById('recDate').value = new Date().toISOString().slice(0,10);
+  receipt.populateArchive();
+
+  document.getElementById('clearSavedBtn').addEventListener('click', () => {
+    if(!confirm('Clear ALL saved invoices and receipts from this device?\n\nThis cannot be undone.')) return;
+    try {
+      localStorage.removeItem(STORAGE_INV);
+      localStorage.removeItem(STORAGE_REC);
+      localStorage.removeItem(STORAGE_REC_COUNTER);
+    } catch(e) {}
+    location.reload();
+  });
+})();
+</script>
+
+</body>
+</html>
