@@ -785,7 +785,41 @@
         padding: 5px 7px;
         font-size: 0.85rem;
     }
+
+    /* ---------- B&W Print Styles for Screenshot Export ---------- */
+    .screenshot-mode {
+        filter: grayscale(100%) !important;
+    }
+
+    .screenshot-mode * {
+        background-color: white !important;
+        color: black !important;
+        border-color: #ccc !important;
+    }
+
+    .screenshot-mode .summary-card,
+    .screenshot-mode .data-table {
+        background-color: white !important;
+        color: black !important;
+    }
+
+    .screenshot-mode .summary-card .label {
+        color: #666 !important;
+    }
+
+    .screenshot-mode .summary-card .value {
+        color: black !important;
+    }
+
+    .screenshot-mode table thead {
+        background-color: #f5f5f5 !important;
+    }
+
+    .screenshot-mode table tbody tr:nth-child(even) {
+        background-color: #fafafa !important;
+    }
 </style>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 </head>
 <body>
 
@@ -950,6 +984,17 @@
 
                 <div class="form-actions" style="margin-bottom: 16px;">
                     <button type="button" class="btn btn-primary" id="transaction-add-btn">+ Add Transaction</button>
+                    <button type="button" class="btn btn-secondary" id="transaction-screenshot-btn">📷 Screenshot</button>
+                </div>
+
+                <div class="form-card" id="transaction-summary-card">
+                    <div class="form-card-header">
+                        <h2>Summary</h2>
+                        <button type="button" class="collapse-toggle-btn" id="transaction-summary-toggle-btn">&#9662; Hide Summary</button>
+                    </div>
+                    <div id="transaction-summary-body" class="collapsible-body">
+                        <div class="summary-grid" id="transaction-summary-grid"></div>
+                    </div>
                 </div>
 
                 <div class="form-card" id="transaction-filter-card">
@@ -2539,6 +2584,9 @@
         // #transaction-filter-toggle-btn (does not affect active filters).
         filterCollapsed: true,
 
+        // Summary card is visible by default
+        summaryCollapsed: false,
+
         init: function () {
             document.getElementById("transaction-form").addEventListener("submit", TransactionsView.handleSubmit);
             document.getElementById("transaction-cancel-btn").addEventListener("click", TransactionsView.cancelEdit);
@@ -2553,7 +2601,10 @@
                 UI.closeModal("transaction-modal");
             });
             document.getElementById("transaction-filter-toggle-btn").addEventListener("click", TransactionsView.toggleFilterPanel);
+            document.getElementById("transaction-summary-toggle-btn").addEventListener("click", TransactionsView.toggleSummaryPanel);
+            document.getElementById("transaction-screenshot-btn").addEventListener("click", TransactionsView.handleScreenshot);
             TransactionsView.applyFilterCollapsedState();
+            TransactionsView.applySummarCollapsedState();
 
             TransactionsView.resetDefaults();
             TransactionsView.bindFilterEvents();
@@ -2569,6 +2620,207 @@
             document.getElementById("transaction-filter-body").classList.toggle("collapsed", TransactionsView.filterCollapsed);
             document.getElementById("transaction-filter-toggle-btn").innerHTML =
                 TransactionsView.filterCollapsed ? "&#9656; Show Filters" : "&#9662; Hide Filters";
+        },
+
+        toggleSummaryPanel: function () {
+            TransactionsView.summaryCollapsed = !TransactionsView.summaryCollapsed;
+            TransactionsView.applySummarCollapsedState();
+        },
+
+        applySummarCollapsedState: function () {
+            document.getElementById("transaction-summary-body").classList.toggle("collapsed", TransactionsView.summaryCollapsed);
+            document.getElementById("transaction-summary-toggle-btn").innerHTML =
+                TransactionsView.summaryCollapsed ? "&#9656; Show Summary" : "&#9662; Hide Summary";
+        },
+
+        calculateSummary: function () {
+            var filtered = TransactionsView.getAccountAwareList();
+            var f = TransactionsView.filters;
+
+            var totalCredit = 0;
+            var totalDebit = 0;
+            var accountIds = {};
+            var fromDate = f.dateFrom || null;
+            var toDate = f.dateTo || null;
+            var selectedAccountId = f.accountId || null;
+            var selectedType = f.type || null;
+
+            // Collect summary data from filtered transactions
+            filtered.forEach(function (t) {
+                if (t.type === "income") {
+                    totalCredit += Number(t.amount);
+                } else if (t.type === "expense") {
+                    totalDebit += Number(t.amount);
+                }
+
+                // Track unique accounts in filtered results
+                if (t.accountId) {
+                    accountIds[t.accountId] = true;
+                }
+            });
+
+            // Calculate closing balance for selected accounts at end date
+            var closingBalance = 0;
+            var selectedAccountIds = selectedAccountId ? [selectedAccountId] : Object.keys(accountIds);
+
+            selectedAccountIds.forEach(function (accId) {
+                var account = Accounts.getById(accId);
+                if (!account) { return; }
+
+                var openingBalance = Number(account.openingBalance);
+                var income = 0;
+                var expense = 0;
+
+                // Include only transactions up to the toDate (or all if no date filter)
+                Transactions.getAll().forEach(function (t) {
+                    if (t.accountId !== accId) { return; }
+                    if (toDate && t.date > toDate) { return; }
+
+                    if (t.type === "income") {
+                        income += Number(t.amount);
+                    } else if (t.type === "expense") {
+                        expense += Number(t.amount);
+                    }
+                });
+
+                closingBalance += openingBalance + income - expense;
+            });
+
+            return {
+                account: selectedAccountId ? (Accounts.getById(selectedAccountId) ? Accounts.getById(selectedAccountId).name : "All Accounts") : "All Accounts",
+                type: selectedType ? (selectedType === "income" ? "Income" : "Expense") : "All",
+                fromDate: fromDate || "N/A",
+                toDate: toDate || "N/A",
+                totalCredit: totalCredit,
+                totalDebit: totalDebit,
+                closingBalance: closingBalance
+            };
+        },
+
+        renderSummary: function () {
+            var summary = TransactionsView.calculateSummary();
+            var grid = document.getElementById("transaction-summary-grid");
+
+            grid.innerHTML =
+                DashboardView.summaryCard("Account", Utilities.escapeHtml(summary.account)) +
+                DashboardView.summaryCard("Type", Utilities.escapeHtml(summary.type)) +
+                DashboardView.summaryCard("From Date", summary.fromDate === "N/A" ? "N/A" : Utilities.formatDateDisplay(summary.fromDate)) +
+                DashboardView.summaryCard("To Date", summary.toDate === "N/A" ? "N/A" : Utilities.formatDateDisplay(summary.toDate)) +
+                DashboardView.summaryCard("Total Credit", Utilities.formatCurrency(summary.totalCredit), "positive") +
+                DashboardView.summaryCard("Total Debit", Utilities.formatCurrency(summary.totalDebit), "negative") +
+                DashboardView.summaryCard("Closing Balance", Utilities.formatCurrency(summary.closingBalance), summary.closingBalance < 0 ? "negative" : "positive");
+        },
+
+        handleScreenshot: function () {
+            var filtered = TransactionsView.getAccountAwareList();
+            var top10 = filtered.slice(0, 10);
+
+            // Create a temporary container
+            var screenshotDiv = document.createElement("div");
+            screenshotDiv.id = "screenshot-container";
+            screenshotDiv.style.position = "absolute";
+            screenshotDiv.style.left = "-9999px";
+            screenshotDiv.style.top = "-9999px";
+            screenshotDiv.style.backgroundColor = "white";
+            screenshotDiv.style.color = "black";
+            screenshotDiv.style.padding = "20px";
+            screenshotDiv.style.width = "900px";
+
+            // Add summary
+            var summaryHtml = '<div style="margin-bottom: 20px;">';
+            summaryHtml += '<h2 style="margin: 0 0 15px 0; color: black;">Transaction Summary</h2>';
+            summaryHtml += '<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px;">';
+
+            var summary = TransactionsView.calculateSummary();
+            summaryHtml += '<div style="border: 1px solid #ccc; padding: 10px; border-radius: 4px; background: white;">';
+            summaryHtml += '<div style="font-size: 0.8rem; color: #666; margin-bottom: 4px;">Account</div>';
+            summaryHtml += '<div style="font-size: 1.1rem; font-weight: 600; color: black;">' + Utilities.escapeHtml(summary.account) + '</div>';
+            summaryHtml += '</div>';
+
+            summaryHtml += '<div style="border: 1px solid #ccc; padding: 10px; border-radius: 4px; background: white;">';
+            summaryHtml += '<div style="font-size: 0.8rem; color: #666; margin-bottom: 4px;">Type</div>';
+            summaryHtml += '<div style="font-size: 1.1rem; font-weight: 600; color: black;">' + Utilities.escapeHtml(summary.type) + '</div>';
+            summaryHtml += '</div>';
+
+            summaryHtml += '<div style="border: 1px solid #ccc; padding: 10px; border-radius: 4px; background: white;">';
+            summaryHtml += '<div style="font-size: 0.8rem; color: #666; margin-bottom: 4px;">From Date</div>';
+            summaryHtml += '<div style="font-size: 1.1rem; font-weight: 600; color: black;">' + (summary.fromDate === "N/A" ? "N/A" : Utilities.formatDateDisplay(summary.fromDate)) + '</div>';
+            summaryHtml += '</div>';
+
+            summaryHtml += '<div style="border: 1px solid #ccc; padding: 10px; border-radius: 4px; background: white;">';
+            summaryHtml += '<div style="font-size: 0.8rem; color: #666; margin-bottom: 4px;">To Date</div>';
+            summaryHtml += '<div style="font-size: 1.1rem; font-weight: 600; color: black;">' + (summary.toDate === "N/A" ? "N/A" : Utilities.formatDateDisplay(summary.toDate)) + '</div>';
+            summaryHtml += '</div>';
+
+            summaryHtml += '<div style="border: 1px solid #ccc; padding: 10px; border-radius: 4px; background: white;">';
+            summaryHtml += '<div style="font-size: 0.8rem; color: #666; margin-bottom: 4px;">Total Credit</div>';
+            summaryHtml += '<div style="font-size: 1.1rem; font-weight: 600; color: green;">' + Utilities.formatCurrency(summary.totalCredit) + '</div>';
+            summaryHtml += '</div>';
+
+            summaryHtml += '<div style="border: 1px solid #ccc; padding: 10px; border-radius: 4px; background: white;">';
+            summaryHtml += '<div style="font-size: 0.8rem; color: #666; margin-bottom: 4px;">Total Debit</div>';
+            summaryHtml += '<div style="font-size: 1.1rem; font-weight: 600; color: red;">' + Utilities.formatCurrency(summary.totalDebit) + '</div>';
+            summaryHtml += '</div>';
+
+            summaryHtml += '<div style="border: 1px solid #ccc; padding: 10px; border-radius: 4px; background: white;">';
+            summaryHtml += '<div style="font-size: 0.8rem; color: #666; margin-bottom: 4px;">Closing Balance</div>';
+            summaryHtml += '<div style="font-size: 1.1rem; font-weight: 600; color: ' + (summary.closingBalance < 0 ? 'red' : 'black') + ';">' + Utilities.formatCurrency(summary.closingBalance) + '</div>';
+            summaryHtml += '</div>';
+
+            summaryHtml += '</div></div>';
+
+            // Add table with top 10 transactions
+            summaryHtml += '<div style="margin-top: 20px;">';
+            summaryHtml += '<h2 style="margin: 0 0 10px 0; color: black;">Top 10 Filtered Transactions</h2>';
+            summaryHtml += '<table style="width: 100%; border-collapse: collapse; font-size: 0.85rem;">';
+            summaryHtml += '<thead><tr style="background-color: #f0f0f0;">';
+            summaryHtml += '<th style="border: 1px solid #ccc; padding: 8px; text-align: left; color: black;">S.No</th>';
+            summaryHtml += '<th style="border: 1px solid #ccc; padding: 8px; text-align: left; color: black;">Date</th>';
+            summaryHtml += '<th style="border: 1px solid #ccc; padding: 8px; text-align: left; color: black;">Type</th>';
+            summaryHtml += '<th style="border: 1px solid #ccc; padding: 8px; text-align: left; color: black;">Narration</th>';
+            summaryHtml += '<th style="border: 1px solid #ccc; padding: 8px; text-align: left; color: black;">Account</th>';
+            summaryHtml += '<th style="border: 1px solid #ccc; padding: 8px; text-align: right; color: black;">Amount</th>';
+            summaryHtml += '</tr></thead>';
+            summaryHtml += '<tbody>';
+
+            top10.forEach(function (t, idx) {
+                var typeLabel = t.type === "income" ? "Income" : "Expense";
+                var amountColor = t.type === "income" ? "green" : "red";
+                summaryHtml += '<tr style="background-color: ' + (idx % 2 === 0 ? 'white' : '#f9f9f9') + ';">';
+                summaryHtml += '<td style="border: 1px solid #ccc; padding: 8px; color: black;">' + t.sNo + '</td>';
+                summaryHtml += '<td style="border: 1px solid #ccc; padding: 8px; color: black;">' + Utilities.formatDateDisplay(t.date) + '</td>';
+                summaryHtml += '<td style="border: 1px solid #ccc; padding: 8px; color: black;">' + typeLabel + '</td>';
+                summaryHtml += '<td style="border: 1px solid #ccc; padding: 8px; color: black;">' + Utilities.escapeHtml(t.narration) + '</td>';
+                summaryHtml += '<td style="border: 1px solid #ccc; padding: 8px; color: black;">' + Utilities.escapeHtml(t.accountName) + '</td>';
+                summaryHtml += '<td style="border: 1px solid #ccc; padding: 8px; text-align: right; color: ' + amountColor + '; font-weight: 600;">' + Utilities.formatCurrency(t.amount) + '</td>';
+                summaryHtml += '</tr>';
+            });
+
+            summaryHtml += '</tbody></table></div>';
+
+            screenshotDiv.innerHTML = summaryHtml;
+            document.body.appendChild(screenshotDiv);
+
+            // Use html2canvas to capture the div
+            html2canvas(screenshotDiv, {
+                backgroundColor: "white",
+                scale: 2
+            }).then(function (canvas) {
+                // Convert to JPG and download
+                var link = document.createElement("a");
+                link.href = canvas.toDataURL("image/jpeg", 0.95);
+                var today = Utilities.getTodayIso();
+                link.download = "transactions-" + today + ".jpg";
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                document.body.removeChild(screenshotDiv);
+                UI.showNotification("Screenshot downloaded successfully.", "success");
+            }).catch(function (error) {
+                console.error("Screenshot error:", error);
+                document.body.removeChild(screenshotDiv);
+                UI.showNotification("Error capturing screenshot. Please try again.", "error");
+            });
         },
 
         bindFilterEvents: function () {
@@ -2782,6 +3034,9 @@
             TransactionsView.refreshAccountOptions(select.value || null);
             TransactionsView.refreshFilterAccountOptions();
             TransactionsView.pruneSelection();
+
+            // Update summary in real-time
+            TransactionsView.renderSummary();
 
             var totalCount = Transactions.getAll().length;
             var transactions = TransactionsView.getAccountAwareList();
