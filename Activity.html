@@ -72,7 +72,7 @@
     .lang-btn:active { opacity: .75; }
 
     /* ── Layout ── */
-    .main { padding: 16px; max-width: 520px; margin: 0 auto; padding-bottom: 130px; }
+    .main { padding: 16px; max-width: 100%; margin: 0 auto; padding-bottom: 130px; }
 
     /* ── Card ── */
     .card {
@@ -379,6 +379,84 @@
     }
     .error-msg.visible { display: block; }
 
+    /* ── Brochures by language ── */
+    .bro-table { width: 100%; border-collapse: collapse; font-size: 15px; }
+    .bro-table th {
+      text-align: start;
+      font-size: 11px;
+      font-weight: 800;
+      color: var(--text-secondary);
+      text-transform: uppercase;
+      letter-spacing: .6px;
+      padding: 0 6px 8px;
+    }
+    .bro-table td {
+      padding: 8px 6px;
+      border-top: 1px solid var(--border);
+      vertical-align: middle;
+    }
+    .bro-lang { font-weight: 700; color: var(--text-primary); word-break: break-word; }
+    .bro-count-cell { width: auto; }
+    .bro-count-cell .stepper { display: inline-flex; width: auto; max-width: 100%; }
+    .bro-count-cell .stepper-btn { width: 48px; min-height: 48px; font-size: 24px; }
+    .bro-count-cell .stepper-input { flex: 0 1 auto; width: 4ch; min-width: 0; padding: 8px 2px; }
+    .bro-action { width: 48px; text-align: center; }
+    .bro-count {
+      width: 100%;
+      border: 2px solid var(--border);
+      border-radius: 10px;
+      padding: 10px 6px;
+      font-size: 17px;
+      font-weight: 800;
+      font-family: inherit;
+      color: var(--text-primary);
+      background: var(--white);
+      text-align: center;
+      outline: none;
+      min-width: 0;
+      -moz-appearance: textfield;
+      -webkit-appearance: none;
+    }
+    .bro-count::-webkit-outer-spin-button,
+    .bro-count::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+    .bro-count:focus {
+      border-color: var(--blue-mid);
+      box-shadow: 0 0 0 3px rgba(25,118,210,0.14);
+    }
+    .bro-del {
+      background: var(--blue-light);
+      border: none;
+      border-radius: 50%;
+      width: 34px; height: 34px;
+      font-size: 16px;
+      font-weight: 700;
+      color: var(--danger);
+      cursor: pointer;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .bro-del:active { opacity: .7; }
+    .add-lang-row { display: flex; gap: 10px; align-items: stretch; }
+    .add-lang-row input {
+      flex: 1;
+      border: 2px solid var(--border);
+      border-radius: 10px;
+      padding: 12px 14px;
+      font-size: 15px;
+      font-family: inherit;
+      color: var(--text-primary);
+      background: var(--white);
+      outline: none;
+      min-width: 0;
+      transition: border-color .2s, box-shadow .2s;
+      -webkit-appearance: none;
+    }
+    .add-lang-row input:focus {
+      border-color: var(--blue-mid);
+      box-shadow: 0 0 0 3px rgba(25,118,210,0.14);
+    }
+    .add-lang-row input { max-width: 320px; }
+    .add-lang-btn { padding: 0 18px; flex-shrink: 0; font-size: 15px; }
+
     /* ── Action buttons ── */
     .btn-group {
       display: grid;
@@ -584,6 +662,7 @@
     /* ── RTL ── */
     body.rtl .stepper-input { direction: ltr; }
     body.rtl .time-text-input { direction: ltr; text-align: right; }
+    body.rtl .bro-count { direction: ltr; }
   </style>
 </head>
 <body>
@@ -698,21 +777,6 @@
 
     <div class="field">
       <label>
-        <span class="lbl-icon"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" width="26" height="26" fill="none" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="4"  width="20" height="24" rx="3" fill="#BFD4F2" stroke="#1565C0" stroke-width="1.5"/><rect x="2" y="6"  width="20" height="24" rx="3" fill="#fff"    stroke="#1565C0" stroke-width="2"/><line x1="6" y1="13" x2="18" y2="13" stroke="#1565C0" stroke-width="1.8"/><line x1="6" y1="18" x2="18" y2="18" stroke="#1565C0" stroke-width="1.8"/><line x1="6" y1="23" x2="14" y2="23" stroke="#1565C0" stroke-width="1.8"/></svg></span>
-        <span id="lbl-bro">Brochures Distributed</span><span class="req">*</span>
-      </label>
-      <div class="stepper" id="step-brochures">
-        <button class="stepper-btn" onclick="stepChange('f-brochures',-1,'step-brochures')">−</button>
-        <input class="stepper-input" type="number" id="f-brochures" min="0" value="0"
-               oninput="onStepInput(this,'step-brochures')"
-               onfocus="stepFocus('step-brochures')" onblur="stepBlur('step-brochures')" />
-        <button class="stepper-btn" onclick="stepChange('f-brochures',1,'step-brochures')">+</button>
-      </div>
-      <div class="error-msg" id="err-bro" data-en="Cannot be negative" data-ar="لا يمكن أن يكون سالباً">Cannot be negative</div>
-    </div>
-
-    <div class="field">
-      <label>
         <span class="lbl-icon"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" width="26" height="26" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M22 6 A10 10 0 1 0 22 26 A7 7 0 1 1 22 6Z" fill="#E3F0FF" stroke="#1565C0" stroke-width="2"/><polygon points="25,10 26.2,13.6 30,13.6 27,15.8 28.2,19.4 25,17.2 21.8,19.4 23,15.8 20,13.6 23.8,13.6" fill="#1565C0"/><circle cx="14" cy="15" r="1.1" fill="#1565C0"/><circle cx="17" cy="15" r="1.1" fill="#1565C0"/><path d="M13 18 Q15.5 20 18 18" stroke="#1565C0" stroke-width="1.2" fill="none"/></svg></span>
         <span id="lbl-nm">New Muslims</span>
       </label>
@@ -724,6 +788,33 @@
         <button class="stepper-btn" onclick="stepChange('f-newmuslims',1,'step-newmuslims')">+</button>
       </div>
       <div class="error-msg" id="err-nm" data-en="Cannot be negative" data-ar="لا يمكن أن يكون سالباً">Cannot be negative</div>
+    </div>
+  </div>
+
+  <!-- Brochures Distributed (by language) -->
+  <div class="card">
+    <div class="card-title" id="sect-bro">Brochures Distributed</div>
+
+    <table class="bro-table">
+      <thead>
+        <tr>
+          <th id="th-lang">Language</th>
+          <th id="th-count">Brochures</th>
+          <th class="bro-action"></th>
+        </tr>
+      </thead>
+      <tbody id="broBody"></tbody>
+    </table>
+
+    <div class="field" style="margin-top:16px;margin-bottom:0;">
+      <label for="f-newlang"><span id="lbl-newlang">Add language</span></label>
+      <div class="add-lang-row">
+        <input type="text" id="f-newlang" maxlength="40" autocomplete="off" />
+        <button class="btn btn-primary add-lang-btn" type="button" onclick="addLanguage()">
+          <span id="btn-addlang">Add</span>
+        </button>
+      </div>
+      <div class="error-msg" id="err-lang"></div>
     </div>
   </div>
 
@@ -831,6 +922,7 @@ const I18N = {
     hdrSub:        "Mosque Volunteer System",
     sectDatetime:  "Date & Time",
     sectStats:     "Statistics",
+    sectBro:       "Brochures Distributed",
     sectRemarks:   "Remarks",
     sectActions:   "Actions",
     modalTitle:    "Saved Report",
@@ -840,8 +932,17 @@ const I18N = {
     lblVol:        "Number of Volunteers",
     lblVis:        "Number of Visitors",
     lblDia:        "Discussions / Dialogues",
-    lblBro:        "Brochures Distributed",
     lblNm:         "New Muslims",
+    colLang:       "Language",
+    colCount:      "Brochures",
+    lblNewLang:    "Add language",
+    phNewLang:     "Enter a language name",
+    btnAddLang:    "Add",
+    btnRemove:     "Remove language",
+    errLangEmpty:  "Enter a language name",
+    errLangDup:    "This language is already in the table",
+    btnDecrease:   "Decrease",
+    btnIncrease:   "Increase",
     lblRemarks:    "Remarks",
     phRemarks:     "Any additional notes about the shift…",
     btnSave:       "Save",
@@ -884,6 +985,7 @@ const I18N = {
     hdrSub:        "نظام المتطوعين في المسجد",
     sectDatetime:  "التاريخ والوقت",
     sectStats:     "الإحصائيات",
+    sectBro:       "الكتيبات الموزعة",
     sectRemarks:   "ملاحظات",
     sectActions:   "الإجراءات",
     modalTitle:    "التقرير المحفوظ",
@@ -893,8 +995,17 @@ const I18N = {
     lblVol:        "عدد المتطوعين",
     lblVis:        "عدد الزوار",
     lblDia:        "النقاشات / الحوارات",
-    lblBro:        "الكتيبات الموزعة",
     lblNm:         "المسلمون الجدد",
+    colLang:       "اللغة",
+    colCount:      "الكتيبات",
+    lblNewLang:    "إضافة لغة",
+    phNewLang:     "أدخل اسم اللغة",
+    btnAddLang:    "إضافة",
+    btnRemove:     "حذف اللغة",
+    errLangEmpty:  "أدخل اسم اللغة",
+    errLangDup:    "هذه اللغة موجودة بالفعل في الجدول",
+    btnDecrease:   "تقليل",
+    btnIncrease:   "زيادة",
     lblRemarks:    "ملاحظات",
     phRemarks:     "أي ملاحظات إضافية حول الوردية…",
     btnSave:       "حفظ",
@@ -949,6 +1060,7 @@ function applyLang() {
     "hdr-sub":          t.hdrSub,
     "sect-datetime":    t.sectDatetime,
     "sect-stats":       t.sectStats,
+    "sect-bro":         t.sectBro,
     "sect-remarks":     t.sectRemarks,
     "sect-actions":     t.sectActions,
     "modal-title":      t.modalTitle,
@@ -958,8 +1070,11 @@ function applyLang() {
     "lbl-vol":          t.lblVol,
     "lbl-vis":          t.lblVis,
     "lbl-dia":          t.lblDia,
-    "lbl-bro":          t.lblBro,
     "lbl-nm":           t.lblNm,
+    "th-lang":          t.colLang,
+    "th-count":         t.colCount,
+    "lbl-newlang":      t.lblNewLang,
+    "btn-addlang":      t.btnAddLang,
     "lbl-remarks":      t.lblRemarks,
     "btn-save":         t.btnSave,
     "btn-copy":         t.btnCopy,
@@ -976,10 +1091,13 @@ function applyLang() {
   Object.entries(ids).forEach(([id, txt]) => set(id, txt));
   document.getElementById("langBtn").textContent = t.langSwitch;
   document.getElementById("f-remarks").placeholder = t.phRemarks;
+  document.getElementById("f-newlang").placeholder = t.phNewLang;
 
   document.querySelectorAll(".error-msg").forEach(el => {
     if (el.dataset[lang]) el.textContent = el.dataset[lang];
   });
+
+  renderBroTable();
 
   const saved = loadFromStorage();
   if (saved) set("savedReportText", buildReportText(saved));
@@ -1162,6 +1280,142 @@ function confirmTime() {
   closeTimePicker();
 }
 
+/* ══ Brochures by language ═════════════════════════════════════════════
+   broRows is the single source of truth for the table:
+   [{ name, count, custom }]. Default languages are custom:false.
+   Duplicate check is case- and spacing-insensitive, and runs on add,
+   on save and on load (so saved data is also covered).
+═══════════════════════════════════════════════════════════════════════ */
+const DEFAULT_BRO_LANGS = ["English", "Spanish", "Portuguese", "Russian", "Chinese", "Dutch"];
+let broRows = [];
+
+function defaultBroRows() {
+  return DEFAULT_BRO_LANGS.map(name => ({ name, count: 0, custom: false }));
+}
+function normLang(name) {
+  return String(name).replace(/\s+/g, " ").trim().toLowerCase();
+}
+function isDuplicateLang(name, exceptIndex) {
+  const key = normLang(name);
+  return broRows.some((r, i) => i !== exceptIndex && normLang(r.name) === key);
+}
+function applyBroRows(list) {
+  broRows = Array.isArray(list)
+    ? list.map(r => ({
+        name:   String(r.name || ""),
+        count:  Math.max(0, parseInt(r.count, 10) || 0),
+        custom: !!r.custom
+      }))
+    : defaultBroRows();
+  renderBroTable();
+}
+function renderBroTable() {
+  const tbody = document.getElementById("broBody");
+  if (!tbody) return;
+  const t = I18N[lang];
+  tbody.innerHTML = "";
+  broRows.forEach((r, i) => {
+    const tr = document.createElement("tr");
+
+    const tdName = document.createElement("td");
+    tdName.className = "bro-lang";
+    tdName.textContent = r.name;            // textContent: user input is never parsed as HTML
+
+    const tdCount = document.createElement("td");
+    tdCount.className = "bro-count-cell";
+    const stepper = document.createElement("div");
+    stepper.className = "stepper";
+    const minus = document.createElement("button");
+    minus.type = "button";
+    minus.className = "stepper-btn";
+    minus.textContent = "−";
+    minus.setAttribute("aria-label", t.btnDecrease);
+    const inp = document.createElement("input");
+    inp.type = "number";
+    inp.min = "0";
+    inp.inputMode = "numeric";
+    inp.className = "stepper-input";
+    inp.value = r.count;
+    inp.setAttribute("aria-label", r.name);
+    inp.addEventListener("input", () => onBroCountInput(i, inp));
+    inp.addEventListener("focus", () => stepper.classList.add("focused"));
+    inp.addEventListener("blur", () => stepper.classList.remove("focused"));
+    const plus = document.createElement("button");
+    plus.type = "button";
+    plus.className = "stepper-btn";
+    plus.textContent = "+";
+    plus.setAttribute("aria-label", t.btnIncrease);
+    minus.addEventListener("click", () => stepBroCount(i, -1, inp));
+    plus.addEventListener("click", () => stepBroCount(i, 1, inp));
+    stepper.append(minus, inp, plus);
+    tdCount.appendChild(stepper);
+
+    const tdAct = document.createElement("td");
+    tdAct.className = "bro-action";
+    if (r.custom) {
+      const btn = document.createElement("button");
+      btn.type = "button";
+      btn.className = "bro-del";
+      btn.textContent = "✕";
+      btn.title = t.btnRemove;
+      btn.setAttribute("aria-label", t.btnRemove);
+      btn.addEventListener("click", () => removeLanguage(i));
+      tdAct.appendChild(btn);
+    }
+
+    tr.append(tdName, tdCount, tdAct);
+    tbody.appendChild(tr);
+  });
+}
+function stepBroCount(i, delta, inp) {
+  broRows[i].count = Math.max(0, (broRows[i].count || 0) + delta);
+  inp.value = broRows[i].count;
+  markDirty();
+}
+function onBroCountInput(i, inp) {
+  let n = parseInt(inp.value, 10);
+  if (isNaN(n) || n < 0) {
+    n = 0;
+    if (inp.value !== "") inp.value = "0";
+  }
+  broRows[i].count = n;
+  markDirty();
+}
+function showLangError(msg) {
+  const el = document.getElementById("err-lang");
+  el.textContent = msg;
+  el.classList.add("visible");
+}
+function hideLangError() {
+  document.getElementById("err-lang").classList.remove("visible");
+}
+function addLanguage() {
+  const t = I18N[lang];
+  const inp = document.getElementById("f-newlang");
+  const name = inp.value.replace(/\s+/g, " ").trim();
+  if (!name) { showLangError(t.errLangEmpty); inp.focus(); return; }
+  if (isDuplicateLang(name, -1)) { showLangError(t.errLangDup); inp.select(); return; }
+  broRows.push({ name, count: 0, custom: true });
+  inp.value = "";
+  hideLangError();
+  renderBroTable();
+  markDirty();
+  inp.focus();
+}
+function removeLanguage(i) {
+  broRows.splice(i, 1);
+  renderBroTable();
+  markDirty();
+}
+function validateBrochures() {
+  const t = I18N[lang];
+  for (let i = 0; i < broRows.length; i++) {
+    if (!normLang(broRows[i].name)) { showLangError(t.errLangEmpty); return false; }
+    if (isDuplicateLang(broRows[i].name, i)) { showLangError(t.errLangDup); return false; }
+  }
+  return true;
+}
+
 /* ══ Helpers ═══════════════════════════════════════════════════════════ */
 function today() { return new Date().toISOString().slice(0,10); }
 
@@ -1191,9 +1445,18 @@ function buildReportText(data) {
     `${t.reportVol}: ${data.volunteers}`,
     `${t.reportVis}: ${data.visitors}`,
     `${t.reportDia}: ${data.dialogues}`,
-    `${t.reportBro}: ${data.brochures}`,
-    `${t.reportNm}: ${parseInt(data.newmuslims,10)||0}`,
   ];
+
+  // Brochures: only languages with a count above zero
+  const broWithCount = (data.broLangs || [])
+    .map(r => ({ name: String(r.name || "").trim(), count: parseInt(r.count, 10) || 0 }))
+    .filter(r => r.name && r.count > 0);
+  if (broWithCount.length) {
+    lines.push(`${t.reportBro}:`);
+    broWithCount.forEach(r => lines.push(`  ${r.name}: ${r.count}`));
+  }
+
+  lines.push(`${t.reportNm}: ${parseInt(data.newmuslims,10)||0}`);
   if (data.remarks && data.remarks.trim()) {
     lines.push(`${t.reportRemarks}: ${data.remarks.trim()}`);
   }
@@ -1281,7 +1544,7 @@ function collectData() {
     volunteers: v("f-volunteers"),
     visitors:   v("f-visitors"),
     dialogues:  v("f-dialogues"),
-    brochures:  v("f-brochures"),
+    broLangs:   broRows.map(r => ({ name: r.name, count: r.count, custom: r.custom })),
     newmuslims: v("f-newmuslims"),
     remarks:    v("f-remarks"),
   };
@@ -1340,7 +1603,6 @@ function validate() {
   [["f-volunteers","err-vol","step-volunteers"],
    ["f-visitors",  "err-vis","step-visitors"],
    ["f-dialogues", "err-dia","step-dialogues"],
-   ["f-brochures", "err-bro","step-brochures"],
    ["f-newmuslims","err-nm", "step-newmuslims"]].forEach(([fid,eid,sid]) => {
     if (parseInt(document.getElementById(fid).value,10) < 0) {
       document.getElementById(eid).classList.add("visible");
@@ -1348,6 +1610,10 @@ function validate() {
       ok = false;
     }
   });
+
+  // Brochures: non-empty names and no duplicate languages
+  if (!validateBrochures()) ok = false;
+
   return ok;
 }
 
@@ -1407,7 +1673,6 @@ function clearForm() {
   document.getElementById("f-volunteers").value = 0;
   document.getElementById("f-visitors").value   = 0;
   document.getElementById("f-dialogues").value  = 0;
-  document.getElementById("f-brochures").value  = 0;
   document.getElementById("f-newmuslims").value = 0;
   document.getElementById("f-remarks").value    = "";
   timeValues.start = ""; timeValues.end = "";
@@ -1415,6 +1680,8 @@ function clearForm() {
   document.getElementById("f-end-text").value   = "";
   document.getElementById("tig-start").classList.remove("invalid");
   document.getElementById("tig-end").classList.remove("invalid");
+  document.getElementById("f-newlang").value = "";
+  applyBroRows(null);                       // back to the default languages, all at 0
   clearErrors();
   toast(I18N[lang].toastCleared);
   markDirty();
@@ -1438,9 +1705,9 @@ function loadSavedToForm() {
   document.getElementById("f-volunteers").value = saved.volunteers ?? 0;
   document.getElementById("f-visitors").value   = saved.visitors   ?? 0;
   document.getElementById("f-dialogues").value  = saved.dialogues  ?? 0;
-  document.getElementById("f-brochures").value  = saved.brochures  ?? 0;
   document.getElementById("f-newmuslims").value = saved.newmuslims ?? 0;
   document.getElementById("f-remarks").value    = saved.remarks    ?? "";
+  applyBroRows(saved.broLangs);
   ["start","end"].forEach(k => {
     timeValues[k] = saved[k] || "";
     const textEl = document.getElementById("f-"+k+"-text");
@@ -1469,12 +1736,12 @@ function toast(msg) {
 (function init() {
   document.getElementById("f-date").value = today();
   const saved = loadFromStorage();
+  applyBroRows(saved ? saved.broLangs : null);
   if (saved) {
     document.getElementById("f-date").value       = saved.date       || today();
     document.getElementById("f-volunteers").value = saved.volunteers ?? 0;
     document.getElementById("f-visitors").value   = saved.visitors   ?? 0;
     document.getElementById("f-dialogues").value  = saved.dialogues  ?? 0;
-    document.getElementById("f-brochures").value  = saved.brochures  ?? 0;
     document.getElementById("f-newmuslims").value = saved.newmuslims ?? 0;
     document.getElementById("f-remarks").value    = saved.remarks    ?? "";
     ["start","end"].forEach(k => {
@@ -1485,6 +1752,9 @@ function toast(msg) {
       }
     });
   }
+  document.getElementById("f-newlang").addEventListener("keydown", e => {
+    if (e.key === "Enter") { e.preventDefault(); addLanguage(); }
+  });
   applyLang();
 })();
 
