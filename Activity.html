@@ -1618,12 +1618,17 @@ function validate() {
 }
 
 /* ══ Actions ═══════════════════════════════════════════════════════════ */
-function saveReport() {
-  if (!validate()) return;
+/* Validates and stores the current form. Returns false (and stores nothing) if invalid. */
+function saveCurrent() {
+  if (!validate()) return false;
   if (autosaveDebounceTimer) { clearTimeout(autosaveDebounceTimer); autosaveDebounceTimer = null; }
   saveToStorage(collectData());
   isDirty = false;
-  toast(I18N[lang].toastSaved);
+  return true;
+}
+
+function saveReport() {
+  if (saveCurrent()) toast(I18N[lang].toastSaved);
 }
 
 function doCopy(text) {
@@ -1649,8 +1654,8 @@ function legacyCopy(text) {
 }
 
 function copyClipboard() {
-  const saved = loadFromStorage();
-  doCopy(saved ? buildReportText(saved) : buildReportText(collectData()))
+  if (!saveCurrent()) return;
+  doCopy(buildReportText(loadFromStorage()))
     .then(() => toast(I18N[lang].toastCopied));
 }
 function copyFromModal() {
@@ -1688,9 +1693,8 @@ function clearForm() {
 }
 
 function openReportModal() {
-  const saved = loadFromStorage();
-  if (!saved) { toast(I18N[lang].toastNoSaved); return; }
-  set("savedReportText", buildReportText(saved));
+  if (!saveCurrent()) return;
+  set("savedReportText", buildReportText(loadFromStorage()));
   document.getElementById("reportModalOverlay").classList.add("open");
 }
 function closeReportModal() { document.getElementById("reportModalOverlay").classList.remove("open"); }
