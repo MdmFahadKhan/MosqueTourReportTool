@@ -1569,12 +1569,9 @@ function validate() {
     ok = false;
   }
 
-  // Validate start time — try to parse typed text first
+  // The typed text is the source of truth: re-parse it so a stale time is never saved
   const startText = document.getElementById("f-start-text").value.trim();
-  if (startText && !timeValues.start) {
-    const p = parseTimeText(startText);
-    if (p) timeValues.start = p;
-  }
+  timeValues.start = startText ? (parseTimeText(startText) || "") : "";
   if (!timeValues.start) {
     document.getElementById("err-start").textContent = t.errTimeInvalid;
     document.getElementById("err-start").classList.add("visible");
@@ -1582,12 +1579,9 @@ function validate() {
     ok = false;
   }
 
-  // Validate end time
+  // Same for shift end
   const endText = document.getElementById("f-end-text").value.trim();
-  if (endText && !timeValues.end) {
-    const p = parseTimeText(endText);
-    if (p) timeValues.end = p;
-  }
+  timeValues.end = endText ? (parseTimeText(endText) || "") : "";
   if (!timeValues.end) {
     document.getElementById("err-end").textContent = t.errTimeInvalid;
     document.getElementById("err-end").classList.add("visible");
