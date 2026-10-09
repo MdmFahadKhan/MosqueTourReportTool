@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>Personal Finance Manager</title>
 <style>
     :root {
@@ -20,6 +20,7 @@
         --color-focus: #d4af37;
         --radius: 8px;
         --nav-width: 220px;
+        --bottom-nav-height: 64px;
     }
 
     * { box-sizing: border-box; }
@@ -31,6 +32,7 @@
         background: var(--color-bg);
         color: var(--color-text);
         font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+        -webkit-text-size-adjust: 100%;
     }
 
     a { color: var(--color-gold); }
@@ -44,6 +46,7 @@
     a:focus-visible,
     input:focus-visible,
     select:focus-visible,
+    textarea:focus-visible,
     [tabindex]:focus-visible {
         outline: 2px solid var(--color-focus);
         outline-offset: 2px;
@@ -90,9 +93,7 @@
         flex: 1;
     }
 
-    .nav-item {
-        margin: 0;
-    }
+    .nav-item { margin: 0; }
 
     .nav-link {
         display: flex;
@@ -155,13 +156,9 @@
         width: 100%;
     }
 
-    .view {
-        display: none;
-    }
+    .view { display: none; }
 
-    .view.active {
-        display: block;
-    }
+    .view.active { display: block; }
 
     .view-header {
         position: sticky;
@@ -211,6 +208,7 @@
         flex-direction: column;
         gap: 5px;
         flex: 1 1 200px;
+        min-width: 0;
     }
 
     .form-group label {
@@ -228,6 +226,7 @@
         color: var(--color-text);
         font-size: 0.92rem;
         font-family: inherit;
+        width: 100%;
     }
 
     .form-group input.has-error,
@@ -243,6 +242,7 @@
 
     .form-actions {
         display: flex;
+        flex-wrap: wrap;
         gap: 10px;
         margin-top: 4px;
     }
@@ -260,9 +260,9 @@
         color: #16232a;
     }
 
-    .btn-primary:hover {
-        background: var(--color-gold-hover);
-    }
+    .btn-primary:hover { background: var(--color-gold-hover); }
+
+    .btn-primary:disabled { opacity: 0.6; cursor: not-allowed; }
 
     .btn-secondary {
         background: transparent;
@@ -280,9 +280,7 @@
         color: #fff;
     }
 
-    .btn-danger:hover {
-        background: #d9634a;
-    }
+    .btn-danger:hover { background: #d9634a; }
 
     .btn-danger-text {
         background: none;
@@ -307,6 +305,7 @@
         border: 1px solid var(--color-border);
         border-radius: var(--radius);
         overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
     }
 
     table.data-table {
@@ -331,9 +330,7 @@
         background: var(--color-bg-elevated);
     }
 
-    table.data-table tbody tr:last-child td {
-        border-bottom: none;
-    }
+    table.data-table tbody tr:last-child td { border-bottom: none; }
 
     table.data-table td.amount,
     table.data-table th.amount {
@@ -369,13 +366,9 @@
         color: var(--color-expense);
     }
 
-    .amount-income {
-        color: var(--color-income);
-    }
+    .amount-income { color: var(--color-income); }
 
-    .amount-expense {
-        color: var(--color-expense);
-    }
+    .amount-expense { color: var(--color-expense); }
 
     .record-cards {
         display: none;
@@ -394,16 +387,19 @@
         display: flex;
         justify-content: space-between;
         align-items: flex-start;
+        gap: 8px;
         margin-bottom: 6px;
     }
 
     .record-card-title {
         font-weight: 600;
+        overflow-wrap: anywhere;
     }
 
     .record-card-row {
         display: flex;
         justify-content: space-between;
+        gap: 10px;
         font-size: 0.85rem;
         color: var(--color-text-muted);
         padding: 2px 0;
@@ -424,9 +420,7 @@
 
     /* ---------- Dashboard ---------- */
 
-    .dashboard-section {
-        margin-bottom: 28px;
-    }
+    .dashboard-section { margin-bottom: 28px; }
 
     .dashboard-section h2 {
         font-size: 0.95rem;
@@ -446,6 +440,7 @@
         border: 1px solid var(--color-border);
         border-radius: var(--radius);
         padding: 16px 18px;
+        min-width: 0;
     }
 
     .summary-card .label {
@@ -458,15 +453,12 @@
         font-size: 1.35rem;
         font-weight: 700;
         font-variant-numeric: tabular-nums;
+        overflow-wrap: anywhere;
     }
 
-    .summary-card .value.positive {
-        color: var(--color-income);
-    }
+    .summary-card .value.positive { color: var(--color-income); }
 
-    .summary-card .value.negative {
-        color: var(--color-expense);
-    }
+    .summary-card .value.negative { color: var(--color-expense); }
 
     /* ---------- Reports ---------- */
 
@@ -498,40 +490,24 @@
         font-weight: 600;
     }
 
-    .report-panel {
-        display: none;
-    }
+    .report-panel { display: none; }
 
-    .report-panel.active {
-        display: block;
-    }
+    .report-panel.active { display: block; }
 
-    @media (max-width: 860px) {
-        .data-table-wrap {
-            display: none;
-        }
-
-        .record-cards {
-            display: flex;
-        }
-    }
-
-    /* ---------- Modal (confirmation dialogs) ---------- */
+    /* ---------- Modal ---------- */
 
     .modal-overlay {
         display: none;
         position: fixed;
         inset: 0;
-        background: rgba(0,0,0,0.55);
+        background: rgba(0, 0, 0, 0.55);
         align-items: center;
         justify-content: center;
         z-index: 200;
         padding: 16px;
     }
 
-    .modal-overlay.open {
-        display: flex;
-    }
+    .modal-overlay.open { display: flex; }
 
     .modal-box {
         background: var(--color-bg-card);
@@ -559,9 +535,7 @@
         gap: 10px;
     }
 
-    .modal-box-lg {
-        max-width: 640px;
-    }
+    .modal-box-lg { max-width: 640px; }
 
     .form-card-header {
         display: flex;
@@ -570,9 +544,7 @@
         margin-bottom: 16px;
     }
 
-    .form-card-header h2 {
-        margin: 0;
-    }
+    .form-card-header h2 { margin: 0; }
 
     .collapse-toggle-btn {
         background: none;
@@ -582,8 +554,31 @@
         padding: 4px 8px;
     }
 
-    .collapsible-body.collapsed {
-        display: none;
+    .collapsible-body.collapsed { display: none; }
+
+    .more-sheet-list {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+    }
+
+    .more-sheet-link {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        width: 100%;
+        padding: 12px 14px;
+        background: var(--color-bg-elevated);
+        border: 1px solid var(--color-border);
+        border-radius: 6px;
+        color: var(--color-text);
+        font-size: 0.95rem;
+        text-align: left;
+    }
+
+    .more-sheet-link.active {
+        border-color: var(--color-gold);
+        color: var(--color-gold);
     }
 
     /* ---------- Lock Screen ---------- */
@@ -597,11 +592,10 @@
         align-items: center;
         justify-content: center;
         padding: 20px;
+        overflow-y: auto;
     }
 
-    #lock-overlay.hidden {
-        display: none;
-    }
+    #lock-overlay.hidden { display: none; }
 
     .lock-panel {
         display: none;
@@ -613,9 +607,7 @@
         width: 100%;
     }
 
-    .lock-panel.active {
-        display: block;
-    }
+    .lock-panel.active { display: block; }
 
     .lock-panel h2 {
         margin: 0 0 6px 0;
@@ -668,67 +660,33 @@
         background: var(--color-bg-elevated);
         border-top: 1px solid var(--color-border);
         z-index: 20;
+        padding-bottom: env(safe-area-inset-bottom);
     }
 
     #bottom-nav-scroll {
         display: flex;
-        overflow-x: auto;
-        -webkit-overflow-scrolling: touch;
     }
 
     .bottom-nav-link {
-        flex: 1 0 auto;
-        min-width: 78px;
+        flex: 1 1 0;
+        min-width: 0;
+        min-height: 56px;
         display: flex;
         flex-direction: column;
         align-items: center;
+        justify-content: center;
         gap: 3px;
-        padding: 8px 6px 10px 6px;
+        padding: 6px 4px;
         background: none;
         border: none;
         color: var(--color-text-muted);
         font-size: 0.68rem;
+        white-space: nowrap;
     }
 
-    .bottom-nav-link .nav-icon {
-        font-size: 1.15rem;
-    }
+    .bottom-nav-link .nav-icon { font-size: 1.15rem; }
 
-    .bottom-nav-link.active {
-        color: var(--color-gold);
-    }
-
-    /* ---------- Responsive ---------- */
-
-    @media (max-width: 860px) {
-        #sidebar {
-            display: none;
-        }
-
-        #topbar {
-            display: flex;
-        }
-
-        #content {
-            padding: 20px 16px 90px 16px;
-        }
-
-        #bottom-nav {
-            display: block;
-        }
-
-        /* Prevent iOS Safari's automatic zoom-on-focus, which fires
-           whenever a focused input's font-size is below 16px. */
-        .form-group input,
-        .form-group select,
-        .form-group textarea {
-            font-size: 16px;
-        }
-
-        .lock-panel {
-            padding: 22px 18px;
-        }
-    }
+    .bottom-nav-link.active { color: var(--color-gold); }
 
     /* ---------- Notifications ---------- */
 
@@ -736,7 +694,7 @@
         position: fixed;
         top: 16px;
         right: 16px;
-        z-index: 100;
+        z-index: 150;
         display: flex;
         flex-direction: column;
         gap: 8px;
@@ -750,7 +708,7 @@
         border-radius: var(--radius);
         padding: 12px 16px;
         font-size: 0.88rem;
-        box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
     }
 
     .toast.success { border-left-color: var(--color-income); }
@@ -777,6 +735,7 @@
 
     .sms-mapping-row {
         display: flex;
+        flex-wrap: wrap;
         align-items: center;
         gap: 12px;
         margin: 6px 0;
@@ -791,6 +750,7 @@
 
     .sms-mapping-row select {
         flex: 1 1 240px;
+        min-width: 0;
     }
 
     table.data-table input[type="text"].sms-amount-input {
@@ -830,6 +790,137 @@
 
     .screenshot-mode table tbody tr:nth-child(even) {
         background-color: #fafafa !important;
+    }
+
+    /* =========================================================
+       MOBILE (<= 860px)
+       Single consolidated block. Desktop rules above are untouched.
+    ========================================================= */
+
+    @media (max-width: 860px) {
+
+        /* Remove the desktop sidebar offset */
+        #app {
+            margin-left: 0;
+            min-height: 100vh;
+            min-height: 100dvh;
+        }
+
+        #sidebar { display: none; }
+
+        #topbar { display: flex; }
+
+        #bottom-nav { display: block; }
+
+        #content {
+            padding: 20px 16px calc(var(--bottom-nav-height) + 32px + env(safe-area-inset-bottom)) 16px;
+        }
+
+        /* Views are not pinned on small screens (saves vertical space) */
+        .view-header {
+            position: static;
+            padding-bottom: 14px;
+            margin-bottom: 16px;
+        }
+
+        .view-header h1 { font-size: 1.3rem; }
+
+        /* Card alternative replaces the table for these only.
+           Report and SMS tables stay visible and scroll horizontally. */
+        .data-table-wrap.has-card-alt { display: none; }
+        .record-cards { display: flex; }
+
+        table.data-table th,
+        table.data-table td {
+            padding: 10px 10px;
+        }
+
+        table.data-table td.amount { white-space: nowrap; }
+
+        /* Touch-friendly tap targets */
+        .btn {
+            min-height: 44px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .btn-link-text,
+        .btn-danger-text,
+        .collapse-toggle-btn,
+        .report-tab-btn {
+            min-height: 44px;
+            min-width: 44px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .report-tab-btn { min-height: 40px; }
+
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            min-height: 44px;
+            /* 16px prevents iOS Safari auto-zoom on focus */
+            font-size: 16px;
+        }
+
+        .form-group textarea { min-height: 80px; }
+
+        .form-actions .btn { flex: 1 1 auto; }
+
+        .form-card { padding: 16px; }
+
+        .lock-panel { padding: 22px 18px; }
+
+        /* Summary cards: two per row, smaller values */
+        .summary-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+
+        .summary-card { padding: 12px 14px; }
+
+        .summary-card .value { font-size: 1.1rem; }
+
+        /* Modals become bottom sheets */
+        .modal-overlay {
+            align-items: flex-end;
+            padding: 0;
+        }
+
+        .modal-box,
+        .modal-box-lg {
+            max-width: none;
+            width: 100%;
+            max-height: 92vh;
+            max-height: 92dvh;
+            overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
+            border-radius: 12px 12px 0 0;
+            padding: 18px 16px calc(18px + env(safe-area-inset-bottom)) 16px;
+        }
+
+        .modal-actions { flex-direction: column-reverse; }
+
+        .modal-actions .btn { width: 100%; }
+
+        /* Toasts sit above the bottom bar */
+        #notification-area {
+            top: auto;
+            bottom: calc(var(--bottom-nav-height) + 12px + env(safe-area-inset-bottom));
+            left: 12px;
+            right: 12px;
+            max-width: none;
+        }
+
+        /* Bottom bar: 5 items, fits without scrolling */
+        .bottom-nav-link .nav-icon { font-size: 1.1rem; }
+
+        .sms-mapping-row label { width: 100%; }
+    }
+
+    @media (max-width: 360px) {
+        .bottom-nav-link { font-size: 0.6rem; }
+        .summary-card .value { font-size: 1rem; }
     }
 </style>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
@@ -971,7 +1062,7 @@
 
                 <div class="dashboard-section">
                     <h2>Accounts</h2>
-                    <div class="data-table-wrap">
+                    <div class="data-table-wrap has-card-alt">
                         <table class="data-table">
                             <thead>
                                 <tr>
@@ -998,6 +1089,7 @@
 
                 <div class="form-actions" style="margin-bottom: 16px;">
                     <button type="button" class="btn btn-primary" id="transaction-add-btn">+ Add Transaction</button>
+                    <button type="button" class="btn btn-secondary" id="transaction-select-visible-btn">Select Visible</button>
                     <button type="button" class="btn btn-secondary" id="transaction-screenshot-btn">📷 Screenshot</button>
                     <button type="button" class="btn btn-secondary" id="transaction-export-pdf-btn">📄 Export PDF</button>
                 </div>
@@ -1049,11 +1141,11 @@
                             </div>
                             <div class="form-group">
                                 <label for="filter-amount-min-input">Minimum Amount</label>
-                                <input type="number" id="filter-amount-min-input" step="0.01" min="0">
+                                <input type="number" id="filter-amount-min-input" step="0.01" min="0" inputmode="decimal">
                             </div>
                             <div class="form-group">
                                 <label for="filter-amount-max-input">Maximum Amount</label>
-                                <input type="number" id="filter-amount-max-input" step="0.01" min="0">
+                                <input type="number" id="filter-amount-max-input" step="0.01" min="0" inputmode="decimal">
                             </div>
                         </div>
                         <div class="form-row">
@@ -1078,7 +1170,7 @@
                     <button type="button" class="btn btn-danger" id="transaction-delete-selected-btn">Delete Selected</button>
                 </div>
 
-                <div class="data-table-wrap">
+                <div class="data-table-wrap has-card-alt">
                     <table class="data-table">
                         <thead>
                             <tr>
@@ -1108,7 +1200,7 @@
                     <button type="button" class="btn btn-primary" id="account-add-btn">+ Add Account</button>
                 </div>
 
-                <div class="data-table-wrap">
+                <div class="data-table-wrap has-card-alt">
                     <table class="data-table">
                         <thead>
                             <tr>
@@ -1217,7 +1309,7 @@
                         <button type="button" class="btn btn-primary" id="export-json-btn">Export JSON Backup</button>
                         <button type="button" class="btn btn-secondary" id="export-csv-btn">Export Transactions (CSV)</button>
                     </div>
-                    <div class="field-error" role="alert" id="backup-last-export-info" style="color: var(--color-text-muted); margin-top:10px;"></div>
+                    <div class="field-error" role="status" id="backup-last-export-info" style="color: var(--color-text-muted); margin-top:10px;"></div>
                 </div>
 
                 <div class="form-card">
@@ -1282,14 +1374,14 @@
                         <button type="button" class="btn btn-primary" id="sms-import-btn">Import Selected Transactions</button>
                     </div>
 
-                    <div class="field-error" role="alert" id="sms-import-summary" style="color: var(--color-text-muted); margin-top:12px; white-space:pre-line;"></div>
+                    <div class="field-error" role="status" id="sms-import-summary" style="color: var(--color-text-muted); margin-top:12px; white-space:pre-line;"></div>
                 </div>
             </section>
 
             <section class="view" data-view="settings">
                 <div class="view-header">
                     <h1>Settings</h1>
-                    <p>PIN protection and security question.</p>
+                    <p>PIN protection, security question and server sync.</p>
                 </div>
 
                 <div class="form-card">
@@ -1303,10 +1395,10 @@
                     <div class="form-row">
                         <div class="form-group" style="flex-basis: 100%;">
                             <label for="ss-url-input">Server Address</label>
-                            <input type="url" id="ss-url-input" placeholder="https://your-function-app.azurewebsites.net" autocomplete="off">
+                            <input type="url" id="ss-url-input" placeholder="https://your-function-app.azurewebsites.net" autocomplete="off" inputmode="url">
                         </div>
                     </div>
-                    <p class="field-error" role="alert" id="ss-status-line" style="color: var(--color-text-muted);"></p>
+                    <p class="field-error" role="status" id="ss-status-line" style="color: var(--color-text-muted);"></p>
                     <div class="form-actions">
                         <button type="button" class="btn btn-primary" id="ss-connect-btn">Connect</button>
                         <button type="button" class="btn btn-secondary" id="ss-sync-now-btn" style="display:none;">Sync Now</button>
@@ -1388,6 +1480,17 @@
 
 </div>
 
+<!-- Mobile "More" sheet (secondary navigation) -->
+<div class="modal-overlay" id="more-modal">
+    <div class="modal-box" role="dialog" aria-modal="true" aria-labelledby="more-modal-title">
+        <div class="form-card-header">
+            <h2 id="more-modal-title">More</h2>
+            <button type="button" class="collapse-toggle-btn" id="more-modal-close-x" aria-label="Close">&#10005;</button>
+        </div>
+        <div class="more-sheet-list" id="more-sheet-list"></div>
+    </div>
+</div>
+
 <!-- Add/Edit Transaction modal -->
 <div class="modal-overlay" id="transaction-modal">
     <div class="modal-box modal-box-lg" role="dialog" aria-modal="true" aria-labelledby="transaction-form-title">
@@ -1428,7 +1531,7 @@
                 </div>
                 <div class="form-group">
                     <label for="transaction-amount-input">Amount (QAR)</label>
-                    <input type="number" id="transaction-amount-input" step="0.01" min="0">
+                    <input type="number" id="transaction-amount-input" step="0.01" min="0" inputmode="decimal">
                     <div class="field-error" role="alert" id="transaction-amount-error"></div>
                 </div>
             </div>
@@ -1463,7 +1566,7 @@
                 </div>
                 <div class="form-group">
                     <label for="account-balance-input">Opening Balance (QAR)</label>
-                    <input type="number" id="account-balance-input" step="0.01" value="0">
+                    <input type="number" id="account-balance-input" step="0.01" value="0" inputmode="decimal">
                     <div class="field-error" role="alert" id="account-balance-error"></div>
                 </div>
                 <div class="form-group" id="account-status-group" style="display:none;">
@@ -1502,17 +1605,19 @@
 
     /* =========================================================
        NAVIGATION CONFIG
-       Single source of truth for both sidebar and bottom nav.
+       Single source of truth for sidebar, bottom nav and More sheet.
+       primary: true items appear in the mobile bottom bar; the rest
+       are reached through the "More" sheet.
     ========================================================= */
 
     var NAV_ITEMS = [
-        { id: "dashboard",    label: "Dashboard",       icon: "\u25A6" },
-        { id: "transactions", label: "Transactions",    icon: "\u2261" },
-        { id: "accounts",     label: "Accounts",        icon: "\u2B21" },
-        { id: "reports",      label: "Reports",         icon: "\u25A4" },
-        { id: "backup",       label: "Backup",          icon: "\u21BB" },
-        { id: "importSms",    label: "Import SMS",      icon: "\u2709" },
-        { id: "settings",     label: "Settings",        icon: "\u2699" }
+        { id: "dashboard",    label: "Dashboard",    icon: "\u25A6", primary: true },
+        { id: "transactions", label: "Transactions", icon: "\u2261", primary: true },
+        { id: "accounts",     label: "Accounts",     icon: "\u2B21", primary: true },
+        { id: "reports",      label: "Reports",      icon: "\u25A4", primary: true },
+        { id: "backup",       label: "Backup",       icon: "\u21BB", primary: false },
+        { id: "importSms",    label: "Import SMS",   icon: "\u2709", primary: false },
+        { id: "settings",     label: "Settings",     icon: "\u2699", primary: false }
     ];
 
     /* =========================================================
@@ -1700,19 +1805,11 @@
 
     /* =========================================================
        SERVER SYNC MODULE
-       Hybrid persistence: localStorage (above) remains the live
-       working copy that every read/write in this app goes
-       through. This module additionally mirrors that data to a
-       shared JSON file kept on a server you control, so the
-       server — not localStorage — is the durable "source of
-       truth", reachable from any device or browser (unlike the
-       old File System Access approach, this needs nothing more
-       than fetch()).
-
-       There is deliberately NO login here: this app assumes the
-       server endpoint itself is only reachable over a private
-       network/VPN you control. If that ever changes, add real
-       authentication on the server before pointing this at it.
+       localStorage remains the live working copy. This module
+       mirrors that data to a JSON endpoint on a server you control.
+       There is deliberately NO login: the endpoint must only be
+       reachable over a private network/VPN. If that ever changes,
+       add real authentication on the server first.
     ========================================================= */
 
     var SERVER_SYNC_URL_KEY = "pfm_server_sync_api_base_url";
@@ -1746,7 +1843,7 @@
         },
 
         normalizeBaseUrl: function (url) {
-            return (url || "").trim().replace(/\/+$/, ""); // strip trailing slash(es)
+            return (url || "").trim().replace(/\/+$/, "");
         },
 
         dataEndpoint: function () {
@@ -1755,8 +1852,7 @@
 
         _describeError: function (err) {
             // A fetch() TypeError almost always means "could not reach the
-            // host at all" (offline, VPN down, wrong address, CORS block) —
-            // give the practical explanation rather than the raw message.
+            // host at all" (offline, VPN down, wrong address, CORS block).
             if (err instanceof TypeError) {
                 return "Could not reach the server. Check your VPN/network connection and the address.";
             }
@@ -1774,10 +1870,8 @@
                 ServerSync.lastError = null;
             }).catch(function (err) {
                 console.error("Server sync unreachable at startup:", err);
-                // Deliberately does NOT clear apiBaseUrl/saved URL — the
-                // server may simply be unreachable right now (VPN not yet
-                // connected). Falls back to localStorage until "Sync Now"
-                // or a reload succeeds.
+                // Deliberately does NOT clear the saved URL — the server may
+                // simply be unreachable right now (VPN not yet connected).
                 ServerSync.status = "error";
                 ServerSync.lastError = ServerSync._describeError(err);
             });
@@ -1892,10 +1986,9 @@
     /* =========================================================
        SECURITY MODULE
        PIN + security-question hashing and verification using the
-       browser's built-in Web Crypto API (SHA-256 + random salt).
-       Neither the PIN nor the security answer is ever stored as
-       plain text (§20/§21). This is a local UI lock only — see
-       the disclaimer shown on the lock screen and in §22.
+       Web Crypto API (SHA-256 + random salt). Neither the PIN nor
+       the security answer is stored as plain text. This is a local
+       UI lock only — see the disclaimer on the lock screen.
     ========================================================= */
 
     var Security = {
@@ -1988,7 +2081,7 @@
 
     /* =========================================================
        UI MODULE
-       Handles view switching, nav rendering and notifications.
+       View switching, navigation rendering, notifications, modals.
     ========================================================= */
 
     var UI = {
@@ -1996,34 +2089,56 @@
         init: function () {
             UI.renderSidebarNav();
             UI.renderBottomNav();
+            UI.renderMoreSheet();
             UI.bindNavClicks();
             UI.showView("dashboard");
+        },
+
+        navButtonHtml: function (item, className) {
+            return (
+                '<button type="button" class="' + className + '" data-nav-target="' + item.id + '">' +
+                    '<span class="nav-icon" aria-hidden="true">' + item.icon + '</span>' +
+                    '<span>' + item.label + '</span>' +
+                '</button>'
+            );
         },
 
         renderSidebarNav: function () {
             var list = document.getElementById("sidebar-nav-list");
             list.innerHTML = NAV_ITEMS.map(function (item) {
-                return (
-                    '<li class="nav-item">' +
-                        '<button class="nav-link" data-nav-target="' + item.id + '">' +
-                            '<span class="nav-icon" aria-hidden="true">' + item.icon + '</span>' +
-                            '<span>' + item.label + '</span>' +
-                        '</button>' +
-                    '</li>'
-                );
+                return '<li class="nav-item">' + UI.navButtonHtml(item, "nav-link") + '</li>';
             }).join("");
         },
 
+        // Mobile bar: primary items plus a "More" button for the rest.
         renderBottomNav: function () {
             var scroll = document.getElementById("bottom-nav-scroll");
-            scroll.innerHTML = NAV_ITEMS.map(function (item) {
-                return (
-                    '<button class="bottom-nav-link" data-nav-target="' + item.id + '">' +
-                        '<span class="nav-icon" aria-hidden="true">' + item.icon + '</span>' +
-                        '<span>' + item.label + '</span>' +
-                    '</button>'
-                );
-            }).join("");
+            var primaryHtml = NAV_ITEMS
+                .filter(function (item) { return item.primary; })
+                .map(function (item) { return UI.navButtonHtml(item, "bottom-nav-link"); })
+                .join("");
+
+            var moreHtml =
+                '<button type="button" class="bottom-nav-link" id="bottom-nav-more-btn" aria-haspopup="dialog" aria-controls="more-modal">' +
+                    '<span class="nav-icon" aria-hidden="true">\u22EF</span>' +
+                    '<span>More</span>' +
+                '</button>';
+
+            scroll.innerHTML = primaryHtml + moreHtml;
+            document.getElementById("bottom-nav-more-btn").addEventListener("click", function () {
+                UI.openModal("more-modal", document.querySelector("#more-sheet-list .more-sheet-link"));
+            });
+        },
+
+        renderMoreSheet: function () {
+            var list = document.getElementById("more-sheet-list");
+            list.innerHTML = NAV_ITEMS
+                .filter(function (item) { return !item.primary; })
+                .map(function (item) { return UI.navButtonHtml(item, "more-sheet-link"); })
+                .join("");
+            document.getElementById("more-modal-close-x").addEventListener("click", function () {
+                UI.closeModal("more-modal");
+            });
         },
 
         bindNavClicks: function () {
@@ -2035,38 +2150,39 @@
         },
 
         showView: function (viewId) {
+            // Any navigation (including from the More sheet) closes the sheet.
+            UI.closeModal("more-modal");
+
             document.querySelectorAll(".view").forEach(function (view) {
                 view.classList.toggle("active", view.getAttribute("data-view") === viewId);
             });
 
-            document.querySelectorAll("[data-nav-target]").forEach(function (el) {
+            document.querySelectorAll(".nav-link[data-nav-target], .bottom-nav-link[data-nav-target], .more-sheet-link[data-nav-target]").forEach(function (el) {
                 el.classList.toggle("active", el.getAttribute("data-nav-target") === viewId);
             });
 
-            // Keep the active nav item visible if the bottom tab bar scrolls.
-            var activeBottomLink = document.querySelector(
-                '.bottom-nav-link[data-nav-target="' + viewId + '"]'
-            );
-            if (activeBottomLink) {
-                activeBottomLink.scrollIntoView({ inline: "nearest", block: "nearest" });
+            // Highlight "More" when the current view lives inside it.
+            var viewItem = NAV_ITEMS.filter(function (item) { return item.id === viewId; })[0];
+            var moreBtn = document.getElementById("bottom-nav-more-btn");
+            if (moreBtn) {
+                moreBtn.classList.toggle("active", !!viewItem && !viewItem.primary);
             }
 
-            // Re-render the target view so it reflects any changes made
-            // elsewhere (e.g. an account renamed while Transactions was
-            // hidden). Registered lazily since these views load after UI.
             if (typeof UI.viewRenderers[viewId] === "function") {
                 UI.viewRenderers[viewId]();
             }
+
+            window.scrollTo(0, 0);
         },
 
-        // Populated by other modules once they've initialized (see bottom
-        // of the script). Keyed by data-view id.
+        // Populated by other modules once they've initialized.
         viewRenderers: {},
 
         showNotification: function (message, type) {
             var area = document.getElementById("notification-area");
             var toast = document.createElement("div");
             toast.className = "toast " + (type || "success");
+            toast.setAttribute("role", type === "error" ? "alert" : "status");
             toast.textContent = message;
             area.appendChild(toast);
             setTimeout(function () {
@@ -2084,8 +2200,7 @@
             var cancelBtn = document.getElementById("confirm-modal-cancel");
             var previouslyFocused = document.activeElement;
 
-            // Cancel is the safer default focus target for a destructive
-            // confirmation (deactivate/delete actions use this modal).
+            // Cancel is the safer default focus target for destructive actions.
             cancelBtn.focus();
 
             function close() {
@@ -2115,11 +2230,11 @@
             document.addEventListener("keydown", handleKeydown);
         },
 
-        // Generic open/close for the Add/Edit form modals (Transaction,
-        // Account). Closes on Escape or on clicking the dark backdrop,
-        // same as UI.confirm above.
+        // Generic open/close for modals. Closes on Escape or on clicking
+        // the dark backdrop.
         openModal: function (modalId, focusEl) {
             var overlay = document.getElementById(modalId);
+            if (overlay.classList.contains("open")) { return; }
             overlay.classList.add("open");
             if (focusEl) { focusEl.focus(); }
 
@@ -2137,6 +2252,7 @@
 
         closeModal: function (modalId) {
             var overlay = document.getElementById(modalId);
+            if (!overlay) { return; }
             overlay.classList.remove("open");
             if (overlay._closeHandlers) {
                 overlay.removeEventListener("click", overlay._closeHandlers.handleOverlayClick);
@@ -2148,7 +2264,6 @@
 
     /* =========================================================
        UTILITIES MODULE
-       Small shared helpers used across future stages.
     ========================================================= */
 
     var Utilities = {
@@ -2174,9 +2289,8 @@
 
         MONTH_NAMES: ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"],
 
-        // Parses a "YYYY-MM-DD" string into display format "DD-Mon-YYYY"
-        // without ever constructing a Date object from the raw string,
-        // which avoids local/UTC shift bugs entirely.
+        // Parses "YYYY-MM-DD" into "DD-Mon-YYYY" without constructing a
+        // Date from the raw string, avoiding local/UTC shift bugs.
         formatDateDisplay: function (isoDateStr) {
             if (!isoDateStr) { return ""; }
             var parts = isoDateStr.split("-");
@@ -2186,8 +2300,7 @@
             return day + "-" + Utilities.MONTH_NAMES[month - 1] + "-" + year;
         },
 
-        // Today's date as "YYYY-MM-DD" using the LOCAL timezone
-        // (not toISOString, which is UTC and can roll to the wrong day).
+        // Today's date as "YYYY-MM-DD" in the LOCAL timezone.
         getTodayIso: function () {
             var now = new Date();
             var year = now.getFullYear();
@@ -2220,13 +2333,12 @@
             document.body.appendChild(link);
             link.click();
             document.body.removeChild(link);
-            URL.revokeObjectURL(url);
+            setTimeout(function () { URL.revokeObjectURL(url); }, 1000);
         }
     };
 
     /* =========================================================
        ACCOUNTS MODULE
-       Data operations + view rendering for Account Management.
     ========================================================= */
 
     var Accounts = {
@@ -2278,8 +2390,8 @@
             Accounts.update(id, { status: "inactive" });
         },
 
-        // Core balance formula (§10/§26): never stored, always derived.
-        // Current Balance = Opening Balance + Total Income - Total Expense
+        // Current Balance = Opening Balance + Total Income - Total Expense.
+        // Never stored, always derived.
         getBalanceSummary: function (accountId) {
             var account = Accounts.getById(accountId);
             var openingBalance = account ? Number(account.openingBalance) : 0;
@@ -2311,14 +2423,11 @@
         init: function () {
             document.getElementById("account-form").addEventListener("submit", AccountsView.handleSubmit);
             document.getElementById("account-cancel-btn").addEventListener("click", AccountsView.cancelEdit);
-
             document.getElementById("account-add-btn").addEventListener("click", function () {
                 AccountsView.cancelEdit();
                 UI.openModal("account-modal", document.getElementById("account-name-input"));
             });
-            document.getElementById("account-modal-close-x").addEventListener("click", function () {
-                UI.closeModal("account-modal");
-            });
+            document.getElementById("account-modal-close-x").addEventListener("click", AccountsView.cancelEdit);
 
             AccountsView.render();
         },
@@ -2329,8 +2438,9 @@
             var cardsWrap = document.getElementById("accounts-cards");
 
             if (accounts.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="7"><div class="empty-state">No accounts have been created.<br>Create an account above before adding transactions.</div></td></tr>';
-                cardsWrap.innerHTML = '<div class="empty-state">No accounts have been created.<br>Create an account above before adding transactions.</div>';
+                var emptyMsg = "No accounts have been created.<br>Create an account above before adding transactions.";
+                tbody.innerHTML = '<tr><td colspan="7"><div class="empty-state">' + emptyMsg + "</div></td></tr>";
+                cardsWrap.innerHTML = '<div class="empty-state">' + emptyMsg + "</div>";
                 return;
             }
 
@@ -2440,7 +2550,9 @@
 
             if (AccountsView.editingId) {
                 var changes = { name: name, openingBalance: balance };
-                if (statusInput) { changes.status = statusInput.value; }
+                if (statusInput && document.getElementById("account-status-group").style.display !== "none") {
+                    changes.status = statusInput.value;
+                }
                 Accounts.update(AccountsView.editingId, changes);
                 UI.showNotification("Account updated.", "success");
             } else {
@@ -2502,7 +2614,6 @@
 
     /* =========================================================
        TRANSACTIONS MODULE
-       Data operations + view rendering for Transaction entry/list.
     ========================================================= */
 
     var Transactions = {
@@ -2582,7 +2693,7 @@
     var TransactionsView = {
 
         editingId: null,
-        selectedIds: {}, // map: transaction id -> true (bulk-delete selection)
+        selectedIds: {}, // map: transaction id -> true (bulk selection)
 
         filters: {
             narration: "",
@@ -2595,32 +2706,34 @@
             sortBy: "dateDesc"
         },
 
-        // Collapsed by default so the table has more room; toggled via
-        // #transaction-filter-toggle-btn (does not affect active filters).
+        // Filters collapsed by default so the list has more room.
         filterCollapsed: true,
 
-        // Summary card is visible by default
+        // Summary expanded on desktop, collapsed on phones (set in init).
         summaryCollapsed: false,
 
         init: function () {
             document.getElementById("transaction-form").addEventListener("submit", TransactionsView.handleSubmit);
             document.getElementById("transaction-cancel-btn").addEventListener("click", TransactionsView.cancelEdit);
+            document.getElementById("transaction-modal-close-x").addEventListener("click", TransactionsView.cancelEdit);
             document.getElementById("transaction-select-all-checkbox").addEventListener("change", TransactionsView.handleSelectAllChange);
+            document.getElementById("transaction-select-visible-btn").addEventListener("click", TransactionsView.handleSelectVisibleToggle);
             document.getElementById("transaction-delete-selected-btn").addEventListener("click", TransactionsView.confirmDeleteSelected);
 
             document.getElementById("transaction-add-btn").addEventListener("click", function () {
                 TransactionsView.cancelEdit();
                 UI.openModal("transaction-modal", document.getElementById("transaction-date-input"));
             });
-            document.getElementById("transaction-modal-close-x").addEventListener("click", function () {
-                UI.closeModal("transaction-modal");
-            });
             document.getElementById("transaction-filter-toggle-btn").addEventListener("click", TransactionsView.toggleFilterPanel);
             document.getElementById("transaction-summary-toggle-btn").addEventListener("click", TransactionsView.toggleSummaryPanel);
             document.getElementById("transaction-screenshot-btn").addEventListener("click", TransactionsView.handleScreenshot);
             document.getElementById("transaction-export-pdf-btn").addEventListener("click", TransactionsView.handleExportPdf);
+
+            // On phones the summary starts collapsed so the list is visible first.
+            TransactionsView.summaryCollapsed = window.matchMedia("(max-width: 860px)").matches;
+
             TransactionsView.applyFilterCollapsedState();
-            TransactionsView.applySummarCollapsedState();
+            TransactionsView.applySummaryCollapsedState();
 
             TransactionsView.resetDefaults();
             TransactionsView.bindFilterEvents();
@@ -2640,10 +2753,10 @@
 
         toggleSummaryPanel: function () {
             TransactionsView.summaryCollapsed = !TransactionsView.summaryCollapsed;
-            TransactionsView.applySummarCollapsedState();
+            TransactionsView.applySummaryCollapsedState();
         },
 
-        applySummarCollapsedState: function () {
+        applySummaryCollapsedState: function () {
             document.getElementById("transaction-summary-body").classList.toggle("collapsed", TransactionsView.summaryCollapsed);
             document.getElementById("transaction-summary-toggle-btn").innerHTML =
                 TransactionsView.summaryCollapsed ? "&#9656; Show Summary" : "&#9662; Hide Summary";
@@ -2661,21 +2774,18 @@
             var selectedAccountId = f.accountId || null;
             var selectedType = f.type || null;
 
-            // Collect summary data from filtered transactions
             filtered.forEach(function (t) {
                 if (t.type === "income") {
                     totalCredit += Number(t.amount);
                 } else if (t.type === "expense") {
                     totalDebit += Number(t.amount);
                 }
-
-                // Track unique accounts in filtered results
                 if (t.accountId) {
                     accountIds[t.accountId] = true;
                 }
             });
 
-            // Calculate closing balance for selected accounts at end date
+            // Closing balance for the selected account(s) as of the end date.
             var closingBalance = 0;
             var selectedAccountIds = selectedAccountId ? [selectedAccountId] : Object.keys(accountIds);
 
@@ -2687,7 +2797,6 @@
                 var income = 0;
                 var expense = 0;
 
-                // Include only transactions up to the toDate (or all if no date filter)
                 Transactions.getAll().forEach(function (t) {
                     if (t.accountId !== accId) { return; }
                     if (toDate && t.date > toDate) { return; }
@@ -2702,8 +2811,14 @@
                 closingBalance += openingBalance + income - expense;
             });
 
+            var accountName = "All Accounts";
+            if (selectedAccountId) {
+                var selectedAccount = Accounts.getById(selectedAccountId);
+                accountName = selectedAccount ? selectedAccount.name : "All Accounts";
+            }
+
             return {
-                account: selectedAccountId ? (Accounts.getById(selectedAccountId) ? Accounts.getById(selectedAccountId).name : "All Accounts") : "All Accounts",
+                account: accountName,
                 type: selectedType ? (selectedType === "income" ? "Income" : "Expense") : "All",
                 fromDate: fromDate || "N/A",
                 toDate: toDate || "N/A",
@@ -2731,7 +2846,6 @@
             var filtered = TransactionsView.getAccountAwareList();
             var top10 = filtered.slice(0, 10);
 
-            // Create a temporary container
             var screenshotDiv = document.createElement("div");
             screenshotDiv.id = "screenshot-container";
             screenshotDiv.style.position = "absolute";
@@ -2742,12 +2856,12 @@
             screenshotDiv.style.padding = "20px";
             screenshotDiv.style.width = "900px";
 
-            // Add summary
+            var summary = TransactionsView.calculateSummary();
+
             var summaryHtml = '<div style="margin-bottom: 20px;">';
             summaryHtml += '<h2 style="margin: 0 0 15px 0; color: black;">Transaction Summary</h2>';
             summaryHtml += '<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px;">';
 
-            var summary = TransactionsView.calculateSummary();
             summaryHtml += '<div style="border: 1px solid #ccc; padding: 10px; border-radius: 4px; background: white;">';
             summaryHtml += '<div style="font-size: 0.8rem; color: #666; margin-bottom: 4px;">Account</div>';
             summaryHtml += '<div style="font-size: 1.1rem; font-weight: 600; color: black;">' + Utilities.escapeHtml(summary.account) + '</div>';
@@ -2785,7 +2899,6 @@
 
             summaryHtml += '</div></div>';
 
-            // Add table with top 10 transactions
             summaryHtml += '<div style="margin-top: 20px;">';
             summaryHtml += '<h2 style="margin: 0 0 10px 0; color: black;">Top 10 Filtered Transactions</h2>';
             summaryHtml += '<table style="width: 100%; border-collapse: collapse; font-size: 0.85rem;">';
@@ -2817,16 +2930,13 @@
             screenshotDiv.innerHTML = summaryHtml;
             document.body.appendChild(screenshotDiv);
 
-            // Use html2canvas to capture the div
             html2canvas(screenshotDiv, {
                 backgroundColor: "white",
                 scale: 2
             }).then(function (canvas) {
-                // Convert to JPG and download
                 var link = document.createElement("a");
                 link.href = canvas.toDataURL("image/jpeg", 0.95);
-                var today = Utilities.getTodayIso();
-                link.download = "transactions-" + today + ".jpg";
+                link.download = "transactions-" + Utilities.getTodayIso() + ".jpg";
                 document.body.appendChild(link);
                 link.click();
                 document.body.removeChild(link);
@@ -2834,7 +2944,7 @@
                 UI.showNotification("Screenshot downloaded successfully.", "success");
             }).catch(function (error) {
                 console.error("Screenshot error:", error);
-                document.body.removeChild(screenshotDiv);
+                if (screenshotDiv.parentNode) { document.body.removeChild(screenshotDiv); }
                 UI.showNotification("Error capturing screenshot. Please try again.", "error");
             });
         },
@@ -2843,7 +2953,6 @@
             var filtered = TransactionsView.getAccountAwareList();
             var summary = TransactionsView.calculateSummary();
 
-            // Create temporary HTML container for PDF
             var pdfDiv = document.createElement("div");
             pdfDiv.style.position = "absolute";
             pdfDiv.style.left = "-9999px";
@@ -2852,13 +2961,10 @@
             pdfDiv.style.padding = "20px";
             pdfDiv.style.width = "900px";
 
-            // Build HTML content
             var pdfHtml = '<div style="font-family: Arial, sans-serif;">';
 
-            // Title
             pdfHtml += '<h1 style="margin: 0 0 20px 0; color: black; font-size: 24px; border-bottom: 2px solid #333; padding-bottom: 10px;">Transaction Report</h1>';
 
-            // Summary section
             pdfHtml += '<div style="margin-bottom: 30px;">';
             pdfHtml += '<h2 style="margin: 0 0 15px 0; color: #333; font-size: 16px;">Summary</h2>';
             pdfHtml += '<table style="width: 100%; border-collapse: collapse; margin-bottom: 20px;">';
@@ -2894,7 +3000,6 @@
             pdfHtml += '<p style="color: #666; font-size: 12px; margin: 10px 0 0 0;">Generated on: ' + new Date().toLocaleString() + '</p>';
             pdfHtml += '</div>';
 
-            // Transactions table
             pdfHtml += '<div>';
             pdfHtml += '<h2 style="margin: 0 0 15px 0; color: #333; font-size: 16px;">All Filtered Transactions (' + filtered.length + ')</h2>';
             pdfHtml += '<table style="width: 100%; border-collapse: collapse; font-size: 11px;">';
@@ -2929,7 +3034,6 @@
             pdfDiv.innerHTML = pdfHtml;
             document.body.appendChild(pdfDiv);
 
-            // Use html2canvas and jsPDF to create PDF
             html2canvas(pdfDiv, {
                 backgroundColor: "white",
                 scale: 2
@@ -2942,13 +3046,12 @@
                     format: "a4"
                 });
 
-                var imgWidth = 190; // A4 width minus margins
+                var imgWidth = 190;
                 var pageHeight = pdf.internal.pageSize.getHeight();
                 var imgHeight = (canvas.height * imgWidth) / canvas.width;
                 var heightLeft = imgHeight;
                 var position = 10;
 
-                // Add image to PDF with pagination
                 pdf.addImage(imgData, "PNG", 10, position, imgWidth, imgHeight);
                 heightLeft -= (pageHeight - 20);
 
@@ -2959,15 +3062,13 @@
                     heightLeft -= (pageHeight - 20);
                 }
 
-                // Download PDF
-                var today = Utilities.getTodayIso();
-                pdf.save("transactions-" + today + ".pdf");
+                pdf.save("transactions-" + Utilities.getTodayIso() + ".pdf");
 
                 document.body.removeChild(pdfDiv);
                 UI.showNotification("PDF exported successfully.", "success");
             }).catch(function (error) {
                 console.error("PDF export error:", error);
-                document.body.removeChild(pdfDiv);
+                if (pdfDiv.parentNode) { document.body.removeChild(pdfDiv); }
                 UI.showNotification("Error exporting PDF. Please try again.", "error");
             });
         },
@@ -3024,9 +3125,9 @@
             select.value = currentValue;
         },
 
-        // Called whenever the Transactions view needs its dropdowns/autocomplete
-        // refreshed to reflect the latest Accounts data (e.g. after an account
-        // is added/deactivated on the Accounts screen).
+        // Refreshes the transaction form's account dropdown to reflect the
+        // latest Accounts data. Inactive accounts stay listed (flagged) when
+        // they are linked to the transaction being edited.
         refreshAccountOptions: function (selectedAccountId) {
             var select = document.getElementById("transaction-account-input");
             var activeAccounts = Accounts.getActive();
@@ -3037,8 +3138,6 @@
                 options.push('<option value="' + acc.id + '">' + Utilities.escapeHtml(acc.name) + "</option>");
             });
 
-            // If editing a transaction whose account is now inactive, still
-            // list it (flagged) so the existing link isn't broken (§9/§26).
             if (currentAccount && currentAccount.status !== "active") {
                 options.push('<option value="' + currentAccount.id + '">' + Utilities.escapeHtml(currentAccount.name) + " (Inactive)</option>");
             }
@@ -3061,9 +3160,8 @@
             TransactionsView.refreshNarrationSuggestions();
         },
 
-        // Applies the current filters, then sorts, then annotates with
-        // S.No and resolved account name for display. Filters are combined
-        // with AND, matching §13's example.
+        // Applies filters (AND-combined), sorts, then annotates each row
+        // with its S.No and resolved account name for display.
         getAccountAwareList: function () {
             var f = TransactionsView.filters;
 
@@ -3133,21 +3231,36 @@
             TransactionsView.render();
         },
 
-        // Reflects only the currently filtered/visible rows, matching
-        // how every other control on this view is filter-scoped.
+        // Mobile-friendly bulk toggle: selects every visible (filtered) row,
+        // or clears the visible selection if they are all already selected.
+        handleSelectVisibleToggle: function () {
+            var visible = TransactionsView.getAccountAwareList();
+            if (visible.length === 0) { return; }
+            var allSelected = visible.every(function (t) { return !!TransactionsView.selectedIds[t.id]; });
+            visible.forEach(function (t) {
+                if (allSelected) { delete TransactionsView.selectedIds[t.id]; }
+                else { TransactionsView.selectedIds[t.id] = true; }
+            });
+            TransactionsView.render();
+        },
+
+        // Reflects only the currently filtered/visible rows.
         updateSelectAllCheckboxState: function () {
             var checkbox = document.getElementById("transaction-select-all-checkbox");
+            var selectVisibleBtn = document.getElementById("transaction-select-visible-btn");
             var visibleList = TransactionsView.getAccountAwareList();
-            if (visibleList.length === 0) {
-                checkbox.checked = false;
-                checkbox.indeterminate = false;
-                return;
-            }
+
             var selectedVisibleCount = visibleList.filter(function (t) {
                 return !!TransactionsView.selectedIds[t.id];
             }).length;
-            checkbox.checked = selectedVisibleCount === visibleList.length;
-            checkbox.indeterminate = selectedVisibleCount > 0 && selectedVisibleCount < visibleList.length;
+            var allVisibleSelected = visibleList.length > 0 && selectedVisibleCount === visibleList.length;
+
+            checkbox.checked = allVisibleSelected;
+            checkbox.indeterminate = selectedVisibleCount > 0 && !allVisibleSelected;
+            checkbox.disabled = visibleList.length === 0;
+
+            selectVisibleBtn.textContent = allVisibleSelected ? "Clear Visible" : "Select Visible";
+            selectVisibleBtn.disabled = visibleList.length === 0;
         },
 
         updateBulkActionsUi: function () {
@@ -3177,14 +3290,11 @@
 
         render: function () {
             TransactionsView.refreshNarrationSuggestions();
-            // Refresh account dropdown too, in case accounts changed while
-            // this view was hidden (name edits, new accounts, deactivation).
             var select = document.getElementById("transaction-account-input");
             TransactionsView.refreshAccountOptions(select.value || null);
             TransactionsView.refreshFilterAccountOptions();
             TransactionsView.pruneSelection();
 
-            // Update summary in real-time
             TransactionsView.renderSummary();
 
             var totalCount = Transactions.getAll().length;
@@ -3232,7 +3342,7 @@
             var isSelected = !!TransactionsView.selectedIds[t.id];
             return (
                 "<tr>" +
-                    '<td><input type="checkbox" id="txn-select-' + t.id + '"' + (isSelected ? " checked" : "") + '></td>' +
+                    '<td><input type="checkbox" id="txn-select-' + t.id + '"' + (isSelected ? " checked" : "") + ' aria-label="Select transaction"></td>' +
                     "<td>" + t.sNo + "</td>" +
                     "<td>" + Utilities.formatDateDisplay(t.date) + "</td>" +
                     '<td><span class="status-badge ' + typeClass + '">' + typeLabel + "</span></td>" +
@@ -3255,8 +3365,8 @@
             return (
                 '<div class="record-card">' +
                     '<div class="record-card-top">' +
-                        '<span style="display:flex; align-items:center; gap:8px;">' +
-                            '<input type="checkbox" id="txn-select-card-' + t.id + '"' + (isSelected ? " checked" : "") + '>' +
+                        '<span style="display:flex; align-items:center; gap:10px; min-width:0;">' +
+                            '<input type="checkbox" id="txn-select-card-' + t.id + '"' + (isSelected ? " checked" : "") + ' aria-label="Select transaction" style="width:20px; height:20px; flex-shrink:0;">' +
                             '<span class="record-card-title">' + Utilities.escapeHtml(t.narration) + "</span>" +
                         "</span>" +
                         '<span class="status-badge ' + typeClass + '">' + typeLabel + "</span>" +
@@ -3395,6 +3505,7 @@
                 'Delete this ' + typeLabel.toLowerCase() + ' transaction — "' + t.narration + '", ' + Utilities.formatCurrency(t.amount) + ' on ' + Utilities.formatDateDisplay(t.date) + '? This cannot be undone.',
                 function () {
                     Transactions.remove(id);
+                    delete TransactionsView.selectedIds[id];
                     UI.showNotification("Transaction deleted.", "success");
                     TransactionsView.render();
                 }
@@ -3404,9 +3515,7 @@
 
     /* =========================================================
        DASHBOARD MODULE
-       Read-only summary calculations, all derived live from
-       Storage data on every render — nothing is cached or
-       hardcoded (§12).
+       Read-only summaries, derived live on every render.
     ========================================================= */
 
     var Dashboard = {
@@ -3444,7 +3553,7 @@
         },
 
         getCurrentMonthSummary: function () {
-            var currentYearMonth = Utilities.getTodayIso().slice(0, 7); // "YYYY-MM"
+            var currentYearMonth = Utilities.getTodayIso().slice(0, 7);
             return Dashboard.getPeriodSummary(function (t) { return t.date.slice(0, 7) === currentYearMonth; });
         }
     };
@@ -3552,17 +3661,15 @@
 
     /* =========================================================
        REPORTS MODULE
-       Grouping/aggregation logic for the 5 required reports.
-       All computed live from Accounts/Transactions on render.
+       Grouping/aggregation for the five reports, computed live.
     ========================================================= */
 
     var Reports = {
 
-        // Report 1 & Report 4 share this grouping; Report 4 adds count.
         getMonthlyGroups: function () {
             var groups = {};
             Transactions.getAll().forEach(function (t) {
-                var month = t.date.slice(0, 7); // "YYYY-MM"
+                var month = t.date.slice(0, 7);
                 if (!groups[month]) {
                     groups[month] = { month: month, income: 0, expense: 0, count: 0 };
                 }
@@ -3575,7 +3682,7 @@
                     var g = groups[key];
                     return { month: g.month, income: g.income, expense: g.expense, net: g.income - g.expense, count: g.count };
                 })
-                .sort(function (a, b) { return a.month < b.month ? 1 : -1; }); // newest first
+                .sort(function (a, b) { return a.month < b.month ? 1 : -1; });
         },
 
         getDailyGroups: function () {
@@ -3593,7 +3700,7 @@
                     var g = groups[key];
                     return { date: g.date, income: g.income, expense: g.expense, net: g.income - g.expense, count: g.count };
                 })
-                .sort(function (a, b) { return a.date < b.date ? 1 : -1; }); // newest first
+                .sort(function (a, b) { return a.date < b.date ? 1 : -1; });
         },
 
         getAccountWise: function () {
@@ -3759,8 +3866,7 @@
 
     /* =========================================================
        BACKUP MODULE
-       JSON export/import with structure + version validation,
-       and CSV export of transactions.
+       JSON export/import with validation, and CSV export.
     ========================================================= */
 
     var Backup = {
@@ -3778,7 +3884,7 @@
         },
 
         // Returns { valid: true, data } or { valid: false, error }.
-        // Never throws — always returns a result the caller can branch on.
+        // Never throws.
         validateBackupPayload: function (raw) {
             var parsed;
             try {
@@ -3830,7 +3936,6 @@
                 appVersion: data.appVersion || DEFAULTS.metadata.appVersion,
                 lastBackupAt: Storage.getMetadata().lastBackupAt
             });
-            // Future versions: run MIGRATIONS here if data.dataVersion < CURRENT_DATA_VERSION.
         },
 
         transactionsToCsv: function () {
@@ -3859,14 +3964,10 @@
 
     /* =========================================================
        LOCK SCREEN
-       Gates the entire app behind PIN entry / creation. The app
-       itself (Storage, views) still initializes underneath so
-       that once unlocked everything is ready instantly.
+       Gates the app behind PIN entry / creation.
     ========================================================= */
 
     var LockScreen = {
-
-        recoveryVerified: false,
 
         init: function () {
             document.getElementById("create-pin-form").addEventListener("submit", LockScreen.handleCreatePin);
@@ -3912,7 +4013,7 @@
             errorEl.textContent = "";
 
             var pin = document.getElementById("create-pin-input").value;
-            var confirm = document.getElementById("create-pin-confirm-input").value;
+            var confirmPin = document.getElementById("create-pin-confirm-input").value;
             var question = document.getElementById("create-security-question-input").value.trim();
             var answer = document.getElementById("create-security-answer-input").value.trim();
 
@@ -3920,7 +4021,7 @@
                 errorEl.textContent = "PIN must be exactly 6 digits.";
                 return;
             }
-            if (pin !== confirm) {
+            if (pin !== confirmPin) {
                 errorEl.textContent = "PIN and confirmation do not match.";
                 return;
             }
@@ -3990,13 +4091,13 @@
             errorEl.textContent = "";
 
             var pin = document.getElementById("reset-pin-input").value;
-            var confirm = document.getElementById("reset-pin-confirm-input").value;
+            var confirmPin = document.getElementById("reset-pin-confirm-input").value;
 
             if (!Security.isPinFormatValid(pin)) {
                 errorEl.textContent = "PIN must be exactly 6 digits.";
                 return;
             }
-            if (pin !== confirm) {
+            if (pin !== confirmPin) {
                 errorEl.textContent = "PIN and confirmation do not match.";
                 return;
             }
@@ -4011,6 +4112,10 @@
             document.getElementById("lock-overlay").classList.add("hidden");
         }
     };
+
+    /* =========================================================
+       SETTINGS VIEW
+    ========================================================= */
 
     var SettingsView = {
 
@@ -4100,6 +4205,10 @@
         }
     };
 
+    /* =========================================================
+       SERVER SYNC VIEW
+    ========================================================= */
+
     var ServerSyncView = {
 
         init: function () {
@@ -4125,18 +4234,17 @@
 
         render: function () {
             var statusEl = document.getElementById("ss-status-line");
-            if (!statusEl) { return; } // Settings view not in the DOM yet on first load ordering
+            if (!statusEl) { return; }
             statusEl.textContent = ServerSyncView.formatStatusLine();
             statusEl.style.color = ServerSync.status === "error" ? "var(--color-danger)" : "var(--color-text-muted)";
 
             var isConnectedOrError = ServerSync.status === "connected" || ServerSync.status === "error";
-            document.getElementById("ss-sync-now-btn").style.display = isConnectedOrError ? "inline-block" : "none";
-            document.getElementById("ss-disconnect-btn").style.display = isConnectedOrError ? "inline-block" : "none";
+            document.getElementById("ss-sync-now-btn").style.display = isConnectedOrError ? "inline-flex" : "none";
+            document.getElementById("ss-disconnect-btn").style.display = isConnectedOrError ? "inline-flex" : "none";
         },
 
-        // Re-renders every other view after a (re)connect, since the
-        // server's data may differ from what was already showing from
-        // localStorage.
+        // Re-renders every view after a (re)connect, since the server's
+        // data may differ from what was showing from localStorage.
         refreshAllViews: function () {
             DashboardView.render();
             AccountsView.render();
@@ -4186,6 +4294,10 @@
         }
     };
 
+    /* =========================================================
+       BACKUP VIEW
+    ========================================================= */
+
     var BackupView = {
 
         init: function () {
@@ -4205,8 +4317,7 @@
 
         handleExportJson: function () {
             var payload = Backup.buildBackupPayload();
-            var todayIso = Utilities.getTodayIso();
-            var filename = "personal-finance-backup-" + todayIso + ".json";
+            var filename = "personal-finance-backup-" + Utilities.getTodayIso() + ".json";
 
             Utilities.downloadTextFile(filename, JSON.stringify(payload, null, 2), "application/json");
 
@@ -4259,7 +4370,6 @@
                         fileInput.value = "";
                         UI.showNotification("Backup restored successfully.", "success");
 
-                        // Refresh every view so restored data is reflected immediately.
                         DashboardView.render();
                         AccountsView.render();
                         TransactionsView.resetDefaults();
@@ -4277,10 +4387,8 @@
     };
 
     /* =========================================================
-       DEMO DATA (optional, opt-in only — §40)
-       Not loaded automatically. Only runs when explicitly
-       triggered from Settings, and only adds sample records —
-       it never replaces or removes existing data.
+       DEMO DATA (opt-in only, from Settings)
+       Adds sample records; never replaces or removes existing data.
     ========================================================= */
 
     var DemoData = {
@@ -4335,10 +4443,7 @@
 
     /* =========================================================
        SMS PARSER MODULE
-       Pure parsing logic: message splitting, classification and
-       field extraction from bank SMS text. No DOM, no Storage —
-       ImportSms/ImportSmsView below are what wire this into the
-       app's real Transactions/Accounts data.
+       Pure parsing logic: no DOM, no Storage.
     ========================================================= */
 
     var MONTH_ABBR_MAP = {
@@ -4348,8 +4453,7 @@
 
     var SmsParser = {
 
-        // "09-Sep-26" -> "2026-09-09". Never relies on the browser's
-        // locale-dependent Date parsing of ambiguous string formats.
+        // "09-Sep-26" -> "2026-09-09"
         parseSmsDate: function (str) {
             if (!str) { return null; }
             var m = str.match(/(\d{1,2})-([A-Za-z]{3})-(\d{2})/);
@@ -4378,9 +4482,8 @@
         },
 
         // Anchors mark the start of a NEW message. The (credited|debited)
-        // requirement on the "Current Acc" anchor is deliberate: without
-        // it, the "Current Acc Bal: QAR ..." balance LINE inside a
-        // message would be wrongly read as the start of a new one.
+        // requirement on the "Current Acc" anchor stops the balance line
+        // inside a message from being read as a new message start.
         MESSAGE_START_ANCHORS: [
             /^Debit Card/i,
             /^Current Acc\s+\S+\s+(credited|debited)/i,
@@ -4411,11 +4514,9 @@
             });
             if (current.length > 0) { messages.push(current.join("\n")); }
 
-            // Known limitation: a security SMS with "Dear Customer,
-            // Warning..." followed by an OTP line in the SAME message
-            // will be split into two pieces, because the OTP line also
-            // matches a start-anchor. Both halves still classify as
-            // NON_TRANSACTION, so nothing financial is affected.
+            // Known limitation: a security SMS whose OTP line is in the same
+            // message as "Dear Customer" may split in two. Both halves
+            // classify as NON_TRANSACTION, so nothing financial is affected.
             return messages;
         },
 
@@ -4501,7 +4602,7 @@
                 description: merchant, merchant: merchant,
                 sender: null, recipient: null, reference: null,
                 time: m[5], date: SmsParser.parseSmsDate(m[6]),
-                balanceAfter: SmsParser.extractBalance(text), // always QAR (account currency)
+                balanceAfter: SmsParser.extractBalance(text),
                 pending: /pending/i.test(merchant)
             };
         },
@@ -4518,16 +4619,8 @@
             return found ? found.reason : null;
         },
 
-        // Priority order and why:
-        // 1 Salary          - unique opening phrase, zero overlap
-        // 2 Fawran Credit   - "Current Acc ... credited ... Fawran"
-        // 3 Fawran Debit    - same family, checked after credit
-        // 4 Transfer Charge - MORE specific than plain "Transfer", must
-        //                      be excluded before the generic parser runs
-        // 5 Transfer        - generic "Current Acc ... for Transfer ref ..."
-        // 6 Debit Card      - distinct opening phrase, no overlap
-        // 7 Known non-transaction - keyword rules
-        // 8 Unknown         - never guess; surfaced for manual review
+        // Parser order matters: Transfer Charge must run before the
+        // generic Transfer parser. Unknown messages are never guessed.
         PARSERS: [],
 
         parseMessage: function (rawMessage) {
@@ -4580,9 +4673,7 @@
 
     /* =========================================================
        IMPORT SMS MODULE
-       Bridges SmsParser's output into the app's real Accounts/
-       Transactions data: account mapping, duplicate detection,
-       balance-sequence warnings, and the actual import.
+       Bridges SmsParser output into Accounts/Transactions.
     ========================================================= */
 
     var SMS_ACCOUNT_MAP_KEY = "pfm_sms_account_map";
@@ -4595,19 +4686,16 @@
         },
 
         saveAccountMap: function (map) {
-            window.localStorage.setItem(SMS_ACCOUNT_MAP_KEY, JSON.stringify(map));
+            try { window.localStorage.setItem(SMS_ACCOUNT_MAP_KEY, JSON.stringify(map)); }
+            catch (err) { /* non-fatal: mapping just won't be remembered */ }
         },
 
         normalizeForFingerprint: function (str) {
             return (str || "").toString().trim().toLowerCase().replace(/\s+/g, " ");
         },
 
-        // Duplicate fingerprint deliberately excludes account: at parse
-        // time we only know the bank's account/card token, not which of
-        // your real Accounts it maps to (that's chosen in the mapping
-        // panel, after parsing). date+type+amount+narration together are
-        // specific enough in practice to catch a genuine re-paste of the
-        // same SMS; this is a warning either way, never a hard block.
+        // Fingerprint excludes account: at parse time only the bank's
+        // card/account token is known, not which of your Accounts it maps to.
         fingerprint: function (date, type, amount, narration) {
             var amt = (typeof amount === "number" ? amount : parseFloat(amount) || 0).toFixed(2);
             return [date, type, amt, ImportSms.normalizeForFingerprint(narration)].join("|");
@@ -4625,12 +4713,7 @@
             });
         },
 
-        // Warning-only balance check (never blocks import). Groups by
-        // bank account/card token, sorts chronologically within THIS
-        // pasted batch, and flags a mismatch between consecutive rows.
-        // Skips pending/foreign-currency rows, and accepts that a gap in
-        // the pasted batch (some real transactions not included) will
-        // produce a false-positive warning — that's expected, not a bug.
+        // Warning-only balance check (never blocks import).
         flagBalanceWarnings: function (rows) {
             var groups = {};
             rows.forEach(function (r) {
@@ -4675,6 +4758,26 @@
             document.getElementById("sms-select-all-btn").addEventListener("click", function () { ImportSmsView.selectAll(true); });
             document.getElementById("sms-clear-selection-btn").addEventListener("click", function () { ImportSmsView.selectAll(false); });
             document.getElementById("sms-import-btn").addEventListener("click", ImportSmsView.handleImport);
+
+            // Row controls are bound by delegation so the handlers survive re-renders.
+            var tbody = document.getElementById("sms-results-table-body");
+            tbody.addEventListener("change", function (event) {
+                var target = event.target;
+                var rowId = parseInt(target.getAttribute("data-row-id"), 10);
+                if (isNaN(rowId)) { return; }
+                if (target.classList.contains("sms-row-select")) {
+                    ImportSmsView.toggleRow(rowId, target.checked);
+                } else if (target.classList.contains("sms-amount-input")) {
+                    ImportSmsView.editAmount(rowId, target.value);
+                }
+            });
+
+            var mappingPanel = document.getElementById("sms-mapping-panel");
+            mappingPanel.addEventListener("change", function (event) {
+                if (event.target.classList.contains("sms-account-map-select")) {
+                    ImportSmsView.saveCurrentMapping();
+                }
+            });
         },
 
         handleParse: function () {
@@ -4713,10 +4816,8 @@
                 "<span>Unknown: <b>" + unknown + "</b></span>";
         },
 
-        // One dropdown per distinct bank account/card token seen in this
-        // batch, mapping it to one of your real active Accounts. Saved
-        // to localStorage so it's remembered next time the same card
-        // or account number shows up in a future paste.
+        // One dropdown per distinct bank account/card token in this batch,
+        // mapped to one of your active Accounts. Remembered for next time.
         renderMappingPanel: function () {
             var tokens = {};
             ImportSmsView.currentResults.forEach(function (r) {
@@ -4730,19 +4831,18 @@
                 return;
             }
 
-            var savedMap = ImportSms.loadAccountMap();
             var activeAccounts = Accounts.getActive();
-
             if (activeAccounts.length === 0) {
                 panel.innerHTML = '<div class="field-error" role="alert">No active accounts exist yet. Create an account on the Accounts page before importing.</div>';
                 return;
             }
 
-            var html = '<h2 style="font-size:0.95rem;">Account Mapping</h2>';
+            var savedMap = ImportSms.loadAccountMap();
+            var html = '<h2 style="font-size:0.95rem; margin:0 0 10px 0;">Account Mapping</h2>';
             tokenList.forEach(function (token) {
                 var savedAccountId = savedMap[token];
                 html += '<div class="sms-mapping-row"><label>' + Utilities.escapeHtml(token) + "</label>" +
-                    '<select data-token="' + Utilities.escapeHtml(token) + '" class="sms-account-map-select">' +
+                    '<select data-token="' + Utilities.escapeHtml(token) + '" class="sms-account-map-select" aria-label="Map ' + Utilities.escapeHtml(token) + ' to account">' +
                     '<option value="">Select account</option>' +
                     activeAccounts.map(function (acc) {
                         var selected = acc.id === savedAccountId ? " selected" : "";
@@ -4756,9 +4856,13 @@
         currentAccountMapFromInputs: function () {
             var map = {};
             document.querySelectorAll(".sms-account-map-select").forEach(function (el) {
-                if (el.value) { map[el.dataset.token] = el.value; }
+                if (el.value) { map[el.getAttribute("data-token")] = el.value; }
             });
             return map;
+        },
+
+        saveCurrentMapping: function () {
+            ImportSms.saveAccountMap(ImportSmsView.currentAccountMapFromInputs());
         },
 
         renderTable: function () {
@@ -4781,14 +4885,16 @@
                 var checkable = r.status === "Parsed";
                 return (
                     "<tr>" +
-                        "<td>" + (checkable ? '<input type="checkbox" ' + (r.selected ? "checked" : "") + ' onchange="ImportSmsView.toggleRow(' + r.rowId + ', this.checked)">' : "") + "</td>" +
+                        "<td>" + (checkable
+                            ? '<input type="checkbox" class="sms-row-select" data-row-id="' + r.rowId + '"' + (r.selected ? " checked" : "") + ' aria-label="Select row">'
+                            : "") + "</td>" +
                         "<td>" + Utilities.formatDateDisplay(r.date) + "</td>" +
                         "<td>" + (r.time || "") + "</td>" +
                         "<td>" + (r.type || "") + "</td>" +
                         "<td>" + (r.category || "") + "</td>" +
                         "<td>" + Utilities.escapeHtml(r.description || r.reason || "") + "</td>" +
                         '<td class="amount">' + (checkable
-                            ? '<input type="text" class="sms-amount-input" value="' + (r.amount != null ? r.amount : "") + '" onchange="ImportSmsView.editAmount(' + r.rowId + ', this.value)">'
+                            ? '<input type="text" inputmode="decimal" class="sms-amount-input" data-row-id="' + r.rowId + '" value="' + (r.amount != null ? r.amount : "") + '" aria-label="Amount">'
                             : (r.amount != null ? r.amount : "")) + "</td>" +
                         "<td>" + (r.currency || "") + "</td>" +
                         '<td class="amount">' + (r.balanceAfter != null ? Utilities.formatCurrency(r.balanceAfter) : "") + "</td>" +
@@ -4831,7 +4937,7 @@
             var skippedDuplicates = 0;
 
             selectedRows.forEach(function (r) {
-                if (r.duplicate) { skippedDuplicates++; return; } // still respected even if left checked
+                if (r.duplicate) { skippedDuplicates++; return; }
                 Transactions.add({
                     date: r.date,
                     type: r.type.toLowerCase(),
@@ -4860,8 +4966,6 @@
 
             UI.showNotification(imported + " transaction(s) imported.", "success");
 
-            // Same refresh pattern as BackupView.handleImportClick, so
-            // every other view reflects the newly-added transactions.
             DashboardView.render();
             AccountsView.render();
             TransactionsView.resetDefaults();
@@ -4869,37 +4973,29 @@
             ReportsView.render();
         }
     };
-    window.ImportSmsView = ImportSmsView; // needed for the inline onchange handlers in renderTable
 
-    // Expose for later stages / manual console testing.
-    window.Storage = Storage;
-    window.UI = UI;
-    window.Utilities = Utilities;
-    window.Accounts = Accounts;
-    window.AccountsView = AccountsView;
-    window.Transactions = Transactions;
-    window.TransactionsView = TransactionsView;
-    window.Dashboard = Dashboard;
-    window.DashboardView = DashboardView;
-    window.Reports = Reports;
-    window.ReportsView = ReportsView;
-    window.Backup = Backup;
-    window.BackupView = BackupView;
-    window.Security = Security;
-    window.LockScreen = LockScreen;
-    window.SettingsView = SettingsView;
-    window.DemoData = DemoData;
-    window.ServerSync = ServerSync;
-    window.ServerSyncView = ServerSyncView;
+    // Populate the parser's rule list only after all handlers exist.
+    // (Assigned above; kept here so the order of definitions is explicit.)
+
+    /* =========================================================
+       STARTUP
+    ========================================================= */
+
+    UI.viewRenderers.accounts = AccountsView.render;
+    UI.viewRenderers.transactions = TransactionsView.render;
+    UI.viewRenderers.dashboard = DashboardView.render;
+    UI.viewRenderers.reports = ReportsView.render;
+    UI.viewRenderers.settings = ServerSyncView.render;
+    UI.viewRenderers.importSms = function () {
+        if (ImportSmsView.currentResults.length > 0) { ImportSmsView.renderMappingPanel(); }
+    };
 
     document.addEventListener("DOMContentLoaded", function () {
         Storage.init();
 
-        // Attempt to reconnect to a previously configured server BEFORE any
-        // view renders, so the first paint reflects the server's data (the
-        // source of truth) rather than a stale localStorage snapshot. Falls
-        // back to localStorage automatically if no server is configured, or
-        // if the server can't be reached right now — see ServerSync.init().
+        // Reconnect to a previously configured server BEFORE the first
+        // render so the UI reflects the server's data. Falls back to
+        // localStorage automatically if the server is unreachable.
         ServerSync.init().then(function () {
             UI.init();
             AccountsView.init();
@@ -4909,20 +5005,8 @@
             BackupView.init();
             SettingsView.init();
             ServerSyncView.init();
-            LockScreen.init();
             ImportSmsView.init();
-
-            UI.viewRenderers.accounts = AccountsView.render;
-            UI.viewRenderers.transactions = TransactionsView.render;
-            UI.viewRenderers.dashboard = DashboardView.render;
-            UI.viewRenderers.reports = ReportsView.render;
-            UI.viewRenderers.settings = ServerSyncView.render;
-            // Re-populate the account-mapping dropdowns if the results table
-            // is already showing, in case an account was added/edited on
-            // another view since the last parse.
-            UI.viewRenderers.importSms = function () {
-                if (ImportSmsView.currentResults.length > 0) { ImportSmsView.renderMappingPanel(); }
-            };
+            LockScreen.init();
         });
     });
 })();
