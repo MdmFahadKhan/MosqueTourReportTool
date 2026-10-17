@@ -338,6 +338,13 @@
         font-variant-numeric: tabular-nums;
     }
 
+    .cell-sub {
+        display: block;
+        font-size: 0.76rem;
+        color: var(--color-text-muted);
+        margin-top: 2px;
+    }
+
     .status-badge {
         display: inline-block;
         padding: 2px 9px;
@@ -394,6 +401,12 @@
     .record-card-title {
         font-weight: 600;
         overflow-wrap: anywhere;
+    }
+
+    .record-card-sub {
+        font-size: 0.78rem;
+        color: var(--color-text-muted);
+        margin-bottom: 6px;
     }
 
     .record-card-row {
@@ -759,6 +772,10 @@
         font-size: 0.85rem;
     }
 
+    table.data-table input[type="text"].sms-amount-input.has-error {
+        border: 1px solid var(--color-danger);
+    }
+
     /* ---------- B&W Print Styles for Screenshot Export ---------- */
     .screenshot-mode {
         filter: grayscale(100%) !important;
@@ -799,7 +816,6 @@
 
     @media (max-width: 860px) {
 
-        /* Remove the desktop sidebar offset */
         #app {
             margin-left: 0;
             min-height: 100vh;
@@ -816,7 +832,6 @@
             padding: 20px 16px calc(var(--bottom-nav-height) + 32px + env(safe-area-inset-bottom)) 16px;
         }
 
-        /* Views are not pinned on small screens (saves vertical space) */
         .view-header {
             position: static;
             padding-bottom: 14px;
@@ -825,8 +840,6 @@
 
         .view-header h1 { font-size: 1.3rem; }
 
-        /* Card alternative replaces the table for these only.
-           Report and SMS tables stay visible and scroll horizontally. */
         .data-table-wrap.has-card-alt { display: none; }
         .record-cards { display: flex; }
 
@@ -837,7 +850,6 @@
 
         table.data-table td.amount { white-space: nowrap; }
 
-        /* Touch-friendly tap targets */
         .btn {
             min-height: 44px;
             display: inline-flex;
@@ -862,7 +874,6 @@
         .form-group select,
         .form-group textarea {
             min-height: 44px;
-            /* 16px prevents iOS Safari auto-zoom on focus */
             font-size: 16px;
         }
 
@@ -874,14 +885,12 @@
 
         .lock-panel { padding: 22px 18px; }
 
-        /* Summary cards: two per row, smaller values */
         .summary-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 
         .summary-card { padding: 12px 14px; }
 
         .summary-card .value { font-size: 1.1rem; }
 
-        /* Modals become bottom sheets */
         .modal-overlay {
             align-items: flex-end;
             padding: 0;
@@ -903,7 +912,6 @@
 
         .modal-actions .btn { width: 100%; }
 
-        /* Toasts sit above the bottom bar */
         #notification-area {
             top: auto;
             bottom: calc(var(--bottom-nav-height) + 12px + env(safe-area-inset-bottom));
@@ -912,7 +920,6 @@
             max-width: none;
         }
 
-        /* Bottom bar: 5 items, fits without scrolling */
         .bottom-nav-link .nav-icon { font-size: 1.1rem; }
 
         .sms-mapping-row label { width: 100%; }
@@ -930,7 +937,6 @@
 
 <div id="lock-overlay">
 
-    <!-- First launch: create PIN -->
     <div class="lock-panel" id="lock-panel-create">
         <h2>Create Your PIN</h2>
         <p class="lock-subtitle">Set a 6-digit PIN to protect this app on this device.</p>
@@ -963,7 +969,6 @@
         </p>
     </div>
 
-    <!-- Returning: enter PIN -->
     <div class="lock-panel" id="lock-panel-enter">
         <h2>Enter PIN</h2>
         <p class="lock-subtitle">Enter your 6-digit PIN to unlock the app.</p>
@@ -982,7 +987,6 @@
         </div>
     </div>
 
-    <!-- Recovery via security question -->
     <div class="lock-panel" id="lock-panel-recovery">
         <h2>Recover Access</h2>
         <p class="lock-subtitle" id="recovery-question-display">Security question</p>
@@ -1001,7 +1005,6 @@
         </div>
     </div>
 
-    <!-- Set a new PIN after successful recovery -->
     <div class="lock-panel" id="lock-panel-reset">
         <h2>Set a New PIN</h2>
         <p class="lock-subtitle">Your answer was correct. Choose a new 6-digit PIN.</p>
@@ -1025,14 +1028,12 @@
 
 <div id="app">
 
-    <!-- Desktop sidebar -->
     <nav id="sidebar" aria-label="Main navigation">
         <div class="brand">Finance Manager</div>
         <ul class="nav-list" id="sidebar-nav-list"></ul>
     </nav>
 
     <div id="main">
-        <!-- Mobile top bar -->
         <header id="topbar">
             <span class="brand">Finance Manager</span>
         </header>
@@ -1129,6 +1130,12 @@
                                     <option value="expense">Expense</option>
                                 </select>
                             </div>
+                            <div class="form-group">
+                                <label for="filter-category-input">Category</label>
+                                <select id="filter-category-input">
+                                    <option value="">All Categories</option>
+                                </select>
+                            </div>
                         </div>
                         <div class="form-row">
                             <div class="form-group">
@@ -1141,11 +1148,11 @@
                             </div>
                             <div class="form-group">
                                 <label for="filter-amount-min-input">Minimum Amount</label>
-                                <input type="number" id="filter-amount-min-input" step="0.01" min="0" inputmode="decimal">
+                                <input type="number" id="filter-amount-min-input" step="0.001" min="0" inputmode="decimal">
                             </div>
                             <div class="form-group">
                                 <label for="filter-amount-max-input">Maximum Amount</label>
-                                <input type="number" id="filter-amount-max-input" step="0.01" min="0" inputmode="decimal">
+                                <input type="number" id="filter-amount-max-input" step="0.001" min="0" inputmode="decimal">
                             </div>
                         </div>
                         <div class="form-row">
@@ -1222,11 +1229,12 @@
             <section class="view" data-view="reports">
                 <div class="view-header">
                     <h1>Reports</h1>
-                    <p>Monthly, daily and account-wise summaries.</p>
+                    <p>Monthly, daily, category and account-wise summaries.</p>
                 </div>
 
                 <div class="report-tabs" id="report-tabs">
                     <button type="button" class="report-tab-btn" data-report="monthlyIncomeExpense">Monthly Income vs Expense</button>
+                    <button type="button" class="report-tab-btn" data-report="byCategory">By Category</button>
                     <button type="button" class="report-tab-btn" data-report="accountWise">Account-wise</button>
                     <button type="button" class="report-tab-btn" data-report="dailySummary">Daily Summary</button>
                     <button type="button" class="report-tab-btn" data-report="monthlySummary">Monthly Summary</button>
@@ -1240,6 +1248,17 @@
                                 <tr><th>Month</th><th class="amount">Income</th><th class="amount">Expense</th><th class="amount">Net</th></tr>
                             </thead>
                             <tbody id="report-monthly-income-expense-body"></tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="report-panel" data-report-panel="byCategory">
+                    <div class="data-table-wrap">
+                        <table class="data-table">
+                            <thead>
+                                <tr><th>Category</th><th class="amount">Income</th><th class="amount">Expense</th><th class="amount">Net</th><th class="amount">Transactions</th></tr>
+                            </thead>
+                            <tbody id="report-by-category-body"></tbody>
                         </table>
                     </div>
                 </div>
@@ -1304,6 +1323,7 @@
                     <h2>Export</h2>
                     <p style="margin:0 0 14px 0; font-size:0.85rem; color:var(--color-text-muted);">
                         Save a full backup of your accounts, transactions and settings, or export just your transactions to CSV.
+                        The CSV opens cleanly in Excel, including non-English narrations.
                     </p>
                     <div class="form-actions">
                         <button type="button" class="btn btn-primary" id="export-json-btn">Export JSON Backup</button>
@@ -1316,6 +1336,7 @@
                     <h2>Restore from Backup</h2>
                     <p style="margin:0 0 14px 0; font-size:0.85rem; color:var(--color-text-muted);">
                         Restoring a backup replaces your current accounts, transactions and settings. Export your current data first if you want to keep it.
+                        Backups from the previous version are upgraded automatically.
                     </p>
                     <div class="form-row">
                         <div class="form-group">
@@ -1473,14 +1494,12 @@
         </main>
     </div>
 
-    <!-- Mobile bottom tab bar -->
     <nav id="bottom-nav" aria-label="Main navigation (mobile)">
         <div id="bottom-nav-scroll"></div>
     </nav>
 
 </div>
 
-<!-- Mobile "More" sheet (secondary navigation) -->
 <div class="modal-overlay" id="more-modal">
     <div class="modal-box" role="dialog" aria-modal="true" aria-labelledby="more-modal-title">
         <div class="form-card-header">
@@ -1491,7 +1510,6 @@
     </div>
 </div>
 
-<!-- Add/Edit Transaction modal -->
 <div class="modal-overlay" id="transaction-modal">
     <div class="modal-box modal-box-lg" role="dialog" aria-modal="true" aria-labelledby="transaction-form-title">
         <div class="form-card-header">
@@ -1531,12 +1549,18 @@
                 </div>
                 <div class="form-group">
                     <label for="transaction-amount-input">Amount (QAR)</label>
-                    <input type="number" id="transaction-amount-input" step="0.01" min="0" inputmode="decimal">
+                    <input type="number" id="transaction-amount-input" step="0.001" min="0" inputmode="decimal">
                     <div class="field-error" role="alert" id="transaction-amount-error"></div>
                 </div>
             </div>
             <div class="form-row">
-                <div class="form-group" style="flex-basis: 100%;">
+                <div class="form-group">
+                    <label for="transaction-category-input">Category</label>
+                    <input type="text" id="transaction-category-input" list="category-suggestions" maxlength="40" autocomplete="off" placeholder="e.g. Food">
+                    <datalist id="category-suggestions"></datalist>
+                    <div class="field-error" role="alert" id="transaction-category-error"></div>
+                </div>
+                <div class="form-group" style="flex: 2 1 300px;">
                     <label for="transaction-notes-input">Notes (optional)</label>
                     <textarea id="transaction-notes-input" rows="2"></textarea>
                 </div>
@@ -1549,7 +1573,6 @@
     </div>
 </div>
 
-<!-- Add/Edit Account modal -->
 <div class="modal-overlay" id="account-modal">
     <div class="modal-box" role="dialog" aria-modal="true" aria-labelledby="account-form-title">
         <div class="form-card-header">
@@ -1566,7 +1589,7 @@
                 </div>
                 <div class="form-group">
                     <label for="account-balance-input">Opening Balance (QAR)</label>
-                    <input type="number" id="account-balance-input" step="0.01" value="0" inputmode="decimal">
+                    <input type="number" id="account-balance-input" step="0.001" value="0" inputmode="decimal">
                     <div class="field-error" role="alert" id="account-balance-error"></div>
                 </div>
                 <div class="form-group" id="account-status-group" style="display:none;">
@@ -1585,7 +1608,6 @@
     </div>
 </div>
 
-<!-- Reusable confirmation modal -->
 <div class="modal-overlay" id="confirm-modal">
     <div class="modal-box" role="dialog" aria-modal="true" aria-labelledby="confirm-modal-title" aria-describedby="confirm-modal-message">
         <h3 id="confirm-modal-title">Confirm</h3>
@@ -1603,11 +1625,12 @@
 (function () {
     "use strict";
 
+    function fail(message) {
+        throw new Error(message);
+    }
+
     /* =========================================================
        NAVIGATION CONFIG
-       Single source of truth for sidebar, bottom nav and More sheet.
-       primary: true items appear in the mobile bottom bar; the rest
-       are reached through the "More" sheet.
     ========================================================= */
 
     var NAV_ITEMS = [
@@ -1621,12 +1644,90 @@
     ];
 
     /* =========================================================
-       STORAGE MODULE
-       Thin wrapper around localStorage: key management, safe
-       JSON read/write, first-run defaults, and data versioning.
+       MONEY
+       All amounts are stored as integer minor units (fils).
+       1 QAR = 1000 fils. Arithmetic is done on integers only;
+       decimals are produced only for display and CSV output.
     ========================================================= */
 
-    var CURRENT_DATA_VERSION = 1;
+    var Money = {
+        SCALE: 1000,
+
+        toMinor: function (decimal) {
+            return Math.round(Number(decimal) * 1000);
+        },
+
+        // Accepts "12", "12.5", "12.125". Returns { ok, minor } or { ok: false, error }.
+        parseInput: function (raw, allowZero) {
+            var text = String(raw == null ? "" : raw).trim();
+            if (!/^\d+(\.\d{1,3})?$/.test(text)) {
+                return { ok: false, error: "Enter a number with up to 3 decimal places." };
+            }
+            var minor = Math.round(parseFloat(text) * 1000);
+            if (!Number.isSafeInteger(minor)) {
+                return { ok: false, error: "Amount is too large." };
+            }
+            if (minor === 0 && !allowZero) {
+                return { ok: false, error: "Amount must be greater than zero." };
+            }
+            return { ok: true, minor: minor };
+        },
+
+        format: function (minor) {
+            var value = (Number(minor) || 0) / 1000;
+            return "QAR " + value.toLocaleString("en-US", {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 3
+            });
+        },
+
+        toDecimalString: function (minor) {
+            return ((Number(minor) || 0) / 1000).toFixed(3);
+        }
+    };
+
+    /* =========================================================
+       CATEGORIES
+    ========================================================= */
+
+    var Categories = {
+        UNCATEGORIZED: "Uncategorized",
+        MAX_LENGTH: 40,
+        SUGGESTED: [
+            "Uncategorized", "Food", "Transport", "Housing", "Utilities", "Shopping",
+            "Health", "Salary", "Transfer", "Card Purchase", "Fawran", "Other"
+        ],
+
+        normalize: function (value) {
+            var text = String(value == null ? "" : value).replace(/\s+/g, " ").trim();
+            return text || Categories.UNCATEGORIZED;
+        },
+
+        // Suggestions plus every category in use, de-duplicated case-insensitively.
+        options: function (extra) {
+            var seen = Object.create(null);
+            var list = [];
+            function add(value) {
+                var key = value.toLowerCase();
+                if (!seen[key]) {
+                    seen[key] = true;
+                    list.push(value);
+                }
+            }
+            Categories.SUGGESTED.forEach(add);
+            Transactions.getAll().forEach(function (t) {
+                add(Categories.normalize(t.category));
+            });
+            if (extra) { add(extra); }
+            return list.sort(function (a, b) { return a.localeCompare(b); });
+        }
+    };
+
+    /* =========================================================
+       STORAGE
+    ========================================================= */
+
+    var CURRENT_DATA_VERSION = 2;
 
     var STORAGE_KEYS = {
         ACCOUNTS:     "pfm_accounts",
@@ -1635,13 +1736,53 @@
         METADATA:     "pfm_metadata"
     };
 
-    // Add an entry here when a future stage changes the data shape.
-    // Each migration receives the full data set at its "from" version
-    // and must return the data set upgraded to "from + 1".
+    var PRE_V2_SNAPSHOT_KEY = "pfm_backup_before_v2";
+
+    // v1 stored amounts as decimal QAR; v2 stores integer fils.
+    function migrateV1ToV2(data) {
+        return {
+            accounts: (data.accounts || []).map(function (a) {
+                return {
+                    id: a.id,
+                    name: a.name,
+                    status: a.status,
+                    openingBalanceMinor: Money.toMinor(a.openingBalance),
+                    createdAt: a.createdAt
+                };
+            }),
+            transactions: (data.transactions || []).map(function (t) {
+                return {
+                    id: t.id,
+                    date: t.date,
+                    type: t.type,
+                    narration: t.narration,
+                    accountId: t.accountId,
+                    amountMinor: Money.toMinor(t.amount),
+                    category: Categories.UNCATEGORIZED,
+                    notes: t.notes || "",
+                    createdAt: t.createdAt
+                };
+            }),
+            settings: data.settings || null
+        };
+    }
+
     var MIGRATIONS = [
-        // Example for a future stage:
-        // { from: 1, run: function (data) { ... return data; } }
+        { from: 1, run: migrateV1ToV2 }
     ];
+
+    function runMigrations(data, fromVersion) {
+        var version = fromVersion;
+        while (version < CURRENT_DATA_VERSION) {
+            var step = MIGRATIONS.filter(function (m) { return m.from === version; })[0];
+            if (!step) {
+                fail("No upgrade path from data version " + version + ".");
+            }
+            data = step.run(data);
+            version = step.from + 1;
+        }
+        return data;
+    }
 
     var DEFAULTS = {
         accounts: [],
@@ -1655,15 +1796,13 @@
         },
         metadata: {
             dataVersion: CURRENT_DATA_VERSION,
-            appVersion: "1.0.0",
+            appVersion: "1.1.0",
             lastBackupAt: null
         }
     };
 
     var Storage = {
 
-        // True once we've confirmed localStorage works; false means
-        // we're running on an in-memory fallback for this session only.
         persistent: true,
         _memoryFallback: {},
 
@@ -1697,8 +1836,7 @@
         },
 
         _ensureDefault: function (key, defaultValue) {
-            var existing = Storage._rawGet(key);
-            if (existing === null) {
+            if (Storage._rawGet(key) === null) {
                 Storage._rawSet(key, defaultValue);
             }
         },
@@ -1725,10 +1863,6 @@
                 } else {
                     Storage._memoryFallback[key] = serialized;
                 }
-                // Mirror every successful localStorage write out to the
-                // connected server (if any). Skipped while ServerSync
-                // itself is loading server data INTO localStorage, or this
-                // would immediately write the same data straight back out.
                 if (!ServerSync._applyingRemote) {
                     ServerSync.scheduleWrite();
                 }
@@ -1754,19 +1888,34 @@
                 settings: Storage._rawGet(STORAGE_KEYS.SETTINGS) || DEFAULTS.settings
             };
 
-            MIGRATIONS
-                .filter(function (m) { return m.from >= version; })
-                .sort(function (a, b) { return a.from - b.from; })
-                .forEach(function (migration) {
-                    data = migration.run(data);
-                    version = migration.from + 1;
-                });
+            // Keep a raw copy of the pre-upgrade data (best effort).
+            try {
+                if (Storage.persistent && !window.localStorage.getItem(PRE_V2_SNAPSHOT_KEY)) {
+                    window.localStorage.setItem(PRE_V2_SNAPSHOT_KEY, JSON.stringify({
+                        dataVersion: version,
+                        snapshotAt: new Date().toISOString(),
+                        accounts: data.accounts,
+                        transactions: data.transactions,
+                        settings: data.settings
+                    }));
+                }
+            } catch (err) {
+                console.warn("Could not save pre-upgrade snapshot:", err);
+            }
+
+            try {
+                data = runMigrations(data, version);
+            } catch (err) {
+                console.error("Data migration failed:", err);
+                UI.showNotification("Your data could not be upgraded automatically. It has not been changed.", "error");
+                return;
+            }
 
             Storage._rawSet(STORAGE_KEYS.ACCOUNTS, data.accounts);
             Storage._rawSet(STORAGE_KEYS.TRANSACTIONS, data.transactions);
-            Storage._rawSet(STORAGE_KEYS.SETTINGS, data.settings);
+            Storage._rawSet(STORAGE_KEYS.SETTINGS, data.settings || DEFAULTS.settings);
 
-            metadata.dataVersion = version;
+            metadata.dataVersion = CURRENT_DATA_VERSION;
             Storage._rawSet(STORAGE_KEYS.METADATA, metadata);
         },
 
@@ -1805,11 +1954,6 @@
 
     /* =========================================================
        SERVER SYNC MODULE
-       localStorage remains the live working copy. This module
-       mirrors that data to a JSON endpoint on a server you control.
-       There is deliberately NO login: the endpoint must only be
-       reachable over a private network/VPN. If that ever changes,
-       add real authentication on the server first.
     ========================================================= */
 
     var SERVER_SYNC_URL_KEY = "pfm_server_sync_api_base_url";
@@ -1817,12 +1961,11 @@
 
     var ServerSync = {
 
-        // "disconnected" | "connected" | "error"
         status: "disconnected",
         apiBaseUrl: null,
         lastSyncedAt: null,
         lastError: null,
-        _applyingRemote: false,   // true while writing SERVER data INTO localStorage
+        _applyingRemote: false,
         _writeTimer: null,
         _writeInFlight: false,
         _writeQueuedAgain: false,
@@ -1834,7 +1977,7 @@
 
         saveUrl: function (url) {
             try { window.localStorage.setItem(SERVER_SYNC_URL_KEY, url); }
-            catch (err) { /* non-fatal: just won't auto-reconnect next time */ }
+            catch (err) { /* non-fatal */ }
         },
 
         clearUrl: function () {
@@ -1851,15 +1994,11 @@
         },
 
         _describeError: function (err) {
-            // A fetch() TypeError almost always means "could not reach the
-            // host at all" (offline, VPN down, wrong address, CORS block).
             if (err instanceof TypeError) {
                 return "Could not reach the server. Check your VPN/network connection and the address.";
             }
             return err.message || String(err);
         },
-
-        /* ---- Startup: reconnect to a previously configured server, if any ---- */
 
         init: function () {
             var saved = ServerSync.loadSavedUrl();
@@ -1870,14 +2009,10 @@
                 ServerSync.lastError = null;
             }).catch(function (err) {
                 console.error("Server sync unreachable at startup:", err);
-                // Deliberately does NOT clear the saved URL — the server may
-                // simply be unreachable right now (VPN not yet connected).
                 ServerSync.status = "error";
                 ServerSync.lastError = ServerSync._describeError(err);
             });
         },
-
-        /* ---- Reading the server's data into localStorage (server wins) ---- */
 
         _pullFromServer: function () {
             return fetch(ServerSync.dataEndpoint(), { method: "GET" }).then(function (response) {
@@ -1895,8 +2030,6 @@
                 ServerSync.lastSyncedAt = new Date();
             });
         },
-
-        /* ---- Connecting / disconnecting ---- */
 
         connect: function (url) {
             var normalized = ServerSync.normalizeBaseUrl(url);
@@ -1933,8 +2066,6 @@
             });
         },
 
-        /* ---- Writing: localStorage -> server, debounced and coalesced ---- */
-
         scheduleWrite: function () {
             if (!ServerSync.apiBaseUrl) { return; }
             if (ServerSync._writeTimer) { clearTimeout(ServerSync._writeTimer); }
@@ -1963,7 +2094,7 @@
                 ServerSync.status = "connected";
                 ServerSync.lastSyncedAt = new Date();
                 ServerSync.lastError = null;
-                if (typeof ServerSyncView !== "undefined") { ServerSyncView.render(); }
+                ServerSyncView.render();
             }).catch(function (err) {
                 console.error("Server sync write failed:", err);
                 ServerSync.status = "error";
@@ -1972,7 +2103,7 @@
                     "Could not save to the server. Your changes are still kept in this browser — click Sync Now in Settings once reconnected.",
                     "error"
                 );
-                if (typeof ServerSyncView !== "undefined") { ServerSyncView.render(); }
+                ServerSyncView.render();
             }).then(function () {
                 ServerSync._writeInFlight = false;
                 if (ServerSync._writeQueuedAgain) {
@@ -1985,10 +2116,6 @@
 
     /* =========================================================
        SECURITY MODULE
-       PIN + security-question hashing and verification using the
-       Web Crypto API (SHA-256 + random salt). Neither the PIN nor
-       the security answer is stored as plain text. This is a local
-       UI lock only — see the disclaimer on the lock screen.
     ========================================================= */
 
     var Security = {
@@ -2013,8 +2140,6 @@
             return /^[0-9]{6}$/.test(pin);
         },
 
-        // Normalizes a security answer so casing/whitespace differences
-        // don't cause a legitimate answer to fail verification.
         normalizeAnswer: function (answer) {
             return answer.trim().toLowerCase();
         },
@@ -2081,7 +2206,6 @@
 
     /* =========================================================
        UI MODULE
-       View switching, navigation rendering, notifications, modals.
     ========================================================= */
 
     var UI = {
@@ -2110,7 +2234,6 @@
             }).join("");
         },
 
-        // Mobile bar: primary items plus a "More" button for the rest.
         renderBottomNav: function () {
             var scroll = document.getElementById("bottom-nav-scroll");
             var primaryHtml = NAV_ITEMS
@@ -2150,7 +2273,6 @@
         },
 
         showView: function (viewId) {
-            // Any navigation (including from the More sheet) closes the sheet.
             UI.closeModal("more-modal");
 
             document.querySelectorAll(".view").forEach(function (view) {
@@ -2161,7 +2283,6 @@
                 el.classList.toggle("active", el.getAttribute("data-nav-target") === viewId);
             });
 
-            // Highlight "More" when the current view lives inside it.
             var viewItem = NAV_ITEMS.filter(function (item) { return item.id === viewId; })[0];
             var moreBtn = document.getElementById("bottom-nav-more-btn");
             if (moreBtn) {
@@ -2175,7 +2296,6 @@
             window.scrollTo(0, 0);
         },
 
-        // Populated by other modules once they've initialized.
         viewRenderers: {},
 
         showNotification: function (message, type) {
@@ -2200,7 +2320,6 @@
             var cancelBtn = document.getElementById("confirm-modal-cancel");
             var previouslyFocused = document.activeElement;
 
-            // Cancel is the safer default focus target for destructive actions.
             cancelBtn.focus();
 
             function close() {
@@ -2230,8 +2349,6 @@
             document.addEventListener("keydown", handleKeydown);
         },
 
-        // Generic open/close for modals. Closes on Escape or on clicking
-        // the dark backdrop.
         openModal: function (modalId, focusEl) {
             var overlay = document.getElementById(modalId);
             if (overlay.classList.contains("open")) { return; }
@@ -2272,35 +2389,24 @@
             return prefix + "-" + random;
         },
 
-        formatCurrency: function (amount) {
-            var value = Number(amount) || 0;
-            var formatted = value.toLocaleString("en-US", {
-                minimumFractionDigits: 2,
-                maximumFractionDigits: 2
-            });
-            return "QAR " + formatted;
-        },
-
         escapeHtml: function (text) {
-            var div = document.createElement("div");
-            div.textContent = text == null ? "" : String(text);
-            return div.innerHTML;
+            return String(text == null ? "" : text)
+                .replace(/&/g, "&amp;")
+                .replace(/</g, "&lt;")
+                .replace(/>/g, "&gt;")
+                .replace(/"/g, "&quot;")
+                .replace(/'/g, "&#39;");
         },
 
         MONTH_NAMES: ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"],
 
-        // Parses "YYYY-MM-DD" into "DD-Mon-YYYY" without constructing a
-        // Date from the raw string, avoiding local/UTC shift bugs.
         formatDateDisplay: function (isoDateStr) {
             if (!isoDateStr) { return ""; }
             var parts = isoDateStr.split("-");
-            var year = parts[0];
             var month = parseInt(parts[1], 10);
-            var day = parts[2];
-            return day + "-" + Utilities.MONTH_NAMES[month - 1] + "-" + year;
+            return parts[2] + "-" + Utilities.MONTH_NAMES[month - 1] + "-" + parts[0];
         },
 
-        // Today's date as "YYYY-MM-DD" in the LOCAL timezone.
         getTodayIso: function () {
             var now = new Date();
             var year = now.getFullYear();
@@ -2309,23 +2415,28 @@
             return year + "-" + month + "-" + day;
         },
 
-        // "2026-09" -> "Sep 2026"
         formatMonthDisplay: function (yearMonthStr) {
             var parts = yearMonthStr.split("-");
             var month = parseInt(parts[1], 10);
             return Utilities.MONTH_NAMES[month - 1] + " " + parts[0];
         },
 
+        // Quotes fields that need it and neutralises spreadsheet formula injection.
         csvEscape: function (value) {
             var str = value === null || value === undefined ? "" : String(value);
+            if (/^[=+\-@\t\r]/.test(str)) {
+                str = "'" + str;
+            }
             if (/["\n\r,]/.test(str)) {
                 str = '"' + str.replace(/"/g, '""') + '"';
             }
             return str;
         },
 
-        downloadTextFile: function (filename, content, mimeType) {
-            var blob = new Blob([content], { type: mimeType || "text/plain" });
+        // withBom adds a UTF-8 byte-order mark so Excel detects encoding correctly.
+        downloadTextFile: function (filename, content, mimeType, withBom) {
+            var payload = withBom ? "\uFEFF" + content : content;
+            var blob = new Blob([payload], { type: mimeType || "text/plain;charset=utf-8" });
             var url = URL.createObjectURL(blob);
             var link = document.createElement("a");
             link.href = url;
@@ -2339,6 +2450,7 @@
 
     /* =========================================================
        ACCOUNTS MODULE
+       All balance values are integer minor units.
     ========================================================= */
 
     var Accounts = {
@@ -2366,12 +2478,12 @@
             });
         },
 
-        add: function (name, openingBalance) {
+        add: function (name, openingBalanceMinor) {
             var accounts = Accounts.getAll();
             accounts.push({
                 id: Utilities.generateId("ACC"),
                 name: name.trim(),
-                openingBalance: Number(openingBalance),
+                openingBalanceMinor: openingBalanceMinor,
                 status: "active",
                 createdAt: new Date().toISOString()
             });
@@ -2390,28 +2502,27 @@
             Accounts.update(id, { status: "inactive" });
         },
 
-        // Current Balance = Opening Balance + Total Income - Total Expense.
-        // Never stored, always derived.
+        // Current Balance = Opening Balance + Income - Expense. Derived, never stored.
         getBalanceSummary: function (accountId) {
             var account = Accounts.getById(accountId);
-            var openingBalance = account ? Number(account.openingBalance) : 0;
+            var opening = account ? account.openingBalanceMinor : 0;
 
             var income = 0;
             var expense = 0;
             Transactions.getAll().forEach(function (t) {
                 if (t.accountId !== accountId) { return; }
                 if (t.type === "income") {
-                    income += Number(t.amount);
-                } else if (t.type === "expense") {
-                    expense += Number(t.amount);
+                    income += t.amountMinor;
+                } else {
+                    expense += t.amountMinor;
                 }
             });
 
             return {
-                openingBalance: openingBalance,
+                openingBalance: opening,
                 income: income,
                 expense: expense,
-                currentBalance: openingBalance + income - expense
+                currentBalance: opening + income - expense
             };
         }
     };
@@ -2429,9 +2540,6 @@
             });
             document.getElementById("account-modal-close-x").addEventListener("click", AccountsView.cancelEdit);
 
-            // Edit / Deactivate buttons are handled by delegation on the
-            // containers, which are created once in the HTML. Rows and cards
-            // are re-rendered via innerHTML, so per-button listeners would be lost.
             document.getElementById("accounts-table-body").addEventListener("click", AccountsView.handleRowAction);
             document.getElementById("accounts-cards").addEventListener("click", AccountsView.handleRowAction);
 
@@ -2483,10 +2591,10 @@
             return (
                 "<tr>" +
                     "<td>" + Utilities.escapeHtml(acc.name) + "</td>" +
-                    '<td class="amount">' + Utilities.formatCurrency(summary.openingBalance) + "</td>" +
-                    '<td class="amount amount-income">' + Utilities.formatCurrency(summary.income) + "</td>" +
-                    '<td class="amount amount-expense">' + Utilities.formatCurrency(summary.expense) + "</td>" +
-                    '<td class="amount ' + balanceClass + '" style="font-weight:600;">' + Utilities.formatCurrency(summary.currentBalance) + "</td>" +
+                    '<td class="amount">' + Money.format(summary.openingBalance) + "</td>" +
+                    '<td class="amount amount-income">' + Money.format(summary.income) + "</td>" +
+                    '<td class="amount amount-expense">' + Money.format(summary.expense) + "</td>" +
+                    '<td class="amount ' + balanceClass + '" style="font-weight:600;">' + Money.format(summary.currentBalance) + "</td>" +
                     '<td><span class="status-badge ' + statusClass + '">' + statusLabel + "</span></td>" +
                     "<td>" + AccountsView.renderActions(acc) + "</td>" +
                 "</tr>"
@@ -2504,10 +2612,10 @@
                         '<span class="record-card-title">' + Utilities.escapeHtml(acc.name) + "</span>" +
                         '<span class="status-badge ' + statusClass + '">' + statusLabel + "</span>" +
                     "</div>" +
-                    '<div class="record-card-row"><span>Opening Balance</span><span>' + Utilities.formatCurrency(summary.openingBalance) + "</span></div>" +
-                    '<div class="record-card-row amount-income"><span>Income</span><span>' + Utilities.formatCurrency(summary.income) + "</span></div>" +
-                    '<div class="record-card-row amount-expense"><span>Expense</span><span>' + Utilities.formatCurrency(summary.expense) + "</span></div>" +
-                    '<div class="record-card-row ' + balanceClass + '" style="font-weight:600; font-size:1rem;"><span>Current Balance</span><span>' + Utilities.formatCurrency(summary.currentBalance) + "</span></div>" +
+                    '<div class="record-card-row"><span>Opening Balance</span><span>' + Money.format(summary.openingBalance) + "</span></div>" +
+                    '<div class="record-card-row amount-income"><span>Income</span><span>' + Money.format(summary.income) + "</span></div>" +
+                    '<div class="record-card-row amount-expense"><span>Expense</span><span>' + Money.format(summary.expense) + "</span></div>" +
+                    '<div class="record-card-row ' + balanceClass + '" style="font-weight:600; font-size:1rem;"><span>Current Balance</span><span>' + Money.format(summary.currentBalance) + "</span></div>" +
                     '<div class="record-card-actions">' +
                         AccountsView.renderActions(acc) +
                     "</div>" +
@@ -2531,9 +2639,7 @@
             var statusInput = document.getElementById("account-status-input");
 
             var name = nameInput.value.trim();
-            var balanceRaw = balanceInput.value;
-            var balance = parseFloat(balanceRaw);
-
+            var parsed = Money.parseInput(balanceInput.value, true);
             var hasError = false;
 
             if (!name) {
@@ -2546,12 +2652,8 @@
                 hasError = true;
             }
 
-            if (balanceRaw === "" || isNaN(balance)) {
-                document.getElementById("account-balance-error").textContent = "Opening balance must be a number.";
-                balanceInput.classList.add("has-error");
-                hasError = true;
-            } else if (balance < 0) {
-                document.getElementById("account-balance-error").textContent = "Opening balance cannot be negative.";
+            if (!parsed.ok) {
+                document.getElementById("account-balance-error").textContent = "Opening balance: " + parsed.error;
                 balanceInput.classList.add("has-error");
                 hasError = true;
             }
@@ -2559,19 +2661,19 @@
             if (hasError) { return; }
 
             if (AccountsView.editingId) {
-                var changes = { name: name, openingBalance: balance };
-                if (statusInput && document.getElementById("account-status-group").style.display !== "none") {
+                var changes = { name: name, openingBalanceMinor: parsed.minor };
+                if (document.getElementById("account-status-group").style.display !== "none") {
                     changes.status = statusInput.value;
                 }
                 Accounts.update(AccountsView.editingId, changes);
                 UI.showNotification("Account updated.", "success");
             } else {
-                Accounts.add(name, balance);
+                Accounts.add(name, parsed.minor);
                 UI.showNotification("Account created.", "success");
             }
 
             AccountsView.cancelEdit();
-            AccountsView.render();
+            refreshAll();
         },
 
         startEdit: function (id) {
@@ -2583,7 +2685,7 @@
 
             document.getElementById("account-id-input").value = acc.id;
             document.getElementById("account-name-input").value = acc.name;
-            document.getElementById("account-balance-input").value = acc.openingBalance;
+            document.getElementById("account-balance-input").value = Money.toDecimalString(acc.openingBalanceMinor);
 
             var statusGroup = document.getElementById("account-status-group");
             statusGroup.style.display = "flex";
@@ -2616,7 +2718,7 @@
                 function () {
                     Accounts.deactivate(id);
                     UI.showNotification("Account deactivated.", "success");
-                    AccountsView.render();
+                    refreshAll();
                 }
             );
         }
@@ -2638,7 +2740,6 @@
             }) || null;
         },
 
-        // Default sort: Date DESC, then Created-At DESC as tiebreaker.
         getSorted: function () {
             return Transactions.getAll().slice().sort(function (a, b) {
                 if (a.date !== b.date) {
@@ -2667,9 +2768,10 @@
                 id: Utilities.generateId("TXN"),
                 date: data.date,
                 type: data.type,
+                category: Categories.normalize(data.category),
                 narration: data.narration.trim(),
                 accountId: data.accountId,
-                amount: Number(data.amount),
+                amountMinor: data.amountMinor,
                 notes: (data.notes || "").trim(),
                 createdAt: new Date().toISOString()
             });
@@ -2682,11 +2784,11 @@
                 return Object.assign({}, t, {
                     date: data.date,
                     type: data.type,
+                    category: Categories.normalize(data.category),
                     narration: data.narration.trim(),
                     accountId: data.accountId,
-                    amount: Number(data.amount),
+                    amountMinor: data.amountMinor,
                     notes: (data.notes || "").trim()
-                    // id and createdAt are intentionally preserved.
                 });
             });
             Storage.setTransactions(transactions);
@@ -2703,12 +2805,13 @@
     var TransactionsView = {
 
         editingId: null,
-        selectedIds: {}, // map: transaction id -> true (bulk selection)
+        selectedIds: {},
 
         filters: {
             narration: "",
             accountId: "",
             type: "",
+            category: "",
             dateFrom: "",
             dateTo: "",
             amountMin: "",
@@ -2716,10 +2819,7 @@
             sortBy: "dateDesc"
         },
 
-        // Filters collapsed by default so the list has more room.
         filterCollapsed: true,
-
-        // Summary expanded on desktop, collapsed on phones (set in init).
         summaryCollapsed: false,
 
         init: function () {
@@ -2739,13 +2839,9 @@
             document.getElementById("transaction-screenshot-btn").addEventListener("click", TransactionsView.handleScreenshot);
             document.getElementById("transaction-export-pdf-btn").addEventListener("click", TransactionsView.handleExportPdf);
 
-            // Edit / Delete buttons are handled by delegation on the
-            // containers, which are created once in the HTML. Rows and cards
-            // are re-rendered via innerHTML, so per-button listeners would be lost.
             document.getElementById("transactions-table-body").addEventListener("click", TransactionsView.handleRowAction);
             document.getElementById("transactions-cards").addEventListener("click", TransactionsView.handleRowAction);
 
-            // On phones the summary starts collapsed so the list is visible first.
             TransactionsView.summaryCollapsed = window.matchMedia("(max-width: 860px)").matches;
 
             TransactionsView.applyFilterCollapsedState();
@@ -2790,13 +2886,14 @@
                 TransactionsView.summaryCollapsed ? "&#9656; Show Summary" : "&#9662; Hide Summary";
         },
 
+        // All money values in the returned object are integer minor units.
         calculateSummary: function () {
             var filtered = TransactionsView.getAccountAwareList();
             var f = TransactionsView.filters;
 
             var totalCredit = 0;
             var totalDebit = 0;
-            var accountIds = {};
+            var accountIds = Object.create(null);
             var fromDate = f.dateFrom || null;
             var toDate = f.dateTo || null;
             var selectedAccountId = f.accountId || null;
@@ -2804,16 +2901,15 @@
 
             filtered.forEach(function (t) {
                 if (t.type === "income") {
-                    totalCredit += Number(t.amount);
-                } else if (t.type === "expense") {
-                    totalDebit += Number(t.amount);
+                    totalCredit += t.amountMinor;
+                } else {
+                    totalDebit += t.amountMinor;
                 }
                 if (t.accountId) {
                     accountIds[t.accountId] = true;
                 }
             });
 
-            // Closing balance for the selected account(s) as of the end date.
             var closingBalance = 0;
             var selectedAccountIds = selectedAccountId ? [selectedAccountId] : Object.keys(accountIds);
 
@@ -2821,7 +2917,6 @@
                 var account = Accounts.getById(accId);
                 if (!account) { return; }
 
-                var openingBalance = Number(account.openingBalance);
                 var income = 0;
                 var expense = 0;
 
@@ -2830,13 +2925,13 @@
                     if (toDate && t.date > toDate) { return; }
 
                     if (t.type === "income") {
-                        income += Number(t.amount);
-                    } else if (t.type === "expense") {
-                        expense += Number(t.amount);
+                        income += t.amountMinor;
+                    } else {
+                        expense += t.amountMinor;
                     }
                 });
 
-                closingBalance += openingBalance + income - expense;
+                closingBalance += account.openingBalanceMinor + income - expense;
             });
 
             var accountName = "All Accounts";
@@ -2848,6 +2943,7 @@
             return {
                 account: accountName,
                 type: selectedType ? (selectedType === "income" ? "Income" : "Expense") : "All",
+                category: f.category || "All",
                 fromDate: fromDate || "N/A",
                 toDate: toDate || "N/A",
                 totalCredit: totalCredit,
@@ -2863,11 +2959,12 @@
             grid.innerHTML =
                 DashboardView.summaryCard("Account", Utilities.escapeHtml(summary.account)) +
                 DashboardView.summaryCard("Type", Utilities.escapeHtml(summary.type)) +
+                DashboardView.summaryCard("Category", Utilities.escapeHtml(summary.category)) +
                 DashboardView.summaryCard("From Date", summary.fromDate === "N/A" ? "N/A" : Utilities.formatDateDisplay(summary.fromDate)) +
                 DashboardView.summaryCard("To Date", summary.toDate === "N/A" ? "N/A" : Utilities.formatDateDisplay(summary.toDate)) +
-                DashboardView.summaryCard("Total Credit", Utilities.formatCurrency(summary.totalCredit), "positive") +
-                DashboardView.summaryCard("Total Debit", Utilities.formatCurrency(summary.totalDebit), "negative") +
-                DashboardView.summaryCard("Closing Balance", Utilities.formatCurrency(summary.closingBalance), summary.closingBalance < 0 ? "negative" : "positive");
+                DashboardView.summaryCard("Total Credit", Money.format(summary.totalCredit), "positive") +
+                DashboardView.summaryCard("Total Debit", Money.format(summary.totalDebit), "negative") +
+                DashboardView.summaryCard("Closing Balance", Money.format(summary.closingBalance), summary.closingBalance < 0 ? "negative" : "positive");
         },
 
         handleScreenshot: function () {
@@ -2912,17 +3009,17 @@
 
             summaryHtml += '<div style="border: 1px solid #ccc; padding: 10px; border-radius: 4px; background: white;">';
             summaryHtml += '<div style="font-size: 0.8rem; color: #666; margin-bottom: 4px;">Total Credit</div>';
-            summaryHtml += '<div style="font-size: 1.1rem; font-weight: 600; color: green;">' + Utilities.formatCurrency(summary.totalCredit) + '</div>';
+            summaryHtml += '<div style="font-size: 1.1rem; font-weight: 600; color: green;">' + Money.format(summary.totalCredit) + '</div>';
             summaryHtml += '</div>';
 
             summaryHtml += '<div style="border: 1px solid #ccc; padding: 10px; border-radius: 4px; background: white;">';
             summaryHtml += '<div style="font-size: 0.8rem; color: #666; margin-bottom: 4px;">Total Debit</div>';
-            summaryHtml += '<div style="font-size: 1.1rem; font-weight: 600; color: red;">' + Utilities.formatCurrency(summary.totalDebit) + '</div>';
+            summaryHtml += '<div style="font-size: 1.1rem; font-weight: 600; color: red;">' + Money.format(summary.totalDebit) + '</div>';
             summaryHtml += '</div>';
 
             summaryHtml += '<div style="border: 1px solid #ccc; padding: 10px; border-radius: 4px; background: white;">';
             summaryHtml += '<div style="font-size: 0.8rem; color: #666; margin-bottom: 4px;">Closing Balance</div>';
-            summaryHtml += '<div style="font-size: 1.1rem; font-weight: 600; color: ' + (summary.closingBalance < 0 ? 'red' : 'black') + ';">' + Utilities.formatCurrency(summary.closingBalance) + '</div>';
+            summaryHtml += '<div style="font-size: 1.1rem; font-weight: 600; color: ' + (summary.closingBalance < 0 ? 'red' : 'black') + ';">' + Money.format(summary.closingBalance) + '</div>';
             summaryHtml += '</div>';
 
             summaryHtml += '</div></div>';
@@ -2949,7 +3046,7 @@
                 summaryHtml += '<td style="border: 1px solid #ccc; padding: 8px; color: black;">' + typeLabel + '</td>';
                 summaryHtml += '<td style="border: 1px solid #ccc; padding: 8px; color: black;">' + Utilities.escapeHtml(t.narration) + '</td>';
                 summaryHtml += '<td style="border: 1px solid #ccc; padding: 8px; color: black;">' + Utilities.escapeHtml(t.accountName) + '</td>';
-                summaryHtml += '<td style="border: 1px solid #ccc; padding: 8px; text-align: right; color: ' + amountColor + '; font-weight: 600;">' + Utilities.formatCurrency(t.amount) + '</td>';
+                summaryHtml += '<td style="border: 1px solid #ccc; padding: 8px; text-align: right; color: ' + amountColor + '; font-weight: 600;">' + Money.format(t.amountMinor) + '</td>';
                 summaryHtml += '</tr>';
             });
 
@@ -3005,24 +3102,28 @@
             pdfHtml += '<td style="border: 1px solid #ccc; padding: 8px; color: black;">' + Utilities.escapeHtml(summary.type) + '</td>';
             pdfHtml += '</tr>';
             pdfHtml += '<tr style="background-color: #f9f9f9;">';
+            pdfHtml += '<td style="border: 1px solid #ccc; padding: 8px; font-weight: 600; color: black;">Category</td>';
+            pdfHtml += '<td style="border: 1px solid #ccc; padding: 8px; color: black;">' + Utilities.escapeHtml(summary.category) + '</td>';
+            pdfHtml += '</tr>';
+            pdfHtml += '<tr>';
             pdfHtml += '<td style="border: 1px solid #ccc; padding: 8px; font-weight: 600; color: black;">From Date</td>';
             pdfHtml += '<td style="border: 1px solid #ccc; padding: 8px; color: black;">' + (summary.fromDate === "N/A" ? "N/A" : Utilities.formatDateDisplay(summary.fromDate)) + '</td>';
             pdfHtml += '</tr>';
-            pdfHtml += '<tr>';
+            pdfHtml += '<tr style="background-color: #f9f9f9;">';
             pdfHtml += '<td style="border: 1px solid #ccc; padding: 8px; font-weight: 600; color: black;">To Date</td>';
             pdfHtml += '<td style="border: 1px solid #ccc; padding: 8px; color: black;">' + (summary.toDate === "N/A" ? "N/A" : Utilities.formatDateDisplay(summary.toDate)) + '</td>';
             pdfHtml += '</tr>';
-            pdfHtml += '<tr style="background-color: #f9f9f9;">';
+            pdfHtml += '<tr>';
             pdfHtml += '<td style="border: 1px solid #ccc; padding: 8px; font-weight: 600; color: black;">Total Credit</td>';
-            pdfHtml += '<td style="border: 1px solid #ccc; padding: 8px; color: green; font-weight: 600;">' + Utilities.formatCurrency(summary.totalCredit) + '</td>';
+            pdfHtml += '<td style="border: 1px solid #ccc; padding: 8px; color: green; font-weight: 600;">' + Money.format(summary.totalCredit) + '</td>';
+            pdfHtml += '</tr>';
+            pdfHtml += '<tr style="background-color: #f9f9f9;">';
+            pdfHtml += '<td style="border: 1px solid #ccc; padding: 8px; font-weight: 600; color: black;">Total Debit</td>';
+            pdfHtml += '<td style="border: 1px solid #ccc; padding: 8px; color: red; font-weight: 600;">' + Money.format(summary.totalDebit) + '</td>';
             pdfHtml += '</tr>';
             pdfHtml += '<tr>';
-            pdfHtml += '<td style="border: 1px solid #ccc; padding: 8px; font-weight: 600; color: black;">Total Debit</td>';
-            pdfHtml += '<td style="border: 1px solid #ccc; padding: 8px; color: red; font-weight: 600;">' + Utilities.formatCurrency(summary.totalDebit) + '</td>';
-            pdfHtml += '</tr>';
-            pdfHtml += '<tr style="background-color: #f9f9f9;">';
             pdfHtml += '<td style="border: 1px solid #ccc; padding: 8px; font-weight: 600; color: black;">Closing Balance</td>';
-            pdfHtml += '<td style="border: 1px solid #ccc; padding: 8px; color: ' + (summary.closingBalance < 0 ? 'red' : 'black') + '; font-weight: 600;">' + Utilities.formatCurrency(summary.closingBalance) + '</td>';
+            pdfHtml += '<td style="border: 1px solid #ccc; padding: 8px; color: ' + (summary.closingBalance < 0 ? 'red' : 'black') + '; font-weight: 600;">' + Money.format(summary.closingBalance) + '</td>';
             pdfHtml += '</tr>';
             pdfHtml += '</table>';
             pdfHtml += '<p style="color: #666; font-size: 12px; margin: 10px 0 0 0;">Generated on: ' + new Date().toLocaleString() + '</p>';
@@ -3036,6 +3137,7 @@
             pdfHtml += '<th style="border: 1px solid #ccc; padding: 8px; text-align: left;">Date</th>';
             pdfHtml += '<th style="border: 1px solid #ccc; padding: 8px; text-align: left;">Type</th>';
             pdfHtml += '<th style="border: 1px solid #ccc; padding: 8px; text-align: left;">Narration</th>';
+            pdfHtml += '<th style="border: 1px solid #ccc; padding: 8px; text-align: left;">Category</th>';
             pdfHtml += '<th style="border: 1px solid #ccc; padding: 8px; text-align: left;">Account</th>';
             pdfHtml += '<th style="border: 1px solid #ccc; padding: 8px; text-align: right;">Amount</th>';
             pdfHtml += '</tr></thead>';
@@ -3050,8 +3152,9 @@
                 pdfHtml += '<td style="border: 1px solid #ccc; padding: 8px; color: black;">' + Utilities.formatDateDisplay(t.date) + '</td>';
                 pdfHtml += '<td style="border: 1px solid #ccc; padding: 8px; color: black;">' + typeLabel + '</td>';
                 pdfHtml += '<td style="border: 1px solid #ccc; padding: 8px; color: black;">' + Utilities.escapeHtml(t.narration) + '</td>';
+                pdfHtml += '<td style="border: 1px solid #ccc; padding: 8px; color: black;">' + Utilities.escapeHtml(t.category) + '</td>';
                 pdfHtml += '<td style="border: 1px solid #ccc; padding: 8px; color: black;">' + Utilities.escapeHtml(t.accountName) + '</td>';
-                pdfHtml += '<td style="border: 1px solid #ccc; padding: 8px; text-align: right; color: ' + amountColor + '; font-weight: 600;">' + Utilities.formatCurrency(t.amount) + '</td>';
+                pdfHtml += '<td style="border: 1px solid #ccc; padding: 8px; text-align: right; color: ' + amountColor + '; font-weight: 600;">' + Money.format(t.amountMinor) + '</td>';
                 pdfHtml += '</tr>';
             });
 
@@ -3103,7 +3206,7 @@
 
         bindFilterEvents: function () {
             var liveFields = [
-                "filter-narration-input", "filter-account-input", "filter-type-input",
+                "filter-narration-input", "filter-account-input", "filter-type-input", "filter-category-input",
                 "filter-date-from-input", "filter-date-to-input",
                 "filter-amount-min-input", "filter-amount-max-input", "filter-sort-input"
             ];
@@ -3120,6 +3223,7 @@
                 narration: document.getElementById("filter-narration-input").value.trim().toLowerCase(),
                 accountId: document.getElementById("filter-account-input").value,
                 type: document.getElementById("filter-type-input").value,
+                category: document.getElementById("filter-category-input").value,
                 dateFrom: document.getElementById("filter-date-from-input").value,
                 dateTo: document.getElementById("filter-date-to-input").value,
                 amountMin: document.getElementById("filter-amount-min-input").value,
@@ -3133,6 +3237,7 @@
             document.getElementById("filter-narration-input").value = "";
             document.getElementById("filter-account-input").value = "";
             document.getElementById("filter-type-input").value = "";
+            document.getElementById("filter-category-input").value = "";
             document.getElementById("filter-date-from-input").value = "";
             document.getElementById("filter-date-to-input").value = "";
             document.getElementById("filter-amount-min-input").value = "";
@@ -3153,9 +3258,17 @@
             select.value = currentValue;
         },
 
-        // Refreshes the transaction form's account dropdown to reflect the
-        // latest Accounts data. Inactive accounts stay listed (flagged) when
-        // they are linked to the transaction being edited.
+        refreshFilterCategoryOptions: function () {
+            var select = document.getElementById("filter-category-input");
+            var currentValue = select.value || TransactionsView.filters.category || "";
+            var options = ['<option value="">All Categories</option>'];
+            Categories.options(currentValue).forEach(function (c) {
+                options.push('<option value="' + Utilities.escapeHtml(c) + '">' + Utilities.escapeHtml(c) + "</option>");
+            });
+            select.innerHTML = options.join("");
+            select.value = currentValue;
+        },
+
         refreshAccountOptions: function (selectedAccountId) {
             var select = document.getElementById("transaction-account-input");
             var activeAccounts = Accounts.getActive();
@@ -3174,10 +3287,12 @@
             select.value = selectedAccountId || "";
         },
 
-        refreshNarrationSuggestions: function () {
-            var datalist = document.getElementById("narration-suggestions");
-            datalist.innerHTML = Transactions.getDistinctNarrations().map(function (n) {
+        refreshSuggestions: function () {
+            document.getElementById("narration-suggestions").innerHTML = Transactions.getDistinctNarrations().map(function (n) {
                 return '<option value="' + Utilities.escapeHtml(n) + '">';
+            }).join("");
+            document.getElementById("category-suggestions").innerHTML = Categories.options().map(function (c) {
+                return '<option value="' + Utilities.escapeHtml(c) + '">';
             }).join("");
         },
 
@@ -3185,11 +3300,9 @@
             document.getElementById("transaction-date-input").value = Utilities.getTodayIso();
             document.getElementById("transaction-type-input").value = "expense";
             TransactionsView.refreshAccountOptions(null);
-            TransactionsView.refreshNarrationSuggestions();
+            TransactionsView.refreshSuggestions();
         },
 
-        // Applies filters (AND-combined), sorts, then annotates each row
-        // with its S.No and resolved account name for display.
         getAccountAwareList: function () {
             var f = TransactionsView.filters;
 
@@ -3197,10 +3310,13 @@
                 if (f.narration && t.narration.toLowerCase().indexOf(f.narration) === -1) { return false; }
                 if (f.accountId && t.accountId !== f.accountId) { return false; }
                 if (f.type && t.type !== f.type) { return false; }
+                if (f.category && Categories.normalize(t.category) !== f.category) { return false; }
                 if (f.dateFrom && t.date < f.dateFrom) { return false; }
                 if (f.dateTo && t.date > f.dateTo) { return false; }
-                if (f.amountMin !== "" && !isNaN(parseFloat(f.amountMin)) && t.amount < parseFloat(f.amountMin)) { return false; }
-                if (f.amountMax !== "" && !isNaN(parseFloat(f.amountMax)) && t.amount > parseFloat(f.amountMax)) { return false; }
+                var minDecimal = parseFloat(f.amountMin);
+                var maxDecimal = parseFloat(f.amountMax);
+                if (f.amountMin !== "" && !isNaN(minDecimal) && t.amountMinor < Money.toMinor(minDecimal)) { return false; }
+                if (f.amountMax !== "" && !isNaN(maxDecimal) && t.amountMinor > Money.toMinor(maxDecimal)) { return false; }
                 return true;
             });
 
@@ -3210,9 +3326,9 @@
                         if (a.date !== b.date) { return a.date > b.date ? 1 : -1; }
                         return a.createdAt > b.createdAt ? 1 : -1;
                     case "amountDesc":
-                        return b.amount - a.amount;
+                        return b.amountMinor - a.amountMinor;
                     case "amountAsc":
-                        return a.amount - b.amount;
+                        return a.amountMinor - b.amountMinor;
                     case "dateDesc":
                     default:
                         if (a.date !== b.date) { return a.date < b.date ? 1 : -1; }
@@ -3229,10 +3345,8 @@
             });
         },
 
-        // ---- Bulk selection helpers ----
-
         pruneSelection: function () {
-            var allIds = {};
+            var allIds = Object.create(null);
             Transactions.getAll().forEach(function (t) { allIds[t.id] = true; });
             Object.keys(TransactionsView.selectedIds).forEach(function (id) {
                 if (!allIds[id]) { delete TransactionsView.selectedIds[id]; }
@@ -3259,8 +3373,6 @@
             TransactionsView.render();
         },
 
-        // Mobile-friendly bulk toggle: selects every visible (filtered) row,
-        // or clears the visible selection if they are all already selected.
         handleSelectVisibleToggle: function () {
             var visible = TransactionsView.getAccountAwareList();
             if (visible.length === 0) { return; }
@@ -3272,7 +3384,6 @@
             TransactionsView.render();
         },
 
-        // Reflects only the currently filtered/visible rows.
         updateSelectAllCheckboxState: function () {
             var checkbox = document.getElementById("transaction-select-all-checkbox");
             var selectVisibleBtn = document.getElementById("transaction-select-visible-btn");
@@ -3309,18 +3420,17 @@
                     });
                     TransactionsView.selectedIds = {};
                     UI.showNotification(count + " transaction(s) deleted.", "success");
-                    TransactionsView.render();
-                    DashboardView.render();
-                    ReportsView.render();
+                    refreshAll();
                 }
             );
         },
 
         render: function () {
-            TransactionsView.refreshNarrationSuggestions();
+            TransactionsView.refreshSuggestions();
             var select = document.getElementById("transaction-account-input");
             TransactionsView.refreshAccountOptions(select.value || null);
             TransactionsView.refreshFilterAccountOptions();
+            TransactionsView.refreshFilterCategoryOptions();
             TransactionsView.pruneSelection();
 
             TransactionsView.renderSummary();
@@ -3344,8 +3454,6 @@
             tbody.innerHTML = transactions.map(TransactionsView.renderRow).join("");
             cardsWrap.innerHTML = transactions.map(TransactionsView.renderCard).join("");
 
-            // Only the checkboxes need per-element bindings here. Edit and
-            // Delete are handled by delegation (see handleRowAction).
             transactions.forEach(function (t) {
                 var selectCheckbox = document.getElementById("txn-select-" + t.id);
                 var selectCheckboxCard = document.getElementById("txn-select-card-" + t.id);
@@ -3379,9 +3487,9 @@
                     "<td>" + t.sNo + "</td>" +
                     "<td>" + Utilities.formatDateDisplay(t.date) + "</td>" +
                     '<td><span class="status-badge ' + typeClass + '">' + typeLabel + "</span></td>" +
-                    "<td>" + Utilities.escapeHtml(t.narration) + "</td>" +
+                    "<td>" + Utilities.escapeHtml(t.narration) + '<span class="cell-sub">' + Utilities.escapeHtml(t.category) + "</span></td>" +
                     "<td>" + Utilities.escapeHtml(t.accountName) + "</td>" +
-                    '<td class="amount ' + amountClass + '">' + Utilities.formatCurrency(t.amount) + "</td>" +
+                    '<td class="amount ' + amountClass + '">' + Money.format(t.amountMinor) + "</td>" +
                     "<td>" + TransactionsView.renderActions(t) + "</td>" +
                 "</tr>"
             );
@@ -3401,8 +3509,9 @@
                         "</span>" +
                         '<span class="status-badge ' + typeClass + '">' + typeLabel + "</span>" +
                     "</div>" +
+                    '<div class="record-card-sub">' + Utilities.escapeHtml(t.category) + "</div>" +
                     '<div class="record-card-row"><span>' + Utilities.formatDateDisplay(t.date) + '</span><span>' + Utilities.escapeHtml(t.accountName) + "</span></div>" +
-                    '<div class="record-card-row ' + amountClass + '" style="font-size:1rem; font-weight:600;"><span>Amount</span><span>' + Utilities.formatCurrency(t.amount) + "</span></div>" +
+                    '<div class="record-card-row ' + amountClass + '" style="font-size:1rem; font-weight:600;"><span>Amount</span><span>' + Money.format(t.amountMinor) + "</span></div>" +
                     '<div class="record-card-actions">' +
                         TransactionsView.renderActions(t) +
                     "</div>" +
@@ -3411,10 +3520,10 @@
         },
 
         clearErrors: function () {
-            ["transaction-date-error", "transaction-account-error", "transaction-narration-error", "transaction-amount-error"].forEach(function (id) {
+            ["transaction-date-error", "transaction-account-error", "transaction-narration-error", "transaction-amount-error", "transaction-category-error"].forEach(function (id) {
                 document.getElementById(id).textContent = "";
             });
-            ["transaction-date-input", "transaction-account-input", "transaction-narration-input", "transaction-amount-input"].forEach(function (id) {
+            ["transaction-date-input", "transaction-account-input", "transaction-narration-input", "transaction-amount-input", "transaction-category-input"].forEach(function (id) {
                 document.getElementById(id).classList.remove("has-error");
             });
         },
@@ -3428,14 +3537,15 @@
             var accountInput = document.getElementById("transaction-account-input");
             var narrationInput = document.getElementById("transaction-narration-input");
             var amountInput = document.getElementById("transaction-amount-input");
+            var categoryInput = document.getElementById("transaction-category-input");
             var notesInput = document.getElementById("transaction-notes-input");
 
             var date = dateInput.value;
             var type = typeInput.value;
             var accountId = accountInput.value;
             var narration = narrationInput.value.trim();
-            var amountRaw = amountInput.value;
-            var amount = parseFloat(amountRaw);
+            var amount = Money.parseInput(amountInput.value, false);
+            var categoryRaw = categoryInput.value;
 
             var hasError = false;
 
@@ -3457,13 +3567,15 @@
                 hasError = true;
             }
 
-            if (amountRaw === "" || isNaN(amount)) {
-                document.getElementById("transaction-amount-error").textContent = "Amount is required and must be numeric.";
+            if (!amount.ok) {
+                document.getElementById("transaction-amount-error").textContent = amount.error;
                 amountInput.classList.add("has-error");
                 hasError = true;
-            } else if (amount <= 0) {
-                document.getElementById("transaction-amount-error").textContent = "Amount must be greater than zero.";
-                amountInput.classList.add("has-error");
+            }
+
+            if (categoryRaw.trim().length > Categories.MAX_LENGTH) {
+                document.getElementById("transaction-category-error").textContent = "Category must be " + Categories.MAX_LENGTH + " characters or fewer.";
+                categoryInput.classList.add("has-error");
                 hasError = true;
             }
 
@@ -3474,7 +3586,8 @@
                 type: type,
                 accountId: accountId,
                 narration: narration,
-                amount: amount,
+                amountMinor: amount.minor,
+                category: Categories.normalize(categoryRaw).slice(0, Categories.MAX_LENGTH),
                 notes: notesInput.value
             };
 
@@ -3487,7 +3600,7 @@
             }
 
             TransactionsView.cancelEdit();
-            TransactionsView.render();
+            refreshAll();
         },
 
         startEdit: function (id) {
@@ -3503,7 +3616,8 @@
             document.getElementById("transaction-type-input").value = t.type;
             TransactionsView.refreshAccountOptions(t.accountId);
             document.getElementById("transaction-narration-input").value = t.narration;
-            document.getElementById("transaction-amount-input").value = t.amount;
+            document.getElementById("transaction-amount-input").value = Money.toDecimalString(t.amountMinor);
+            document.getElementById("transaction-category-input").value = t.category;
             document.getElementById("transaction-notes-input").value = t.notes || "";
 
             document.getElementById("transaction-form-title").textContent = "Edit Transaction";
@@ -3531,12 +3645,12 @@
             var typeLabel = t.type === "income" ? "Income" : "Expense";
             UI.confirm(
                 "Delete Transaction",
-                'Delete this ' + typeLabel.toLowerCase() + ' transaction — "' + t.narration + '", ' + Utilities.formatCurrency(t.amount) + ' on ' + Utilities.formatDateDisplay(t.date) + '? This cannot be undone.',
+                'Delete this ' + typeLabel.toLowerCase() + ' transaction — "' + t.narration + '", ' + Money.format(t.amountMinor) + ' on ' + Utilities.formatDateDisplay(t.date) + '? This cannot be undone.',
                 function () {
                     Transactions.remove(id);
                     delete TransactionsView.selectedIds[id];
                     UI.showNotification("Transaction deleted.", "success");
-                    TransactionsView.render();
+                    refreshAll();
                 }
             );
         }
@@ -3544,18 +3658,17 @@
 
     /* =========================================================
        DASHBOARD MODULE
-       Read-only summaries, derived live on every render.
     ========================================================= */
 
     var Dashboard = {
 
         getOverallSummary: function () {
-            var transactions = Transactions.getAll();
             var income = 0;
             var expense = 0;
+            var transactions = Transactions.getAll();
             transactions.forEach(function (t) {
-                if (t.type === "income") { income += Number(t.amount); }
-                else { expense += Number(t.amount); }
+                if (t.type === "income") { income += t.amountMinor; }
+                else { expense += t.amountMinor; }
             });
             return {
                 income: income,
@@ -3570,8 +3683,8 @@
             var expense = 0;
             Transactions.getAll().forEach(function (t) {
                 if (!matchFn(t)) { return; }
-                if (t.type === "income") { income += Number(t.amount); }
-                else { expense += Number(t.amount); }
+                if (t.type === "income") { income += t.amountMinor; }
+                else { expense += t.amountMinor; }
             });
             return { income: income, expense: expense, net: income - expense };
         },
@@ -3612,30 +3725,27 @@
 
         renderOverall: function () {
             var s = Dashboard.getOverallSummary();
-            var el = document.getElementById("dashboard-overall-cards");
-            el.innerHTML =
-                DashboardView.summaryCard("Total Income", Utilities.formatCurrency(s.income), "positive") +
-                DashboardView.summaryCard("Total Expense", Utilities.formatCurrency(s.expense), "negative") +
-                DashboardView.summaryCard("Net Balance", Utilities.formatCurrency(s.net), DashboardView.netClass(s.net)) +
+            document.getElementById("dashboard-overall-cards").innerHTML =
+                DashboardView.summaryCard("Total Income", Money.format(s.income), "positive") +
+                DashboardView.summaryCard("Total Expense", Money.format(s.expense), "negative") +
+                DashboardView.summaryCard("Net Balance", Money.format(s.net), DashboardView.netClass(s.net)) +
                 DashboardView.summaryCard("Number of Transactions", String(s.count));
         },
 
         renderToday: function () {
             var s = Dashboard.getTodaySummary();
-            var el = document.getElementById("dashboard-today-cards");
-            el.innerHTML =
-                DashboardView.summaryCard("Today's Income", Utilities.formatCurrency(s.income), "positive") +
-                DashboardView.summaryCard("Today's Expense", Utilities.formatCurrency(s.expense), "negative") +
-                DashboardView.summaryCard("Today's Net", Utilities.formatCurrency(s.net), DashboardView.netClass(s.net));
+            document.getElementById("dashboard-today-cards").innerHTML =
+                DashboardView.summaryCard("Today's Income", Money.format(s.income), "positive") +
+                DashboardView.summaryCard("Today's Expense", Money.format(s.expense), "negative") +
+                DashboardView.summaryCard("Today's Net", Money.format(s.net), DashboardView.netClass(s.net));
         },
 
         renderMonth: function () {
             var s = Dashboard.getCurrentMonthSummary();
-            var el = document.getElementById("dashboard-month-cards");
-            el.innerHTML =
-                DashboardView.summaryCard("Monthly Income", Utilities.formatCurrency(s.income), "positive") +
-                DashboardView.summaryCard("Monthly Expense", Utilities.formatCurrency(s.expense), "negative") +
-                DashboardView.summaryCard("Monthly Net", Utilities.formatCurrency(s.net), DashboardView.netClass(s.net));
+            document.getElementById("dashboard-month-cards").innerHTML =
+                DashboardView.summaryCard("Monthly Income", Money.format(s.income), "positive") +
+                DashboardView.summaryCard("Monthly Expense", Money.format(s.expense), "negative") +
+                DashboardView.summaryCard("Monthly Net", Money.format(s.net), DashboardView.netClass(s.net));
         },
 
         renderAccounts: function () {
@@ -3658,10 +3768,10 @@
                 return (
                     "<tr>" +
                         "<td>" + Utilities.escapeHtml(acc.name) + "</td>" +
-                        '<td class="amount">' + Utilities.formatCurrency(summary.openingBalance) + "</td>" +
-                        '<td class="amount amount-income">' + Utilities.formatCurrency(summary.income) + "</td>" +
-                        '<td class="amount amount-expense">' + Utilities.formatCurrency(summary.expense) + "</td>" +
-                        '<td class="amount ' + balanceClass + '" style="font-weight:600;">' + Utilities.formatCurrency(summary.currentBalance) + "</td>" +
+                        '<td class="amount">' + Money.format(summary.openingBalance) + "</td>" +
+                        '<td class="amount amount-income">' + Money.format(summary.income) + "</td>" +
+                        '<td class="amount amount-expense">' + Money.format(summary.expense) + "</td>" +
+                        '<td class="amount ' + balanceClass + '" style="font-weight:600;">' + Money.format(summary.currentBalance) + "</td>" +
                         '<td><span class="status-badge ' + statusClass + '">' + statusLabel + "</span></td>" +
                     "</tr>"
                 );
@@ -3678,10 +3788,10 @@
                             '<span class="record-card-title">' + Utilities.escapeHtml(acc.name) + "</span>" +
                             '<span class="status-badge ' + statusClass + '">' + statusLabel + "</span>" +
                         "</div>" +
-                        '<div class="record-card-row"><span>Opening Balance</span><span>' + Utilities.formatCurrency(summary.openingBalance) + "</span></div>" +
-                        '<div class="record-card-row amount-income"><span>Income</span><span>' + Utilities.formatCurrency(summary.income) + "</span></div>" +
-                        '<div class="record-card-row amount-expense"><span>Expense</span><span>' + Utilities.formatCurrency(summary.expense) + "</span></div>" +
-                        '<div class="record-card-row ' + balanceClass + '" style="font-weight:600; font-size:1rem;"><span>Current Balance</span><span>' + Utilities.formatCurrency(summary.currentBalance) + "</span></div>" +
+                        '<div class="record-card-row"><span>Opening Balance</span><span>' + Money.format(summary.openingBalance) + "</span></div>" +
+                        '<div class="record-card-row amount-income"><span>Income</span><span>' + Money.format(summary.income) + "</span></div>" +
+                        '<div class="record-card-row amount-expense"><span>Expense</span><span>' + Money.format(summary.expense) + "</span></div>" +
+                        '<div class="record-card-row ' + balanceClass + '" style="font-weight:600; font-size:1rem;"><span>Current Balance</span><span>' + Money.format(summary.currentBalance) + "</span></div>" +
                     "</div>"
                 );
             }).join("");
@@ -3690,21 +3800,21 @@
 
     /* =========================================================
        REPORTS MODULE
-       Grouping/aggregation for the five reports, computed live.
+       All sums are integer minor units.
     ========================================================= */
 
     var Reports = {
 
         getMonthlyGroups: function () {
-            var groups = {};
+            var groups = Object.create(null);
             Transactions.getAll().forEach(function (t) {
                 var month = t.date.slice(0, 7);
                 if (!groups[month]) {
                     groups[month] = { month: month, income: 0, expense: 0, count: 0 };
                 }
                 groups[month].count += 1;
-                if (t.type === "income") { groups[month].income += Number(t.amount); }
-                else { groups[month].expense += Number(t.amount); }
+                if (t.type === "income") { groups[month].income += t.amountMinor; }
+                else { groups[month].expense += t.amountMinor; }
             });
             return Object.keys(groups)
                 .map(function (key) {
@@ -3715,14 +3825,14 @@
         },
 
         getDailyGroups: function () {
-            var groups = {};
+            var groups = Object.create(null);
             Transactions.getAll().forEach(function (t) {
                 if (!groups[t.date]) {
                     groups[t.date] = { date: t.date, income: 0, expense: 0, count: 0 };
                 }
                 groups[t.date].count += 1;
-                if (t.type === "income") { groups[t.date].income += Number(t.amount); }
-                else { groups[t.date].expense += Number(t.amount); }
+                if (t.type === "income") { groups[t.date].income += t.amountMinor; }
+                else { groups[t.date].expense += t.amountMinor; }
             });
             return Object.keys(groups)
                 .map(function (key) {
@@ -3730,6 +3840,25 @@
                     return { date: g.date, income: g.income, expense: g.expense, net: g.income - g.expense, count: g.count };
                 })
                 .sort(function (a, b) { return a.date < b.date ? 1 : -1; });
+        },
+
+        getCategoryGroups: function () {
+            var groups = Object.create(null);
+            Transactions.getAll().forEach(function (t) {
+                var key = Categories.normalize(t.category);
+                if (!groups[key]) {
+                    groups[key] = { category: key, income: 0, expense: 0, count: 0 };
+                }
+                groups[key].count += 1;
+                if (t.type === "income") { groups[key].income += t.amountMinor; }
+                else { groups[key].expense += t.amountMinor; }
+            });
+            return Object.keys(groups)
+                .map(function (key) {
+                    var g = groups[key];
+                    return { category: g.category, income: g.income, expense: g.expense, net: g.income - g.expense, count: g.count };
+                })
+                .sort(function (a, b) { return (b.income + b.expense) - (a.income + a.expense); });
         },
 
         getAccountWise: function () {
@@ -3776,6 +3905,7 @@
         render: function () {
             switch (ReportsView.activeReport) {
                 case "monthlyIncomeExpense": ReportsView.renderMonthlyIncomeExpense(); break;
+                case "byCategory": ReportsView.renderByCategory(); break;
                 case "accountWise": ReportsView.renderAccountWise(); break;
                 case "dailySummary": ReportsView.renderDailySummary(); break;
                 case "monthlySummary": ReportsView.renderMonthlySummary(); break;
@@ -3799,9 +3929,30 @@
                 return (
                     "<tr>" +
                         "<td>" + Utilities.formatMonthDisplay(r.month) + "</td>" +
-                        '<td class="amount amount-income">' + Utilities.formatCurrency(r.income) + "</td>" +
-                        '<td class="amount amount-expense">' + Utilities.formatCurrency(r.expense) + "</td>" +
-                        '<td class="amount ' + netClass + '" style="font-weight:600;">' + Utilities.formatCurrency(r.net) + "</td>" +
+                        '<td class="amount amount-income">' + Money.format(r.income) + "</td>" +
+                        '<td class="amount amount-expense">' + Money.format(r.expense) + "</td>" +
+                        '<td class="amount ' + netClass + '" style="font-weight:600;">' + Money.format(r.net) + "</td>" +
+                    "</tr>"
+                );
+            }).join("");
+        },
+
+        renderByCategory: function () {
+            var rows = Reports.getCategoryGroups();
+            var tbody = document.getElementById("report-by-category-body");
+            if (rows.length === 0) {
+                tbody.innerHTML = ReportsView.emptyRow(5, "There is no transaction data available for this period.");
+                return;
+            }
+            tbody.innerHTML = rows.map(function (r) {
+                var netClass = r.net < 0 ? "amount-expense" : "amount-income";
+                return (
+                    "<tr>" +
+                        "<td>" + Utilities.escapeHtml(r.category) + "</td>" +
+                        '<td class="amount amount-income">' + Money.format(r.income) + "</td>" +
+                        '<td class="amount amount-expense">' + Money.format(r.expense) + "</td>" +
+                        '<td class="amount ' + netClass + '" style="font-weight:600;">' + Money.format(r.net) + "</td>" +
+                        '<td class="amount">' + r.count + "</td>" +
                     "</tr>"
                 );
             }).join("");
@@ -3819,9 +3970,9 @@
                 return (
                     "<tr>" +
                         "<td>" + Utilities.formatMonthDisplay(r.month) + "</td>" +
-                        '<td class="amount amount-income">' + Utilities.formatCurrency(r.income) + "</td>" +
-                        '<td class="amount amount-expense">' + Utilities.formatCurrency(r.expense) + "</td>" +
-                        '<td class="amount ' + netClass + '" style="font-weight:600;">' + Utilities.formatCurrency(r.net) + "</td>" +
+                        '<td class="amount amount-income">' + Money.format(r.income) + "</td>" +
+                        '<td class="amount amount-expense">' + Money.format(r.expense) + "</td>" +
+                        '<td class="amount ' + netClass + '" style="font-weight:600;">' + Money.format(r.net) + "</td>" +
                         '<td class="amount">' + r.count + "</td>" +
                     "</tr>"
                 );
@@ -3840,9 +3991,9 @@
                 return (
                     "<tr>" +
                         "<td>" + Utilities.formatDateDisplay(r.date) + "</td>" +
-                        '<td class="amount amount-income">' + Utilities.formatCurrency(r.income) + "</td>" +
-                        '<td class="amount amount-expense">' + Utilities.formatCurrency(r.expense) + "</td>" +
-                        '<td class="amount ' + netClass + '" style="font-weight:600;">' + Utilities.formatCurrency(r.net) + "</td>" +
+                        '<td class="amount amount-income">' + Money.format(r.income) + "</td>" +
+                        '<td class="amount amount-expense">' + Money.format(r.expense) + "</td>" +
+                        '<td class="amount ' + netClass + '" style="font-weight:600;">' + Money.format(r.net) + "</td>" +
                         '<td class="amount">' + r.count + "</td>" +
                     "</tr>"
                 );
@@ -3861,10 +4012,10 @@
                 return (
                     "<tr>" +
                         "<td>" + Utilities.escapeHtml(r.name) + "</td>" +
-                        '<td class="amount">' + Utilities.formatCurrency(r.openingBalance) + "</td>" +
-                        '<td class="amount amount-income">' + Utilities.formatCurrency(r.income) + "</td>" +
-                        '<td class="amount amount-expense">' + Utilities.formatCurrency(r.expense) + "</td>" +
-                        '<td class="amount ' + balanceClass + '" style="font-weight:600;">' + Utilities.formatCurrency(r.currentBalance) + "</td>" +
+                        '<td class="amount">' + Money.format(r.openingBalance) + "</td>" +
+                        '<td class="amount amount-income">' + Money.format(r.income) + "</td>" +
+                        '<td class="amount amount-expense">' + Money.format(r.expense) + "</td>" +
+                        '<td class="amount ' + balanceClass + '" style="font-weight:600;">' + Money.format(r.currentBalance) + "</td>" +
                     "</tr>"
                 );
             }).join("");
@@ -3884,8 +4035,8 @@
                 return (
                     "<tr>" +
                         "<td>" + Utilities.escapeHtml(r.name) + "</td>" +
-                        '<td class="amount">' + Utilities.formatCurrency(r.openingBalance) + "</td>" +
-                        '<td class="amount ' + balanceClass + '" style="font-weight:600;">' + Utilities.formatCurrency(r.currentBalance) + "</td>" +
+                        '<td class="amount">' + Money.format(r.openingBalance) + "</td>" +
+                        '<td class="amount ' + balanceClass + '" style="font-weight:600;">' + Money.format(r.currentBalance) + "</td>" +
                         '<td><span class="status-badge ' + statusClass + '">' + statusLabel + "</span></td>" +
                     "</tr>"
                 );
@@ -3895,7 +4046,8 @@
 
     /* =========================================================
        BACKUP MODULE
-       JSON export/import with validation, and CSV export.
+       Accepts data version 1 (upgraded in memory) and version 2.
+       Every record is validated and rebuilt from known fields only.
     ========================================================= */
 
     var Backup = {
@@ -3903,7 +4055,7 @@
         buildBackupPayload: function () {
             var metadata = Storage.getMetadata();
             return {
-                dataVersion: metadata.dataVersion,
+                dataVersion: CURRENT_DATA_VERSION,
                 appVersion: metadata.appVersion,
                 exportedAt: new Date().toISOString(),
                 accounts: Storage.getAccounts(),
@@ -3912,73 +4064,175 @@
             };
         },
 
-        // Returns { valid: true, data } or { valid: false, error }.
-        // Never throws.
+        // Returns { valid: true, data } or { valid: false, error }. Never throws.
         validateBackupPayload: function (raw) {
-            var parsed;
             try {
-                parsed = JSON.parse(raw);
+                var parsed = typeof raw === "string" ? Backup._parseJson(raw) : raw;
+
+                if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) {
+                    fail("This file does not contain a recognizable backup.");
+                }
+
+                var version = parsed.dataVersion;
+                if (!Number.isInteger(version) || version < 1) {
+                    fail("This backup does not specify a valid data version.");
+                }
+                if (version > CURRENT_DATA_VERSION) {
+                    fail("This backup was created with a newer version of the app and cannot be imported here.");
+                }
+                if (!Array.isArray(parsed.accounts) || !Array.isArray(parsed.transactions)) {
+                    fail("This backup is missing its accounts or transactions data.");
+                }
+
+                var data = runMigrations({
+                    accounts: parsed.accounts,
+                    transactions: parsed.transactions,
+                    settings: parsed.settings || null
+                }, version);
+
+                return { valid: true, data: Backup._validateCurrent(data) };
             } catch (err) {
-                return { valid: false, error: "This file is not valid JSON and cannot be read as a backup." };
+                return { valid: false, error: err.message || "This backup could not be read." };
             }
+        },
 
-            if (!parsed || typeof parsed !== "object") {
-                return { valid: false, error: "This file does not contain a recognizable backup." };
+        _parseJson: function (text) {
+            try {
+                return JSON.parse(text);
+            } catch (err) {
+                fail("This file is not valid JSON and cannot be read as a backup.");
             }
+        },
 
-            if (!Array.isArray(parsed.accounts) || !Array.isArray(parsed.transactions)) {
-                return { valid: false, error: "This backup is missing its accounts or transactions data and cannot be imported." };
+        _text: function (value, maxLength, message) {
+            if (typeof value !== "string" || !value.trim()) {
+                fail(message);
             }
+            return value.trim().slice(0, maxLength);
+        },
 
-            var accountsValid = parsed.accounts.every(function (acc) {
-                return acc && typeof acc.id === "string" && typeof acc.name === "string";
+        _isIsoDate: function (value) {
+            if (typeof value !== "string" || !/^\d{4}-\d{2}-\d{2}$/.test(value)) { return false; }
+            var y = parseInt(value.slice(0, 4), 10);
+            var m = parseInt(value.slice(5, 7), 10);
+            var d = parseInt(value.slice(8, 10), 10);
+            var dt = new Date(Date.UTC(y, m - 1, d));
+            return dt.getUTCFullYear() === y && dt.getUTCMonth() === m - 1 && dt.getUTCDate() === d;
+        },
+
+        _sanitizeSettings: function (settings) {
+            var keys = Object.keys(DEFAULTS.settings);
+            if (settings === null || settings === undefined) {
+                return Object.assign({}, DEFAULTS.settings);
+            }
+            if (typeof settings !== "object" || Array.isArray(settings)) {
+                fail("Backup settings are malformed.");
+            }
+            var out = {};
+            keys.forEach(function (key) {
+                var value = settings[key];
+                if (value === undefined || value === null) {
+                    out[key] = null;
+                } else if (typeof value === "string" && value.length <= 500) {
+                    out[key] = value;
+                } else {
+                    fail("Backup settings are malformed.");
+                }
             });
-            if (!accountsValid) {
-                return { valid: false, error: "One or more accounts in this backup are malformed." };
+            if ((out.pinHash === null) !== (out.pinSalt === null)) {
+                fail("Backup PIN settings are incomplete.");
             }
+            if ((out.securityAnswerHash === null) !== (out.securityAnswerSalt === null)) {
+                fail("Backup security question settings are incomplete.");
+            }
+            return out;
+        },
 
-            var transactionsValid = parsed.transactions.every(function (t) {
-                return t && typeof t.id === "string" && typeof t.date === "string" &&
-                    (t.type === "income" || t.type === "expense") && typeof t.accountId === "string";
+        _validateCurrent: function (data) {
+            var accountIds = Object.create(null);
+
+            var accounts = data.accounts.map(function (a, i) {
+                var label = "Account #" + (i + 1);
+                if (!a || typeof a !== "object") { fail(label + " is malformed."); }
+                var id = Backup._text(a.id, 64, label + " has no id.");
+                if (accountIds[id]) { fail("Duplicate account id found: " + id + "."); }
+                accountIds[id] = true;
+                var name = Backup._text(a.name, 80, label + " has no name.");
+                if (!Number.isSafeInteger(a.openingBalanceMinor)) {
+                    fail('Account "' + name + '" has an invalid opening balance.');
+                }
+                if (a.status !== "active" && a.status !== "inactive") {
+                    fail('Account "' + name + '" has an invalid status.');
+                }
+                return {
+                    id: id,
+                    name: name,
+                    openingBalanceMinor: a.openingBalanceMinor,
+                    status: a.status,
+                    createdAt: typeof a.createdAt === "string" ? a.createdAt : new Date().toISOString()
+                };
             });
-            if (!transactionsValid) {
-                return { valid: false, error: "One or more transactions in this backup are malformed." };
-            }
 
-            if (typeof parsed.dataVersion !== "number") {
-                return { valid: false, error: "This backup does not specify a data version and cannot be safely imported." };
-            }
+            var transactionIds = Object.create(null);
 
-            if (parsed.dataVersion > CURRENT_DATA_VERSION) {
-                return { valid: false, error: "This backup was created with a newer version of the app and cannot be imported here." };
-            }
+            var transactions = data.transactions.map(function (t, i) {
+                var label = "Transaction #" + (i + 1);
+                if (!t || typeof t !== "object") { fail(label + " is malformed."); }
+                var id = Backup._text(t.id, 64, label + " has no id.");
+                if (transactionIds[id]) { fail("Duplicate transaction id found: " + id + "."); }
+                transactionIds[id] = true;
+                if (!Backup._isIsoDate(t.date)) { fail(label + " has an invalid date."); }
+                if (t.type !== "income" && t.type !== "expense") { fail(label + " has an invalid type."); }
+                if (typeof t.accountId !== "string" || !accountIds[t.accountId]) {
+                    fail(label + " refers to an account that does not exist.");
+                }
+                if (!Number.isSafeInteger(t.amountMinor) || t.amountMinor <= 0) {
+                    fail(label + " has an invalid amount.");
+                }
+                return {
+                    id: id,
+                    date: t.date,
+                    type: t.type,
+                    accountId: t.accountId,
+                    amountMinor: t.amountMinor,
+                    narration: Backup._text(t.narration, 200, label + " has no narration."),
+                    category: Categories.normalize(t.category).slice(0, Categories.MAX_LENGTH),
+                    notes: typeof t.notes === "string" ? t.notes.slice(0, 1000) : "",
+                    createdAt: typeof t.createdAt === "string" ? t.createdAt : new Date().toISOString()
+                };
+            });
 
-            return { valid: true, data: parsed };
+            return {
+                accounts: accounts,
+                transactions: transactions,
+                settings: Backup._sanitizeSettings(data.settings)
+            };
         },
 
         applyBackup: function (data) {
             Storage.setAccounts(data.accounts);
             Storage.setTransactions(data.transactions);
-            Storage.setSettings(data.settings || DEFAULTS.settings);
+            Storage.setSettings(data.settings);
             Storage.setMetadata({
                 dataVersion: CURRENT_DATA_VERSION,
-                appVersion: data.appVersion || DEFAULTS.metadata.appVersion,
+                appVersion: DEFAULTS.metadata.appVersion,
                 lastBackupAt: Storage.getMetadata().lastBackupAt
             });
         },
 
         transactionsToCsv: function () {
-            var header = ["S.No", "Transaction ID", "Date", "Type", "Narration", "Account", "Amount", "Notes", "Created Date/Time"];
+            var header = ["S.No", "Transaction ID", "Date", "Type", "Category", "Narration", "Account", "Amount (QAR)", "Notes", "Created At"];
             var rows = Transactions.getSorted().map(function (t, index) {
                 var account = Accounts.getById(t.accountId);
                 return [
                     index + 1,
                     t.id,
-                    Utilities.formatDateDisplay(t.date),
+                    t.date,
                     t.type === "income" ? "Income" : "Expense",
+                    t.category,
                     t.narration,
                     account ? account.name : "(Unknown Account)",
-                    Number(t.amount).toFixed(2),
+                    Money.toDecimalString(t.amountMinor),
                     t.notes || "",
                     t.createdAt
                 ];
@@ -3993,7 +4247,6 @@
 
     /* =========================================================
        LOCK SCREEN
-       Gates the app behind PIN entry / creation.
     ========================================================= */
 
     var LockScreen = {
@@ -4165,10 +4418,7 @@
                         "Sample data loaded: " + result.accountsAdded + " account(s), " + result.transactionsAdded + " transaction(s) added.",
                         "success"
                     );
-                    DashboardView.render();
-                    AccountsView.render();
-                    TransactionsView.render();
-                    ReportsView.render();
+                    refreshAll();
                 }
             );
         },
@@ -4272,16 +4522,6 @@
             document.getElementById("ss-disconnect-btn").style.display = isConnectedOrError ? "inline-flex" : "none";
         },
 
-        // Re-renders every view after a (re)connect, since the server's
-        // data may differ from what was showing from localStorage.
-        refreshAllViews: function () {
-            DashboardView.render();
-            AccountsView.render();
-            TransactionsView.resetDefaults();
-            TransactionsView.render();
-            ReportsView.render();
-        },
-
         handleConnect: function () {
             var url = document.getElementById("ss-url-input").value;
             var btn = document.getElementById("ss-connect-btn");
@@ -4289,7 +4529,7 @@
             ServerSync.connect(url).then(function () {
                 UI.showNotification("Connected. The server is now the source of truth for your data.", "success");
                 ServerSyncView.render();
-                ServerSyncView.refreshAllViews();
+                refreshAll();
             }).catch(function (err) {
                 UI.showNotification("Could not connect: " + err.message, "error");
                 ServerSyncView.render();
@@ -4302,7 +4542,7 @@
             ServerSync.syncNow().then(function () {
                 UI.showNotification("Synced with the server.", "success");
                 ServerSyncView.render();
-                ServerSyncView.refreshAllViews();
+                refreshAll();
             }).catch(function (err) {
                 UI.showNotification("Sync failed: " + err.message, "error");
                 ServerSyncView.render();
@@ -4348,7 +4588,7 @@
             var payload = Backup.buildBackupPayload();
             var filename = "personal-finance-backup-" + Utilities.getTodayIso() + ".json";
 
-            Utilities.downloadTextFile(filename, JSON.stringify(payload, null, 2), "application/json");
+            Utilities.downloadTextFile(filename, JSON.stringify(payload, null, 2), "application/json;charset=utf-8", false);
 
             var metadata = Storage.getMetadata();
             metadata.lastBackupAt = new Date().toISOString();
@@ -4365,7 +4605,7 @@
             }
             var csv = Backup.transactionsToCsv();
             var filename = "transactions-" + Utilities.getTodayIso() + ".csv";
-            Utilities.downloadTextFile(filename, csv, "text/csv");
+            Utilities.downloadTextFile(filename, csv, "text/csv;charset=utf-8", true);
             UI.showNotification("Transactions exported to CSV.", "success");
         },
 
@@ -4398,12 +4638,7 @@
                         Backup.applyBackup(result.data);
                         fileInput.value = "";
                         UI.showNotification("Backup restored successfully.", "success");
-
-                        DashboardView.render();
-                        AccountsView.render();
-                        TransactionsView.resetDefaults();
-                        TransactionsView.render();
-                        ReportsView.render();
+                        refreshAll();
                         BackupView.renderLastExportInfo();
                     }
                 );
@@ -4417,7 +4652,6 @@
 
     /* =========================================================
        DEMO DATA (opt-in only, from Settings)
-       Adds sample records; never replaces or removes existing data.
     ========================================================= */
 
     var DemoData = {
@@ -4431,9 +4665,9 @@
         ],
 
         SAMPLE_TRANSACTIONS: [
-            { type: "income", narration: "Salary", accountName: "Salary", amount: 10000 },
-            { type: "expense", narration: "Grocery", accountName: "Household", amount: 250 },
-            { type: "expense", narration: "Rent", accountName: "Bank", amount: 3000 }
+            { type: "income",  narration: "Salary", accountName: "Salary",    amount: 10000, category: "Salary" },
+            { type: "expense", narration: "Grocery", accountName: "Household", amount: 250,   category: "Food" },
+            { type: "expense", narration: "Rent",    accountName: "Bank",      amount: 3000,  category: "Housing" }
         ],
 
         load: function () {
@@ -4441,7 +4675,7 @@
 
             DemoData.SAMPLE_ACCOUNTS.forEach(function (sample) {
                 if (!Accounts.isDuplicateName(sample.name, null)) {
-                    Accounts.add(sample.name, sample.openingBalance);
+                    Accounts.add(sample.name, Money.toMinor(sample.openingBalance));
                     accountsAdded += 1;
                 }
             });
@@ -4457,9 +4691,10 @@
                     Transactions.add({
                         date: todayIso,
                         type: sample.type,
+                        category: sample.category,
                         narration: sample.narration,
                         accountId: account.id,
-                        amount: sample.amount,
+                        amountMinor: Money.toMinor(sample.amount),
                         notes: ""
                     });
                     transactionsAdded += 1;
@@ -4482,7 +4717,6 @@
 
     var SmsParser = {
 
-        // "09-Sep-26" -> "2026-09-09"
         parseSmsDate: function (str) {
             if (!str) { return null; }
             var m = str.match(/(\d{1,2})-([A-Za-z]{3})-(\d{2})/);
@@ -4510,9 +4744,6 @@
             return m ? SmsParser.parseAmount(m[1]) : null;
         },
 
-        // Anchors mark the start of a NEW message. The (credited|debited)
-        // requirement on the "Current Acc" anchor stops the balance line
-        // inside a message from being read as a new message start.
         MESSAGE_START_ANCHORS: [
             /^Debit Card/i,
             /^Current Acc\s+\S+\s+(credited|debited)/i,
@@ -4543,9 +4774,6 @@
             });
             if (current.length > 0) { messages.push(current.join("\n")); }
 
-            // Known limitation: a security SMS whose OTP line is in the same
-            // message as "Dear Customer" may split in two. Both halves
-            // classify as NON_TRANSACTION, so nothing financial is affected.
             return messages;
         },
 
@@ -4648,8 +4876,6 @@
             return found ? found.reason : null;
         },
 
-        // Parser order matters: Transfer Charge must run before the
-        // generic Transfer parser. Unknown messages are never guessed.
         PARSERS: [],
 
         parseMessage: function (rawMessage) {
@@ -4702,7 +4928,6 @@
 
     /* =========================================================
        IMPORT SMS MODULE
-       Bridges SmsParser output into Accounts/Transactions.
     ========================================================= */
 
     var SMS_ACCOUNT_MAP_KEY = "pfm_sms_account_map";
@@ -4716,37 +4941,57 @@
 
         saveAccountMap: function (map) {
             try { window.localStorage.setItem(SMS_ACCOUNT_MAP_KEY, JSON.stringify(map)); }
-            catch (err) { /* non-fatal: mapping just won't be remembered */ }
+            catch (err) { /* non-fatal */ }
         },
 
         normalizeForFingerprint: function (str) {
             return (str || "").toString().trim().toLowerCase().replace(/\s+/g, " ");
         },
 
-        // Fingerprint excludes account: at parse time only the bank's
-        // card/account token is known, not which of your Accounts it maps to.
-        fingerprint: function (date, type, amount, narration) {
-            var amt = (typeof amount === "number" ? amount : parseFloat(amount) || 0).toFixed(2);
-            return [date, type, amt, ImportSms.normalizeForFingerprint(narration)].join("|");
+        // Fingerprint uses integer minor units, so it is exact.
+        fingerprint: function (date, type, amountMinor, narration) {
+            return [date, type, amountMinor, ImportSms.normalizeForFingerprint(narration)].join("|");
         },
 
-        findDuplicates: function (parsedRows, existingTransactions) {
-            var existingFingerprints = {};
+        // Converts parser output into integer-based rows and flags duplicates / bad amounts.
+        prepareRows: function (parsedRows, existingTransactions) {
+            var existing = Object.create(null);
             existingTransactions.forEach(function (t) {
-                existingFingerprints[ImportSms.fingerprint(t.date, t.type, t.amount, t.narration)] = true;
+                existing[ImportSms.fingerprint(t.date, t.type, t.amountMinor, t.narration)] = true;
             });
+
             return parsedRows.map(function (r) {
-                if (r.status !== "Parsed") { return r; }
-                var fp = ImportSms.fingerprint(r.date, r.type.toLowerCase(), r.amount, r.description);
-                return Object.assign({}, r, { duplicate: !!existingFingerprints[fp] });
+                var row = Object.assign({}, r);
+                row.duplicate = false;
+                row.amountError = null;
+                row.amountMinor = null;
+                row.balanceMinor = null;
+
+                if (row.balanceAfter !== null && row.balanceAfter !== undefined) {
+                    row.balanceMinor = Money.toMinor(row.balanceAfter);
+                }
+
+                if (row.status !== "Parsed") { return row; }
+
+                if (row.amount === null || row.amount === undefined) {
+                    row.amountError = "Amount missing from SMS.";
+                } else {
+                    row.amountMinor = Money.toMinor(row.amount);
+                }
+
+                if (!row.amountError) {
+                    row.duplicate = !!existing[ImportSms.fingerprint(row.date, row.type.toLowerCase(), row.amountMinor, row.description)];
+                }
+                return row;
             });
         },
 
-        // Warning-only balance check (never blocks import).
+        // Warning-only balance check using exact integer arithmetic (never blocks import).
         flagBalanceWarnings: function (rows) {
-            var groups = {};
+            var groups = Object.create(null);
             rows.forEach(function (r) {
-                if (r.status !== "Parsed" || r.currency !== "QAR" || r.balanceAfter == null) { return; }
+                if (r.status !== "Parsed" || r.currency !== "QAR") { return; }
+                if (r.balanceMinor === null || r.amountMinor === null || r.amountError) { return; }
                 var key = r.account || r.card;
                 if (!key) { return; }
                 (groups[key] = groups[key] || []).push(r);
@@ -4756,12 +5001,11 @@
                 var group = groups[key];
                 group.sort(function (a, b) { return (a.date + a.time).localeCompare(b.date + b.time); });
                 for (var i = 1; i < group.length; i++) {
-                    var prev = group[i - 1], curr = group[i];
+                    var prev = group[i - 1];
+                    var curr = group[i];
                     if (prev.pending || curr.pending) { continue; }
-                    var expected = prev.balanceAfter + (curr.type === "Income" ? curr.amount : -curr.amount);
-                    if (Math.abs(expected - curr.balanceAfter) > 0.01) {
-                        curr.balanceWarning = true;
-                    }
+                    var expected = prev.balanceMinor + (curr.type === "Income" ? curr.amountMinor : -curr.amountMinor);
+                    curr.balanceWarning = expected !== curr.balanceMinor;
                 }
             });
             return rows;
@@ -4770,7 +5014,7 @@
         buildImportNotes: function (r) {
             var lines = ["Imported from Bank SMS", "Category: " + r.category];
             if (r.card) { lines.push("Card: " + r.card); }
-            if (r.balanceAfter !== null && r.balanceAfter !== undefined) { lines.push("Balance after: QAR " + r.balanceAfter); }
+            if (r.balanceMinor !== null && r.balanceMinor !== undefined) { lines.push("Balance after: " + Money.toDecimalString(r.balanceMinor) + " QAR"); }
             if (r.reference) { lines.push("Reference: " + r.reference); }
             if (r.currency && r.currency !== "QAR") { lines.push("Original SMS amount: " + r.currency + " " + r.amount); }
             if (r.pending) { lines.push("Status: Pending at time of SMS"); }
@@ -4788,7 +5032,6 @@
             document.getElementById("sms-clear-selection-btn").addEventListener("click", function () { ImportSmsView.selectAll(false); });
             document.getElementById("sms-import-btn").addEventListener("click", ImportSmsView.handleImport);
 
-            // Row controls are bound by delegation so the handlers survive re-renders.
             var tbody = document.getElementById("sms-results-table-body");
             tbody.addEventListener("change", function (event) {
                 var target = event.target;
@@ -4814,20 +5057,28 @@
             var parsed = SmsParser.parseAllMessages(text);
             var existing = Transactions.getAll();
 
-            ImportSmsView.currentResults = ImportSms.findDuplicates(parsed, existing).map(function (r, i) {
+            var rows = ImportSms.prepareRows(parsed, existing).map(function (r, i) {
                 return Object.assign({ rowId: i, selected: false }, r);
             });
-            ImportSms.flagBalanceWarnings(ImportSmsView.currentResults);
+            ImportSms.flagBalanceWarnings(rows);
 
-            ImportSmsView.currentResults.forEach(function (r) {
-                r.selected = r.status === "Parsed" && !r.duplicate && r.currency === "QAR";
+            rows.forEach(function (r) {
+                r.selected = r.status === "Parsed" && !r.duplicate && r.currency === "QAR" && !r.amountError;
             });
+
+            ImportSmsView.currentResults = rows;
 
             document.getElementById("sms-results-card").style.display = "block";
             document.getElementById("sms-import-summary").textContent = "";
             ImportSmsView.renderSummary();
             ImportSmsView.renderMappingPanel();
             ImportSmsView.renderTable();
+        },
+
+        refreshMapping: function () {
+            if (ImportSmsView.currentResults.length > 0) {
+                ImportSmsView.renderMappingPanel();
+            }
         },
 
         renderSummary: function () {
@@ -4845,10 +5096,8 @@
                 "<span>Unknown: <b>" + unknown + "</b></span>";
         },
 
-        // One dropdown per distinct bank account/card token in this batch,
-        // mapped to one of your active Accounts. Remembered for next time.
         renderMappingPanel: function () {
-            var tokens = {};
+            var tokens = Object.create(null);
             ImportSmsView.currentResults.forEach(function (r) {
                 if (r.status === "Parsed") { tokens[r.account || r.card] = true; }
             });
@@ -4900,6 +5149,7 @@
                 var statusCell = r.status;
                 if (r.status === "Parsed") {
                     statusCell = '<span class="status-badge ' + (r.type === "Income" ? "type-income" : "type-expense") + '">' + r.status + "</span>";
+                    if (r.amountError) { statusCell += ' <span class="status-badge badge-unknown">Invalid amount</span>'; }
                     if (r.duplicate) { statusCell += ' <span class="status-badge badge-duplicate">Duplicate</span>'; }
                     if (r.currency && r.currency !== "QAR") { statusCell += ' <span class="status-badge badge-fx">Foreign currency</span>'; }
                     if (r.balanceWarning) { statusCell += ' <span class="status-badge badge-duplicate">Balance mismatch</span>'; }
@@ -4912,6 +5162,10 @@
                 }
 
                 var checkable = r.status === "Parsed";
+                var amountInput = checkable
+                    ? '<input type="text" inputmode="decimal" class="sms-amount-input' + (r.amountError ? " has-error" : "") + '" data-row-id="' + r.rowId + '" value="' + (r.amount != null ? r.amount : "") + '" aria-label="Amount"' + (r.amountError ? ' title="' + Utilities.escapeHtml(r.amountError) + '"' : "") + ">"
+                    : (r.amount != null ? r.amount : "");
+
                 return (
                     "<tr>" +
                         "<td>" + (checkable
@@ -4920,13 +5174,11 @@
                         "<td>" + Utilities.formatDateDisplay(r.date) + "</td>" +
                         "<td>" + (r.time || "") + "</td>" +
                         "<td>" + (r.type || "") + "</td>" +
-                        "<td>" + (r.category || "") + "</td>" +
+                        "<td>" + Utilities.escapeHtml(r.category || "") + "</td>" +
                         "<td>" + Utilities.escapeHtml(r.description || r.reason || "") + "</td>" +
-                        '<td class="amount">' + (checkable
-                            ? '<input type="text" inputmode="decimal" class="sms-amount-input" data-row-id="' + r.rowId + '" value="' + (r.amount != null ? r.amount : "") + '" aria-label="Amount">'
-                            : (r.amount != null ? r.amount : "")) + "</td>" +
+                        '<td class="amount">' + amountInput + "</td>" +
                         "<td>" + (r.currency || "") + "</td>" +
-                        '<td class="amount">' + (r.balanceAfter != null ? Utilities.formatCurrency(r.balanceAfter) : "") + "</td>" +
+                        '<td class="amount">' + (r.balanceMinor !== null ? Money.format(r.balanceMinor) : "") + "</td>" +
                         "<td>" + statusCell + "</td>" +
                     "</tr>"
                 );
@@ -4940,11 +5192,24 @@
 
         editAmount: function (rowId, value) {
             var r = ImportSmsView.currentResults.find(function (x) { return x.rowId === rowId; });
-            if (r) { r.amount = parseFloat(value) || 0; }
+            if (!r) { return; }
+
+            var parsed = Money.parseInput(value, false);
+            if (!parsed.ok) {
+                r.amountError = parsed.error;
+                r.selected = false;
+            } else {
+                r.amountError = null;
+                r.amountMinor = parsed.minor;
+                r.amount = parsed.minor / 1000;
+            }
+            ImportSmsView.renderTable();
         },
 
         selectAll: function (state) {
-            ImportSmsView.currentResults.forEach(function (r) { if (r.status === "Parsed") { r.selected = state; } });
+            ImportSmsView.currentResults.forEach(function (r) {
+                if (r.status === "Parsed") { r.selected = state && !r.amountError; }
+            });
             ImportSmsView.renderTable();
         },
 
@@ -4953,6 +5218,12 @@
 
             var accountMap = ImportSmsView.currentAccountMapFromInputs();
             var selectedRows = ImportSmsView.currentResults.filter(function (r) { return r.status === "Parsed" && r.selected; });
+
+            var invalid = selectedRows.filter(function (r) { return !!r.amountError; });
+            if (invalid.length > 0) {
+                UI.showNotification("Fix the invalid amount on " + invalid.length + " selected row(s) before importing.", "error");
+                return;
+            }
 
             var unmapped = selectedRows.filter(function (r) { return !accountMap[r.account || r.card]; });
             if (unmapped.length > 0) {
@@ -4970,16 +5241,15 @@
                 Transactions.add({
                     date: r.date,
                     type: r.type.toLowerCase(),
+                    category: r.category,
                     narration: r.description,
                     accountId: accountMap[r.account || r.card],
-                    amount: r.amount,
+                    amountMinor: r.amountMinor,
                     notes: ImportSms.buildImportNotes(r)
                 });
                 imported++;
                 r.status = "Imported";
             });
-
-            ImportSmsView.renderTable();
 
             var unknownCount = ImportSmsView.currentResults.filter(function (r) { return r.status === "Unknown"; }).length;
             var nonTxCount = ImportSmsView.currentResults.filter(function (r) { return r.status === "Non-Transaction"; }).length;
@@ -4995,16 +5265,23 @@
 
             UI.showNotification(imported + " transaction(s) imported.", "success");
 
-            DashboardView.render();
-            AccountsView.render();
-            TransactionsView.resetDefaults();
-            TransactionsView.render();
-            ReportsView.render();
+            refreshAll();
+            ImportSmsView.renderTable();
         }
     };
 
-    // Populate the parser's rule list only after all handlers exist.
-    // (Assigned above; kept here so the order of definitions is explicit.)
+    /* =========================================================
+       REFRESH
+       Single place that re-renders every view after a data change.
+    ========================================================= */
+
+    function refreshAll() {
+        DashboardView.render();
+        AccountsView.render();
+        TransactionsView.render();
+        ReportsView.render();
+        ImportSmsView.refreshMapping();
+    }
 
     /* =========================================================
        STARTUP
@@ -5015,16 +5292,11 @@
     UI.viewRenderers.dashboard = DashboardView.render;
     UI.viewRenderers.reports = ReportsView.render;
     UI.viewRenderers.settings = ServerSyncView.render;
-    UI.viewRenderers.importSms = function () {
-        if (ImportSmsView.currentResults.length > 0) { ImportSmsView.renderMappingPanel(); }
-    };
+    UI.viewRenderers.importSms = ImportSmsView.refreshMapping;
 
     document.addEventListener("DOMContentLoaded", function () {
         Storage.init();
 
-        // Reconnect to a previously configured server BEFORE the first
-        // render so the UI reflects the server's data. Falls back to
-        // localStorage automatically if the server is unreachable.
         ServerSync.init().then(function () {
             UI.init();
             AccountsView.init();
