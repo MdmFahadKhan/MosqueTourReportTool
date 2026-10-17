@@ -2429,7 +2429,25 @@
             });
             document.getElementById("account-modal-close-x").addEventListener("click", AccountsView.cancelEdit);
 
+            // Edit / Deactivate buttons are handled by delegation on the
+            // containers, which are created once in the HTML. Rows and cards
+            // are re-rendered via innerHTML, so per-button listeners would be lost.
+            document.getElementById("accounts-table-body").addEventListener("click", AccountsView.handleRowAction);
+            document.getElementById("accounts-cards").addEventListener("click", AccountsView.handleRowAction);
+
             AccountsView.render();
+        },
+
+        handleRowAction: function (event) {
+            var btn = event.target.closest("[data-action]");
+            if (!btn) { return; }
+            var id = btn.getAttribute("data-id");
+            var action = btn.getAttribute("data-action");
+            if (action === "edit") {
+                AccountsView.startEdit(id);
+            } else if (action === "deactivate") {
+                AccountsView.confirmDeactivate(id);
+            }
         },
 
         render: function () {
@@ -2446,13 +2464,15 @@
 
             tbody.innerHTML = accounts.map(AccountsView.renderRow).join("");
             cardsWrap.innerHTML = accounts.map(AccountsView.renderCard).join("");
+        },
 
-            accounts.forEach(function (acc) {
-                var editBtn = document.getElementById("acc-edit-" + acc.id);
-                var deactivateBtn = document.getElementById("acc-deactivate-" + acc.id);
-                if (editBtn) { editBtn.addEventListener("click", function () { AccountsView.startEdit(acc.id); }); }
-                if (deactivateBtn) { deactivateBtn.addEventListener("click", function () { AccountsView.confirmDeactivate(acc.id); }); }
-            });
+        renderActions: function (acc) {
+            return (
+                '<button type="button" class="btn-link-text" data-action="edit" data-id="' + acc.id + '">Edit</button>' +
+                (acc.status === "active"
+                    ? '<button type="button" class="btn-danger-text" data-action="deactivate" data-id="' + acc.id + '">Deactivate</button>'
+                    : "")
+            );
         },
 
         renderRow: function (acc) {
@@ -2460,9 +2480,6 @@
             var statusLabel = acc.status === "active" ? "Active" : "Inactive";
             var summary = Accounts.getBalanceSummary(acc.id);
             var balanceClass = summary.currentBalance < 0 ? "amount-expense" : "amount-income";
-            var deactivateBtn = acc.status === "active"
-                ? '<button type="button" class="btn-danger-text" id="acc-deactivate-' + acc.id + '">Deactivate</button>'
-                : "";
             return (
                 "<tr>" +
                     "<td>" + Utilities.escapeHtml(acc.name) + "</td>" +
@@ -2471,10 +2488,7 @@
                     '<td class="amount amount-expense">' + Utilities.formatCurrency(summary.expense) + "</td>" +
                     '<td class="amount ' + balanceClass + '" style="font-weight:600;">' + Utilities.formatCurrency(summary.currentBalance) + "</td>" +
                     '<td><span class="status-badge ' + statusClass + '">' + statusLabel + "</span></td>" +
-                    "<td>" +
-                        '<button type="button" class="btn-link-text" id="acc-edit-' + acc.id + '">Edit</button>' +
-                        deactivateBtn +
-                    "</td>" +
+                    "<td>" + AccountsView.renderActions(acc) + "</td>" +
                 "</tr>"
             );
         },
@@ -2484,9 +2498,6 @@
             var statusLabel = acc.status === "active" ? "Active" : "Inactive";
             var summary = Accounts.getBalanceSummary(acc.id);
             var balanceClass = summary.currentBalance < 0 ? "amount-expense" : "amount-income";
-            var deactivateBtn = acc.status === "active"
-                ? '<button type="button" class="btn-danger-text" id="acc-deactivate-' + acc.id + '">Deactivate</button>'
-                : "";
             return (
                 '<div class="record-card">' +
                     '<div class="record-card-top">' +
@@ -2498,8 +2509,7 @@
                     '<div class="record-card-row amount-expense"><span>Expense</span><span>' + Utilities.formatCurrency(summary.expense) + "</span></div>" +
                     '<div class="record-card-row ' + balanceClass + '" style="font-weight:600; font-size:1rem;"><span>Current Balance</span><span>' + Utilities.formatCurrency(summary.currentBalance) + "</span></div>" +
                     '<div class="record-card-actions">' +
-                        '<button type="button" class="btn-link-text" id="acc-edit-' + acc.id + '">Edit</button>' +
-                        deactivateBtn +
+                        AccountsView.renderActions(acc) +
                     "</div>" +
                 "</div>"
             );
@@ -2729,6 +2739,12 @@
             document.getElementById("transaction-screenshot-btn").addEventListener("click", TransactionsView.handleScreenshot);
             document.getElementById("transaction-export-pdf-btn").addEventListener("click", TransactionsView.handleExportPdf);
 
+            // Edit / Delete buttons are handled by delegation on the
+            // containers, which are created once in the HTML. Rows and cards
+            // are re-rendered via innerHTML, so per-button listeners would be lost.
+            document.getElementById("transactions-table-body").addEventListener("click", TransactionsView.handleRowAction);
+            document.getElementById("transactions-cards").addEventListener("click", TransactionsView.handleRowAction);
+
             // On phones the summary starts collapsed so the list is visible first.
             TransactionsView.summaryCollapsed = window.matchMedia("(max-width: 860px)").matches;
 
@@ -2738,6 +2754,18 @@
             TransactionsView.resetDefaults();
             TransactionsView.bindFilterEvents();
             TransactionsView.render();
+        },
+
+        handleRowAction: function (event) {
+            var btn = event.target.closest("[data-action]");
+            if (!btn) { return; }
+            var id = btn.getAttribute("data-id");
+            var action = btn.getAttribute("data-action");
+            if (action === "edit") {
+                TransactionsView.startEdit(id);
+            } else if (action === "delete") {
+                TransactionsView.confirmDelete(id);
+            }
         },
 
         toggleFilterPanel: function () {
@@ -3316,13 +3344,11 @@
             tbody.innerHTML = transactions.map(TransactionsView.renderRow).join("");
             cardsWrap.innerHTML = transactions.map(TransactionsView.renderCard).join("");
 
+            // Only the checkboxes need per-element bindings here. Edit and
+            // Delete are handled by delegation (see handleRowAction).
             transactions.forEach(function (t) {
-                var editBtn = document.getElementById("txn-edit-" + t.id);
-                var deleteBtn = document.getElementById("txn-delete-" + t.id);
                 var selectCheckbox = document.getElementById("txn-select-" + t.id);
                 var selectCheckboxCard = document.getElementById("txn-select-card-" + t.id);
-                if (editBtn) { editBtn.addEventListener("click", function () { TransactionsView.startEdit(t.id); }); }
-                if (deleteBtn) { deleteBtn.addEventListener("click", function () { TransactionsView.confirmDelete(t.id); }); }
                 if (selectCheckbox) {
                     selectCheckbox.addEventListener("change", function () { TransactionsView.toggleSelected(t.id, selectCheckbox.checked); });
                 }
@@ -3333,6 +3359,13 @@
 
             TransactionsView.updateBulkActionsUi();
             TransactionsView.updateSelectAllCheckboxState();
+        },
+
+        renderActions: function (t) {
+            return (
+                '<button type="button" class="btn-link-text" data-action="edit" data-id="' + t.id + '">Edit</button>' +
+                '<button type="button" class="btn-danger-text" data-action="delete" data-id="' + t.id + '">Delete</button>'
+            );
         },
 
         renderRow: function (t) {
@@ -3349,10 +3382,7 @@
                     "<td>" + Utilities.escapeHtml(t.narration) + "</td>" +
                     "<td>" + Utilities.escapeHtml(t.accountName) + "</td>" +
                     '<td class="amount ' + amountClass + '">' + Utilities.formatCurrency(t.amount) + "</td>" +
-                    "<td>" +
-                        '<button type="button" class="btn-link-text" id="txn-edit-' + t.id + '">Edit</button>' +
-                        '<button type="button" class="btn-danger-text" id="txn-delete-' + t.id + '">Delete</button>' +
-                    "</td>" +
+                    "<td>" + TransactionsView.renderActions(t) + "</td>" +
                 "</tr>"
             );
         },
@@ -3374,8 +3404,7 @@
                     '<div class="record-card-row"><span>' + Utilities.formatDateDisplay(t.date) + '</span><span>' + Utilities.escapeHtml(t.accountName) + "</span></div>" +
                     '<div class="record-card-row ' + amountClass + '" style="font-size:1rem; font-weight:600;"><span>Amount</span><span>' + Utilities.formatCurrency(t.amount) + "</span></div>" +
                     '<div class="record-card-actions">' +
-                        '<button type="button" class="btn-link-text" id="txn-edit-' + t.id + '">Edit</button>' +
-                        '<button type="button" class="btn-danger-text" id="txn-delete-' + t.id + '">Delete</button>' +
+                        TransactionsView.renderActions(t) +
                     "</div>" +
                 "</div>"
             );
