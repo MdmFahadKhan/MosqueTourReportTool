@@ -1,0 +1,925 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="theme-color" content="#1B7B8A">
+    <title>Mosque Tour Q&amp;A Learning Guide</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        :root {
+            --primary: #1B7B8A;
+            --primary-light: #0D9488;
+            --gold: #D4AF37;
+            --gold-light: #F59E0B;
+            --bg-light: #F8F9FA;
+            --bg-white: #FFFFFF;
+            --text-dark: #1F2937;
+            --text-gray: #6B7280;
+            --border-light: #E5E7EB;
+            --success: #10B981;
+            --shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+
+        body.dark-mode {
+            --bg-light: #1F2937;
+            --bg-white: #111827;
+            --text-dark: #F3F4F6;
+            --text-gray: #D1D5DB;
+            --border-light: #374151;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background-color: var(--bg-light);
+            color: var(--text-dark);
+            line-height: 1.6;
+            transition: background-color 0.3s, color 0.3s;
+            -webkit-text-size-adjust: 100%;
+            padding-bottom: env(safe-area-inset-bottom);
+        }
+
+        button { font-family: inherit; -webkit-tap-highlight-color: transparent; }
+
+        .container { max-width: 900px; margin: 0 auto; padding: 20px; }
+
+        /* Header */
+        header {
+            background-color: var(--bg-white);
+            border-bottom: 3px solid var(--primary);
+            padding: 16px 0;
+            margin-bottom: 24px;
+            box-shadow: var(--shadow);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .header-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+
+        h1 { font-size: 28px; color: var(--primary); flex: 1; min-width: 200px; }
+
+        .header-controls {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .menu-btn {
+            display: none;
+            width: 44px;
+            height: 44px;
+            border: 1px solid var(--border-light);
+            border-radius: 8px;
+            background: var(--bg-white);
+            color: var(--primary);
+            font-size: 22px;
+            cursor: pointer;
+        }
+
+        .btn, .search-input {
+            padding: 10px 15px;
+            border: 1px solid var(--border-light);
+            border-radius: 6px;
+            background-color: var(--bg-white);
+            color: var(--text-dark);
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.3s;
+        }
+
+        .btn:hover, .btn:focus-visible {
+            background-color: var(--primary);
+            color: white;
+            border-color: var(--primary);
+            outline: none;
+        }
+
+        .search-input { min-width: 200px; padding: 10px 12px; cursor: text; }
+        .search-input::placeholder { color: var(--text-gray); }
+
+        .dark-toggle {
+            position: relative;
+            width: 50px;
+            height: 28px;
+            padding: 0;
+            background-color: var(--border-light);
+            border: none;
+            border-radius: 14px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+            flex-shrink: 0;
+        }
+        .dark-toggle::after {
+            content: '☀️';
+            position: absolute;
+            top: 4px;
+            left: 4px;
+            width: 20px;
+            height: 20px;
+            transition: left 0.3s;
+            font-size: 14px;
+        }
+        body.dark-mode .dark-toggle { background-color: var(--primary); }
+        body.dark-mode .dark-toggle::after { content: '🌙'; left: 26px; }
+
+        /* Progress */
+        .progress-section {
+            background-color: var(--bg-white);
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 24px;
+            box-shadow: var(--shadow);
+        }
+
+        .progress-text { font-size: 16px; font-weight: 600; color: var(--primary); }
+
+        .progress-bar {
+            width: 100%;
+            height: 24px;
+            background-color: var(--bg-light);
+            border-radius: 12px;
+            overflow: hidden;
+            border: 2px solid var(--border-light);
+            margin-top: 12px;
+        }
+
+        .progress-fill {
+            height: 100%;
+            width: 0%;
+            background: linear-gradient(90deg, var(--primary), var(--primary-light));
+            transition: width 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 12px;
+            font-weight: bold;
+        }
+
+        .bulk-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        .bulk-actions .btn { flex: 1; min-width: 120px; }
+
+        .toggle-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 14px;
+            border: 1px solid var(--border-light);
+            border-radius: 6px;
+            background: var(--bg-white);
+            color: var(--text-dark);
+            font-size: 14px;
+            cursor: pointer;
+            user-select: none;
+        }
+        .toggle-pill input { width: 18px; height: 18px; accent-color: var(--primary); }
+
+        /* Sections */
+        .section {
+            background-color: var(--bg-white);
+            border-left: 5px solid var(--gold-light);
+            border-radius: 8px;
+            margin-bottom: 16px;
+            overflow: hidden;
+            box-shadow: var(--shadow);
+        }
+
+        .section-header {
+            padding: 16px 20px;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 10px;
+            background-color: var(--bg-white);
+            min-height: 44px;
+        }
+        .section-header:hover { background-color: var(--bg-light); }
+
+        .section-title { display: flex; align-items: center; gap: 15px; flex: 1; min-width: 0; }
+
+        .section-number {
+            background: linear-gradient(135deg, var(--primary), var(--primary-light));
+            color: white;
+            width: 50px;
+            height: 50px;
+            min-width: 50px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 18px;
+        }
+
+        .section-info { flex: 1; min-width: 0; }
+        .section-name { font-size: 18px; font-weight: 600; color: var(--text-dark); }
+        .section-progress { font-size: 13px; color: var(--text-gray); margin-top: 3px; }
+        .section-progress .percent { color: var(--primary); font-weight: 600; }
+
+        .section-toggle {
+            font-size: 26px;
+            color: var(--primary);
+            transition: transform 0.3s;
+            line-height: 1;
+        }
+        .section.collapsed .section-toggle { transform: rotate(-90deg); }
+
+        .section-content {
+            padding: 16px 20px 20px;
+            border-top: 1px solid var(--border-light);
+        }
+        .section.collapsed .section-content { display: none; }
+
+        .section-controls { display: flex; gap: 10px; margin-bottom: 16px; flex-wrap: wrap; }
+
+        .section-btn {
+            padding: 8px 16px;
+            min-height: 40px;
+            border: 1px solid var(--border-light);
+            border-radius: 6px;
+            background-color: var(--bg-light);
+            color: var(--primary);
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+        .section-btn:hover { background-color: var(--primary); color: white; border-color: var(--primary); }
+
+        /* Q&A items */
+        .qa-item {
+            padding: 16px 0;
+            border-bottom: 1px solid var(--border-light);
+        }
+        .qa-item:last-child { border-bottom: none; }
+
+        .question-label {
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            cursor: pointer;
+        }
+
+        .question-checkbox {
+            margin-top: 4px;
+            width: 20px;
+            height: 20px;
+            flex-shrink: 0;
+            cursor: pointer;
+            accent-color: var(--primary);
+        }
+
+        .question {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--text-dark);
+            flex: 1;
+        }
+
+        .qa-item.learned .question { color: var(--text-gray); text-decoration: line-through; }
+
+        .answer-toggle {
+            margin: 12px 0 0 32px;
+            padding: 8px 14px;
+            min-height: 40px;
+            border: 1px solid var(--gold);
+            border-radius: 6px;
+            background: var(--bg-white);
+            color: var(--primary);
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+        .answer-toggle:hover, .answer-toggle:focus-visible {
+            background: var(--gold);
+            color: #141413;
+            outline: none;
+        }
+
+        .answer {
+            font-size: 15px;
+            color: var(--text-gray);
+            margin: 10px 0 0 32px;
+            padding: 12px 15px;
+            background-color: var(--bg-light);
+            border-left: 3px solid var(--gold);
+            border-radius: 4px;
+            line-height: 1.8;
+        }
+        .answer[hidden] { display: none; }
+
+        .no-results {
+            text-align: center;
+            padding: 40px 20px;
+            color: var(--text-gray);
+            font-size: 16px;
+        }
+
+        /* Back to top */
+        .back-to-top {
+            position: fixed;
+            right: 18px;
+            bottom: calc(18px + env(safe-area-inset-bottom));
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            border: none;
+            background: var(--primary);
+            color: white;
+            font-size: 22px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.25);
+            cursor: pointer;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s;
+            z-index: 150;
+        }
+        .back-to-top.show { opacity: 1; pointer-events: auto; }
+
+        /* Quiz */
+        .quiz-modal {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background-color: rgba(0, 0, 0, 0.7);
+            z-index: 200;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        .quiz-modal.active { display: flex; }
+
+        .quiz-content {
+            background-color: var(--bg-white);
+            border-radius: 12px;
+            padding: 32px;
+            max-width: 600px;
+            width: 100%;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+        }
+
+        .quiz-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+        }
+        .quiz-header h2 { color: var(--primary); font-size: 24px; }
+
+        .quiz-close {
+            background: none;
+            border: none;
+            font-size: 28px;
+            cursor: pointer;
+            color: var(--text-gray);
+            width: 44px;
+            height: 44px;
+        }
+
+        .quiz-question {
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--text-dark);
+            margin-bottom: 24px;
+            min-height: 60px;
+        }
+
+        .quiz-answer {
+            display: none;
+            padding: 20px;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--success);
+            border-radius: 6px;
+            margin-bottom: 20px;
+            font-size: 15px;
+            color: var(--text-gray);
+            line-height: 1.8;
+        }
+        .quiz-answer.visible { display: block; }
+
+        .quiz-controls { display: flex; gap: 10px; flex-wrap: wrap; }
+
+        .quiz-btn {
+            padding: 12px 20px;
+            min-height: 46px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            transition: all 0.3s;
+            flex: 1;
+            min-width: 120px;
+        }
+        .quiz-show-btn { background-color: var(--gold-light); color: white; }
+        .quiz-show-btn:hover { background-color: var(--gold); }
+        .quiz-next-btn { background-color: var(--primary); color: white; }
+        .quiz-next-btn:hover { background-color: var(--primary-light); }
+
+        .quiz-progress {
+            font-size: 13px;
+            color: var(--text-gray);
+            margin-top: 15px;
+            text-align: center;
+        }
+
+        /* Mobile */
+        @media (max-width: 768px) {
+            .container { padding: 12px; }
+
+            header { padding: 10px 0; margin-bottom: 14px; }
+
+            .header-content { flex-wrap: nowrap; gap: 8px; }
+
+            h1 { font-size: 18px; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+            .menu-btn { display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0; }
+
+            /* Only the title stays visible until the menu is opened */
+            .header-controls { display: none; width: 100%; flex-direction: column; align-items: stretch; }
+            .header-controls.open { display: flex; }
+
+            .search-input { width: 100%; min-width: 0; font-size: 16px; /* prevents iOS zoom */ }
+
+            .header-controls .btn { width: 100%; min-height: 44px; }
+
+            .header-row { display: flex; gap: 10px; align-items: center; justify-content: space-between; width: 100%; }
+
+            .progress-section { padding: 16px; margin-bottom: 16px; }
+            .progress-text { font-size: 14px; }
+
+            .bulk-actions .btn, .toggle-pill { flex: 1 1 100%; min-width: 0; justify-content: center; min-height: 44px; }
+
+            .section-header { padding: 14px 16px; }
+            .section-content { padding: 12px 14px 16px; }
+            .section-number { width: 40px; height: 40px; min-width: 40px; font-size: 16px; }
+            .section-name { font-size: 16px; }
+            .section-btn { flex: 1; min-height: 44px; }
+
+            .question { font-size: 15px; }
+            .question-checkbox { width: 22px; height: 22px; }
+            .answer-toggle { margin-left: 0; width: 100%; min-height: 44px; font-size: 15px; }
+            .answer { margin-left: 0; font-size: 14px; }
+
+            .quiz-modal { padding: 0; align-items: flex-end; }
+            .quiz-content { max-height: 92vh; border-radius: 16px 16px 0 0; padding: 22px 18px calc(22px + env(safe-area-inset-bottom)); max-width: none; }
+            .quiz-question { font-size: 17px; }
+            .quiz-btn { min-width: 0; }
+        }
+
+        /* Print */
+        @media print {
+            header, .bulk-actions, .section-controls, .section-btn, .answer-toggle, .back-to-top, .progress-section, .quiz-modal {
+                display: none !important;
+            }
+            body { background-color: white; color: black; }
+            .container { max-width: none; padding: 0; }
+            .section { page-break-inside: avoid; border: 1px solid #ccc; margin-bottom: 16px; box-shadow: none; }
+            .section-content { display: block !important; }
+            .section.collapsed .section-content { display: block !important; }
+            .qa-item { display: block !important; }
+            .answer[hidden] { display: block !important; }
+            .answer { background-color: #f5f5f5; color: #000; }
+            .question-checkbox { display: none; }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="container header-content">
+            <div class="header-row" style="flex:1; min-width:0;">
+                <h1>🕌 Mosque Tour Training</h1>
+                <button class="menu-btn" id="menuBtn" aria-label="Toggle menu" aria-expanded="false" aria-controls="headerControls">☰</button>
+            </div>
+            <div class="header-controls" id="headerControls">
+                <input type="search" class="search-input" id="searchInput" placeholder="Search questions..." aria-label="Search questions">
+                <div class="header-row">
+                    <button class="btn dark-toggle" id="darkModeToggle" title="Toggle dark mode" aria-label="Toggle dark mode"></button>
+                    <button class="btn" id="quizModeBtn">Quiz Mode</button>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <div class="container">
+        <div class="progress-section">
+            <div class="progress-text">Overall Progress</div>
+            <div class="progress-bar">
+                <div class="progress-fill" id="overallProgress">
+                    <span id="progressPercent">0%</span>
+                </div>
+            </div>
+            <div class="progress-text" style="margin-top: 10px; font-size: 14px;">
+                <span id="learnedCount">0</span> of <span id="totalCount">0</span> questions learned
+            </div>
+            <div class="bulk-actions">
+                <button class="btn" id="markAllBtn">✓ Mark All as Learned</button>
+                <button class="btn" id="clearAllBtn">✗ Clear All</button>
+                <button class="btn" id="toggleAllAnswersBtn">Show All Answers</button>
+                <label class="toggle-pill">
+                    <input type="checkbox" id="hideLearnedToggle"> Hide learned questions
+                </label>
+            </div>
+        </div>
+
+        <div id="sectionsContainer"></div>
+
+        <div class="no-results" id="noResults" style="display: none;">
+            No questions match your search. Try different keywords.
+        </div>
+    </div>
+
+    <button class="back-to-top" id="backToTop" aria-label="Back to top">↑</button>
+
+    <!-- Quiz Modal -->
+    <div class="quiz-modal" id="quizModal" role="dialog" aria-modal="true" aria-labelledby="quizTitle">
+        <div class="quiz-content">
+            <div class="quiz-header">
+                <h2 id="quizTitle">Quiz Mode</h2>
+                <button class="quiz-close" id="quizClose" aria-label="Close quiz">✕</button>
+            </div>
+            <div class="quiz-question" id="quizQuestion"></div>
+            <div class="quiz-answer" id="quizAnswer"></div>
+            <div class="quiz-controls">
+                <button class="quiz-btn quiz-show-btn" id="quizShowBtn">Show Answer</button>
+                <button class="quiz-btn quiz-next-btn" id="quizNextBtn">Next Question</button>
+            </div>
+            <div class="quiz-progress">
+                <span id="quizProgressText">Question 1 of 0</span>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ---------- Data ----------
+        const data = [
+            {
+                id: 101,
+                title: "Greeting & Introduction",
+                questions: [
+                    {
+                        q: "What is the first thing I should do when visitors arrive?",
+                        a: "Greet them with a big smile and a warm heart. Make them feel welcome."
+                    },
+                    {
+                        q: "What should I say to break the ice?",
+                        a: "Introduce yourself. Ask their name and which country they are from. Say a friendly sentence or two about their country to make them feel comfortable."
+                    },
+                    {
+                        q: "What rules should I explain before entering the mosque?",
+                        a: "Everyone takes off their shoes. Men wearing shorts will wear an Ezaar (wrap). Women will wear an Abaya (cloak)."
+                    }
+                ]
+            },
+            {
+                id: 102,
+                title: "Talking About the Mosque",
+                questions: [
+                    {
+                        q: "What should visitors do first inside the mosque?",
+                        a: "Allow them for about 30 seconds to walk around and enjoy the peaceful atmosphere. Let them know they are welcome to take photos and offer to take a photo for them if they would like."
+                    },
+                    {
+                        q: "What can I tell them about Katara Masjid?",
+                        a: "The Katara (Blue) Mosque is one of the most beautiful mosques in Qatar. It was designed by the renowned Turkish mosque designer Zainab Fadil Oglu. Its decorative artwork was created by restoration experts from Dolmabahce Palace, Istanbul. The mosque features beautiful turquoise and purple mosaic patterns on the exterior, complemented by a stunning interior. Its minaret, dome, and mihrab (prayer niche) are inspired by the architecture of famous mosques from around the world. The tiles are hand-painted, and 24-karat gold has been used in the design of the mosque's nine domes."
+                    },
+                    {
+                        q: "Why are there no pictures or statues of God?",
+                        a: "We believe that no image or picture can truly represent Almighty God. No one can imagine what God looks like, as His reality is beyond human imagination. As God says in the Quran: \"There is nothing like Him.\""
+                    }
+                ]
+            },
+            {
+                id: 103,
+                title: "Talking About Prayer",
+                questions: [
+                    {
+                        q: "Which direction do Muslims face when praying?",
+                        a: "Muslims around the world face the same direction during prayer, called the Qiblah, which is towards Makkah. This symbolizes the unity of Muslims and our worship of the One God."
+                    },
+                    {
+                        q: "What is the call to prayer (Adhaan)?",
+                        a: "Before each prayer, one person gives a call to prayer called the Adhaan. It is a reminder and a declaration of our faith. Show visitors where it is delivered from and ask if they've heard it before."
+                    },
+                    {
+                        q: "Do Muslims consider the Imam to be a holy or sacred person?",
+                        a: "No. An Imam is an ordinary Muslim, just like everyone else. He can marry, have children, and live a normal family life. He is chosen to lead the prayer because of his knowledge of Islam, good character, and ability to guide the congregation—not because he is considered holy or has any special spiritual status. In Islam, Muslims do not confess their sins to an Imam or any other person. Instead, we turn directly to God, confess our sins to Him, sincerely repent, and ask Him alone for forgiveness. There is no intermediary between a person and God."
+                    },
+                    {
+                        q: "What do the blue lines on the carpet mean?",
+                        a: "The blue lines on the carpet guide worshippers to stand in neat, straight rows, shoulder to shoulder. This arrangement symbolizes equality in Islam—there is no difference between rich or poor, black or white, Arab or non-Arab. Everyone stands together as one community before Allah."
+                    },
+                    {
+                        q: "How many times do Muslims pray each day? Are there any special prayers?",
+                        a: "Muslims perform five daily prayers, which are obligatory for every adult Muslim. On Fridays, there is a special congregational prayer called the Friday Prayer (Jumu'ah). Before the prayer, the Imam delivers a sermon that offers spiritual guidance, reminds Muslims of their purpose in life and accountability before God, and often addresses everyday matters and current issues relevant to the community."
+                    },
+                    {
+                        q: "What are the different positions (postures) used during prayer?",
+                        a: "The main positions in prayer are standing, bowing, and prostrating. Standing represents obedience to God, bowing expresses respect and glorification, and prostrating shows complete humility and submission before God."
+                    }
+                ]
+            }
+        ];
+
+        const TOTAL = data.reduce((sum, s) => sum + s.questions.length, 0);
+        const KEYS = { learned: 'mosqueToursLearned', dark: 'darkMode', hideLearned: 'mosqueHideLearned' };
+
+        // ---------- State ----------
+        let learned = {};            // { "101-0": true }
+        let openAnswers = {};        // { "101-0": true } – session only
+        let expandedSections = {};   // { 101: true }
+        let hideLearned = false;
+        let searchTerm = '';
+        let quizQuestions = [];
+        let quizIndex = 0;
+
+        const $ = id => document.getElementById(id);
+
+        // Safe storage wrappers (private mode / blocked storage can throw)
+        const store = {
+            get(key) { try { return localStorage.getItem(key); } catch (e) { return null; } },
+            set(key, val) { try { localStorage.setItem(key, val); } catch (e) { /* ignore */ } }
+        };
+
+        // ---------- Init ----------
+        function init() {
+            try { learned = JSON.parse(store.get(KEYS.learned) || '{}'); } catch (e) { learned = {}; }
+            hideLearned = store.get(KEYS.hideLearned) === 'true';
+            $('hideLearnedToggle').checked = hideLearned;
+            if (store.get(KEYS.dark) === 'true') document.body.classList.add('dark-mode');
+
+            bindEvents();
+            renderSections();
+            updateProgress();
+        }
+
+        function bindEvents() {
+            $('menuBtn').addEventListener('click', toggleMenu);
+            $('darkModeToggle').addEventListener('click', toggleDarkMode);
+            $('searchInput').addEventListener('input', e => {
+                searchTerm = e.target.value.trim().toLowerCase();
+                renderSections();
+            });
+            $('markAllBtn').addEventListener('click', markAllLearned);
+            $('clearAllBtn').addEventListener('click', clearAll);
+            $('toggleAllAnswersBtn').addEventListener('click', toggleAllAnswers);
+            $('hideLearnedToggle').addEventListener('change', e => {
+                hideLearned = e.target.checked;
+                store.set(KEYS.hideLearned, hideLearned);
+                renderSections();
+            });
+            $('quizModeBtn').addEventListener('click', startQuiz);
+            $('quizClose').addEventListener('click', closeQuiz);
+            $('quizShowBtn').addEventListener('click', showQuizAnswer);
+            $('quizNextBtn').addEventListener('click', nextQuizQuestion);
+            $('quizModal').addEventListener('click', e => { if (e.target.id === 'quizModal') closeQuiz(); });
+
+            // Delegated events for sections (rendered dynamically)
+            const container = $('sectionsContainer');
+            container.addEventListener('click', onSectionsClick);
+            container.addEventListener('change', onSectionsChange);
+            container.addEventListener('keydown', e => {
+                if ((e.key === 'Enter' || e.key === ' ') && e.target.classList.contains('section-header')) {
+                    e.preventDefault();
+                    toggleSection(e.target.parentElement);
+                }
+            });
+
+            // Back to top
+            window.addEventListener('scroll', () => {
+                $('backToTop').classList.toggle('show', window.scrollY > 400);
+            }, { passive: true });
+            $('backToTop').addEventListener('click', () => window.scrollTo({ top: 0, behavior: 'smooth' }));
+        }
+
+        // ---------- Header menu (mobile) ----------
+        function toggleMenu() {
+            const panel = $('headerControls');
+            const open = panel.classList.toggle('open');
+            $('menuBtn').setAttribute('aria-expanded', open);
+            $('menuBtn').textContent = open ? '✕' : '☰';
+        }
+
+        function toggleDarkMode() {
+            document.body.classList.toggle('dark-mode');
+            store.set(KEYS.dark, document.body.classList.contains('dark-mode'));
+        }
+
+        // ---------- Rendering ----------
+        function renderSections() {
+            const container = $('sectionsContainer');
+            let visibleCount = 0;
+            const html = data.map(section => {
+                const items = section.questions
+                    .map((qa, idx) => ({ qa, id: `${section.id}-${idx}` }))
+                    .filter(({ qa, id }) =>
+                        (!searchTerm || qa.q.toLowerCase().includes(searchTerm)) &&
+                        !(hideLearned && learned[id]));
+
+                if (searchTerm && items.length === 0) return '';
+                visibleCount += items.length;
+
+                const sectionLearned = section.questions.filter((_, i) => learned[`${section.id}-${i}`]).length;
+                const pct = Math.round((sectionLearned / section.questions.length) * 100);
+                const isOpen = searchTerm ? true : !!expandedSections[section.id];
+
+                const questionsHtml = items.map(({ qa, id }) => {
+                    const isLearned = !!learned[id];
+                    const isOpenAns = !!openAnswers[id];
+                    return `
+                        <div class="qa-item ${isLearned ? 'learned' : ''}" data-id="${id}">
+                            <label class="question-label">
+                                <input type="checkbox" class="question-checkbox" data-id="${id}" ${isLearned ? 'checked' : ''}>
+                                <span class="question">${qa.q}</span>
+                            </label>
+                            <button class="answer-toggle" data-id="${id}" aria-expanded="${isOpenAns}">
+                                ${isOpenAns ? 'Hide answer' : 'Show answer'}
+                            </button>
+                            <div class="answer" ${isOpenAns ? '' : 'hidden'}>${qa.a}</div>
+                        </div>`;
+                }).join('');
+
+                return `
+                    <div class="section ${isOpen ? '' : 'collapsed'}" data-section-id="${section.id}">
+                        <div class="section-header" role="button" tabindex="0" aria-expanded="${isOpen}">
+                            <div class="section-title">
+                                <div class="section-number">${section.id}</div>
+                                <div class="section-info">
+                                    <div class="section-name">${section.title}</div>
+                                    <div class="section-progress">${sectionLearned} of ${section.questions.length} learned · <span class="percent">${pct}%</span></div>
+                                </div>
+                            </div>
+                            <span class="section-toggle" aria-hidden="true">›</span>
+                        </div>
+                        <div class="section-content">
+                            <div class="section-controls">
+                                <button class="section-btn mark-section" data-section="${section.id}">Mark All</button>
+                            </div>
+                            ${questionsHtml}
+                        </div>
+                    </div>`;
+            }).join('');
+
+            container.innerHTML = html;
+            $('noResults').style.display = (searchTerm && visibleCount === 0) ? 'block' : 'none';
+        }
+
+        // ---------- Event handlers ----------
+        function onSectionsClick(e) {
+            const answerBtn = e.target.closest('.answer-toggle');
+            if (answerBtn) { toggleAnswer(answerBtn); return; }
+
+            const markBtn = e.target.closest('.mark-section');
+            if (markBtn) { markSectionLearned(Number(markBtn.dataset.section)); return; }
+
+            const header = e.target.closest('.section-header');
+            if (header) toggleSection(header.parentElement);
+        }
+
+        function onSectionsChange(e) {
+            if (e.target.classList.contains('question-checkbox')) {
+                toggleLearned(e.target.dataset.id, e.target.checked);
+            }
+        }
+
+        function toggleSection(sectionEl) {
+            if (searchTerm) return; // sections are forced open while searching
+            const id = sectionEl.dataset.sectionId;
+            expandedSections[id] = !expandedSections[id];
+            sectionEl.classList.toggle('collapsed', !expandedSections[id]);
+            sectionEl.querySelector('.section-header').setAttribute('aria-expanded', expandedSections[id]);
+        }
+
+        // Show/hide one answer without re-rendering the list
+        function toggleAnswer(btn) {
+            const id = btn.dataset.id;
+            openAnswers[id] = !openAnswers[id];
+            setAnswerState(btn, openAnswers[id]);
+        }
+
+        function setAnswerState(btn, isOpen) {
+            const answer = btn.parentElement.querySelector('.answer');
+            answer.hidden = !isOpen;
+            btn.textContent = isOpen ? 'Hide answer' : 'Show answer';
+            btn.setAttribute('aria-expanded', isOpen);
+        }
+
+        function toggleAllAnswers() {
+            const allOpen = Object.keys(openAnswers).filter(k => openAnswers[k]).length === TOTAL;
+            data.forEach(section => section.questions.forEach((_, idx) => {
+                openAnswers[`${section.id}-${idx}`] = !allOpen;
+            }));
+            $('toggleAllAnswersBtn').textContent = allOpen ? 'Show All Answers' : 'Hide All Answers';
+            document.querySelectorAll('.answer-toggle').forEach(btn => setAnswerState(btn, !allOpen));
+        }
+
+        // ---------- Learned tracking ----------
+        function toggleLearned(id, isLearned) {
+            if (isLearned) learned[id] = true;
+            else delete learned[id];
+            saveLearned();
+            updateProgress();
+            renderSections();
+        }
+
+        function markSectionLearned(sectionId) {
+            const section = data.find(s => s.id === sectionId);
+            section.questions.forEach((_, idx) => { learned[`${sectionId}-${idx}`] = true; });
+            saveLearned();
+            updateProgress();
+            renderSections();
+        }
+
+        function markAllLearned() {
+            data.forEach(section => section.questions.forEach((_, idx) => {
+                learned[`${section.id}-${idx}`] = true;
+            }));
+            saveLearned();
+            updateProgress();
+            renderSections();
+        }
+
+        function clearAll() {
+            if (!confirm('Are you sure you want to clear all learned items?')) return;
+            learned = {};
+            saveLearned();
+            updateProgress();
+            renderSections();
+        }
+
+        function saveLearned() {
+            store.set(KEYS.learned, JSON.stringify(learned));
+        }
+
+        function updateProgress() {
+            const learnedCount = data.reduce((sum, s) =>
+                sum + s.questions.filter((_, i) => learned[`${s.id}-${i}`]).length, 0);
+            const percent = Math.round((learnedCount / TOTAL) * 100);
+
+            $('learnedCount').textContent = learnedCount;
+            $('totalCount').textContent = TOTAL;
+            $('overallProgress').style.width = percent + '%';
+            $('progressPercent').textContent = percent + '%';
+        }
+
+        // ---------- Quiz ----------
+        function startQuiz() {
+            quizQuestions = data.flatMap(s => s.questions.map(q => ({ q: q.q, a: q.a })));
+            quizQuestions.sort(() => Math.random() - 0.5);
+            quizIndex = 0;
+            showQuizQuestion();
+            $('quizModal').classList.add('active');
+        }
+
+        function showQuizQuestion() {
+            const question = quizQuestions[quizIndex];
+            $('quizQuestion').textContent = question.q;
+            $('quizAnswer').textContent = '';
+            $('quizAnswer').classList.remove('visible');
+            $('quizShowBtn').textContent = 'Show Answer';
+            $('quizProgressText').textContent = `Question ${quizIndex + 1} of ${quizQuestions.length}`;
+        }
+
+        function showQuizAnswer() {
+            $('quizAnswer').textContent = quizQuestions[quizIndex].a;
+            $('quizAnswer').classList.add('visible');
+            $('quizShowBtn').textContent = 'Answer Revealed';
+        }
+
+        function nextQuizQuestion() {
+            quizIndex++;
+            if (quizIndex >= quizQuestions.length) {
+                alert('Quiz completed! Well done! 🎉');
+                closeQuiz();
+            } else {
+                showQuizQuestion();
+            }
+        }
+
+        function closeQuiz() {
+            $('quizModal').classList.remove('active');
+        }
+
+        init();
+    </script>
+</body>
+</html>
